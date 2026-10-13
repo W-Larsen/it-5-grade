@@ -1,0 +1,2279 @@
+<title>Подорож Біта</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a fixed 1200×800 "metro journey" stage scaled to fit the screen, route line above, controls below.
+   One bright comic-sticker look (ink outlines + hard shadows), deliberately single-theme. */
+:root{
+  color-scheme: light;
+  --ground:#E9F0FB;
+  --paper:#FFFFFF;
+  --ink:#16193A;
+  --ink-soft:#4E5584;
+  --line:#C9D5EC;
+  --bit:#FF8A3D; --bit-deep:#E2632A; --bit-light:#FFD7B5;
+  --sun:#FFC93C; --sun-deep:#B07A00;
+  --net:#2BAA6B;
+  --wifi:#12B5A4;
+  --fiber:#E5487B;
+  --ip:#7A5CFA;
+  --dns:#2F80ED;
+  --route:#F2A007;
+  --ocean:#0B2E55; --ocean-2:#1B6FC0;
+  --dc:#3C4A6B;
+  --safe:#EF5B5B;
+  --quiz:#5B6CFF;
+  --byte:#0B8FB0;
+  --good:#22A867; --bad:#E5484D;
+  --f-display:"Unbounded","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --f-body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{background:var(--ground);color:var(--ink);font-family:var(--f-body);margin:0;-webkit-text-size-adjust:100%}
+button{font-family:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--dns);outline-offset:3px}
+
+/* ---------- app chrome ---------- */
+.app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;
+  background:radial-gradient(1100px 600px at 90% -15%,#FFF1E2 0%,rgba(255,241,226,0) 60%),
+             radial-gradient(900px 520px at -10% 115%,#D9F4EF 0%,rgba(217,244,239,0) 60%),var(--ground)}
+.topbar{display:flex;align-items:center;gap:22px;padding:calc(10px + env(safe-area-inset-top,0px)) 20px 8px}
+.brand{display:flex;align-items:center;gap:10px;font:800 15px/1 var(--f-display);white-space:nowrap;background:none;border:0;padding:4px 6px;margin-left:-6px;border-radius:12px;cursor:pointer}
+.brand:hover{background:rgba(255,255,255,.7)}
+.tool:disabled{opacity:.4;cursor:default;transform:none;box-shadow:0 3px 0 var(--ink)}
+.brand-bit{width:32px;display:block;flex:none}
+.route{flex:1;position:relative;display:flex;justify-content:space-between;align-items:center;min-width:0;height:46px;padding:0 4px}
+.route::before{content:"";position:absolute;left:12px;right:12px;top:50%;height:6px;margin-top:-3px;border-radius:6px;background:var(--line)}
+.route-fill{position:absolute;left:12px;top:50%;height:6px;margin-top:-3px;border-radius:6px;width:0;
+  background:linear-gradient(90deg,var(--bit),var(--net),var(--wifi),var(--fiber),var(--ip),var(--dns),var(--route),var(--ocean-2));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.stop{position:relative;z-index:1;width:18px;height:18px;border-radius:50%;border:3px solid var(--line);background:var(--paper);padding:0;cursor:pointer;display:grid;place-items:center;color:#fff;transition:width .3s,height .3s,background .3s,border-color .3s}
+.stop svg{width:18px;height:18px;display:none}
+.stop.passed{border-color:var(--sc)}
+.stop.done{background:var(--sc);border-color:var(--ink)}
+.stop.current{width:38px;height:38px;background:var(--sc);border-color:var(--ink);box-shadow:0 3px 0 var(--ink)}
+.stop.current svg{display:block}
+.stop.current::after{content:attr(data-label);position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);font:800 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap;display:none}
+
+.viewport{position:relative;overflow:hidden;min-height:0;touch-action:none}
+.deck{position:absolute;left:0;top:0;width:1200px;height:800px;transform-origin:0 0}
+
+.bottombar{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:14px;padding:8px 20px calc(12px + env(safe-area-inset-bottom,0px))}
+.nav-btn{font:800 17px/1 var(--f-body);background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:12px 20px;box-shadow:0 4px 0 var(--ink);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.nav-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.nav-btn.next{background:var(--sun)}
+.nav-btn.next.ready{animation:nudge 1.6s ease-in-out infinite}
+.nav-btn:disabled{opacity:.4;cursor:default}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
+.where{display:flex;align-items:baseline;gap:10px;min-width:0;font:700 15px/1.2 var(--f-body);color:var(--ink-soft)}
+.where b{font:800 16px/1.2 var(--f-display);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.where span{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tools{display:flex;gap:8px}
+.tool{height:46px;min-width:46px;border:3px solid var(--ink);border-radius:14px;background:var(--paper);box-shadow:0 3px 0 var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;font:800 14px/1 var(--f-body)}
+.tool svg{width:20px;height:20px}
+.tool:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.tool .count{font-variant-numeric:tabular-nums;background:var(--bit);border:2px solid var(--ink);border-radius:999px;padding:3px 7px;font-size:12px}
+.tool .count.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.4)}}
+@media (max-width:700px){
+  .brand span:last-child{display:none}
+  .tool .tl{display:none}
+  .where b{display:none}
+  .bottombar{gap:8px;padding-left:16px;padding-right:16px}
+  .nav-btn{padding:11px 14px}
+}
+
+/* ---------- slides ---------- */
+.slide{position:absolute;inset:0;padding:52px 60px;display:grid;grid-template-columns:440px 600px;gap:40px;align-items:center;
+  opacity:0;visibility:hidden;transform:translateY(16px) scale(.985);pointer-events:none;
+  transition:opacity .45s ease,transform .6s cubic-bezier(.2,.8,.2,1),visibility 0s linear .6s}
+.slide.active{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition-delay:0s}
+.slide.stack{display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:22px}
+.slide.full{display:block;padding:0}
+.copy{display:flex;flex-direction:column;gap:18px;align-items:flex-start;min-width:0}
+.kicker{display:inline-flex;align-items:center;gap:9px;padding:6px 14px 6px 6px;border-radius:999px;background:var(--paper);border:3px solid var(--ink);font:900 13px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase}
+.kicker .k-ico{width:26px;height:26px;border-radius:50%;background:var(--c);border:2px solid var(--ink);color:#fff;display:grid;place-items:center}
+.kicker .k-ico svg{width:15px;height:15px}
+h1,h2,h3{margin:0;font-family:var(--f-display);font-weight:800;letter-spacing:-.02em;text-wrap:balance;line-height:1.05}
+h2{font-size:42px}
+.mega{font-size:82px;line-height:.95;letter-spacing:-.035em}
+.mega em{font-style:normal;letter-spacing:.01em;color:var(--bit);-webkit-text-stroke:3px var(--ink);paint-order:stroke fill}
+.lead{margin:0;font:700 21px/1.45 var(--f-body);color:var(--ink-soft)}
+.lead b{color:var(--ink)}
+.hint{margin:0;font:700 14px/1.4 var(--f-body);color:var(--ink-soft)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.say{display:flex;align-items:flex-end;gap:14px;margin-top:4px}
+.say .bit-slot{width:82px;flex:none}
+.bubble{position:relative;background:var(--paper);border:3px solid var(--ink);border-radius:22px;padding:13px 17px;font:800 17px/1.38 var(--f-body);box-shadow:4px 4px 0 var(--ink);max-width:330px}
+.bubble::before{content:"";position:absolute;left:-11px;bottom:18px;width:16px;height:16px;background:var(--paper);border-left:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:rotate(45deg)}
+.bubble.pop{animation:pop .4s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{0%{transform:scale(.85)}100%{transform:scale(1)}}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--paper);border:2px solid var(--ink);border-radius:14px;padding:9px 12px;font:800 15px/1.35 var(--f-body)}
+.chip.fact::before{content:"!";flex:none;width:24px;height:24px;border-radius:50%;background:var(--sun);border:2px solid var(--ink);display:grid;place-items:center;font:900 14px/1 var(--f-display)}
+
+.btn{font:800 18px/1 var(--f-body);color:var(--ink);background:var(--sun);border:3px solid var(--ink);border-radius:999px;padding:14px 22px;box-shadow:0 5px 0 var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:transform .08s,box-shadow .08s,background .2s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.btn.ghost{background:var(--paper)}
+.btn.big{font-size:22px;padding:18px 30px}
+.btn.small{font-size:15px;padding:10px 14px;box-shadow:0 3px 0 var(--ink)}
+.btn[aria-pressed="true"]{background:var(--ink);color:#fff}
+.btn:disabled{opacity:.45;cursor:default;transform:none;box-shadow:0 5px 0 var(--ink)}
+.scene{position:relative;width:600px;height:640px;background:var(--paper);border:3px solid var(--ink);border-radius:28px;box-shadow:8px 8px 0 var(--ink);overflow:hidden}
+
+/* ---------- Bit ---------- */
+svg.bit{display:block;width:100%;height:auto;overflow:visible}
+.bit .bit-body{animation:bob 2.4s ease-in-out infinite}
+.bit .bit-eyes{animation:blink 4.2s infinite;transform-origin:60px 70px}
+.bit .bit-ant{animation:ant 1.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes blink{0%,45%,49%,100%{transform:scaleY(1)}47%{transform:scaleY(.1)}}
+@keyframes ant{0%,100%{fill:#FFC93C}50%{fill:#FFF3B0}}
+.bit.happy .bit-body{animation:hop .5s cubic-bezier(.3,1.6,.5,1) 2}
+@keyframes hop{50%{transform:translateY(-16px)}}
+
+/* ---------- cover ---------- */
+.cover-art{position:relative;width:600px;height:640px}
+.cover-art svg.orbit{position:absolute;left:0;top:30px;width:600px;height:600px}
+.orbit .spin{animation:spin 50s linear infinite;transform-origin:300px 300px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cover-bit{position:absolute;left:180px;top:190px;width:240px;background:none;border:0;padding:0;cursor:pointer}
+.cover-bubble{position:absolute;right:0;top:0;max-width:290px}
+.cover-bubble::before{left:40px;bottom:-11px;transform:rotate(-45deg)}
+.playchip{display:inline-grid;place-items:center;width:30px;height:24px;border-radius:7px;background:#FF3B3B;color:#fff;font-size:13px;vertical-align:2px}
+
+/* ---------- guess ---------- */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding:30px;height:100%}
+.choice{border:3px solid var(--ink);border-radius:24px;box-shadow:0 6px 0 var(--ink);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;cursor:pointer;position:relative;transition:transform .15s,box-shadow .15s}
+.choice b{font:800 60px/1 var(--f-display);letter-spacing:-.03em}
+.choice span{font:800 18px/1.2 var(--f-body)}
+.choice:nth-child(1){background:#BFE3FF}.choice:nth-child(2){background:#C8F2D9}.choice:nth-child(3){background:#FFE9A8}.choice:nth-child(4){background:#FFC6D6}
+.choice.picked{transform:translateY(4px) rotate(-2deg);box-shadow:0 2px 0 var(--ink)}
+.choice.picked::after{content:"✓";position:absolute;top:12px;right:14px;width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:900 20px/1 var(--f-body)}
+.choices.has-pick .choice:not(.picked){opacity:.55}
+
+/* ---------- network ---------- */
+.net-scene{background:linear-gradient(#F3F8FF,#E7F3EC)}
+.net-room,.net-mega{position:absolute;inset:0;transition:opacity .6s,transform .8s cubic-bezier(.2,.8,.2,1)}
+.net-mega{opacity:0;transform:scale(1.25);pointer-events:none}
+.net-scene.zoomed .net-room{opacity:0;transform:scale(.5);pointer-events:none}
+.net-scene.zoomed .net-mega{opacity:1;transform:none;pointer-events:auto}
+.net-lines{position:absolute;inset:0;width:600px;height:640px;pointer-events:none}
+.net-lines line{stroke:var(--net);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+.dev{position:absolute;width:128px;display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:8px;cursor:pointer;border-radius:22px;transition:transform .2s}
+.dev svg{height:78px;width:auto;filter:drop-shadow(0 4px 0 rgba(22,25,58,.18))}
+.dev span{font:800 15px/1 var(--f-body);background:var(--paper);border:2px solid var(--ink);border-radius:999px;padding:5px 10px}
+.dev.sel{transform:scale(1.1)}
+.dev.sel span{background:var(--sun)}
+.dev.linked span{background:#C8F2D9}
+.dev.sel::before{content:"";position:absolute;inset:-4px;border:3px dashed var(--ink);border-radius:24px;animation:spin 8s linear infinite}
+.net-actions{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center}
+
+/* ---------- wifi ---------- */
+.wifi-scene{background:linear-gradient(#EAF6FF 0%,#F6FBFF 75%)}
+.wifi-floor{position:absolute;left:0;right:0;top:500px;bottom:0;background:#FFE3C4;border-top:3px solid var(--ink)}
+.wifi-waves{position:absolute;inset:0;width:600px;height:640px;pointer-events:none}
+.wifi-waves circle{fill:none;stroke:var(--wifi);stroke-width:5;transform-box:fill-box;transform-origin:center;animation:wave 3s linear infinite;opacity:0}
+.wifi-waves circle:nth-child(2){animation-delay:1s}.wifi-waves circle:nth-child(3){animation-delay:2s}
+.wifi-scene.noisy .wifi-waves circle{stroke:var(--fiber);stroke-dasharray:6 10}
+@keyframes wave{0%{transform:scale(.4);opacity:.9}100%{transform:scale(11);opacity:0}}
+.wifi-router{position:absolute;left:28px;top:414px;width:132px}
+.wifi-router svg,.wifi-micro svg{width:100%;height:auto;display:block}
+.led{animation:led 1.2s steps(2,jump-none) infinite}
+.l2{animation-delay:-.3s}.l3{animation-delay:-.7s}.l4{animation-delay:-.2s}
+@keyframes led{50%{opacity:.25}}
+.wifi-micro{position:absolute;left:176px;top:426px;width:104px;transform:scale(0);transform-origin:bottom center;transition:transform .45s cubic-bezier(.3,1.6,.5,1)}
+.wifi-scene.noisy .wifi-micro{transform:scale(1)}
+.wifi-wall{position:absolute;left:314px;top:150px;width:34px;height:350px;border:3px solid var(--ink);border-bottom:0;
+  background:
+    repeating-linear-gradient(0deg,var(--ink) 0 3px,transparent 3px 30px),
+    linear-gradient(90deg,#E8806A,#D9654E);
+  transform:translateY(-200%);transition:transform .6s cubic-bezier(.3,1.4,.5,1)}
+.wifi-scene.walled .wifi-wall{transform:none}
+.wifi-pad{position:absolute;top:384px;width:86px;height:114px;border-radius:14px;background:var(--ink);padding:8px 7px 12px;cursor:grab;touch-action:none;box-shadow:0 6px 0 rgba(22,25,58,.2)}
+.wifi-pad:active{cursor:grabbing}
+.pad-screen{width:100%;height:100%;border-radius:6px;background:#BFE3FF;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 0}
+.bars{display:flex;align-items:flex-end;gap:3px;height:26px}
+.bars i{display:block;width:8px;border-radius:2px;background:rgba(22,25,58,.18);transition:background .2s}
+.bars i:nth-child(1){height:8px}.bars i:nth-child(2){height:14px}.bars i:nth-child(3){height:20px}.bars i:nth-child(4){height:26px}
+.bars i.on{background:var(--ink)}
+.pad-video{width:44px;height:44px;border-radius:50%;background:#FF3B3B;display:grid;place-items:center;color:#fff;font-size:18px;margin-bottom:6px}
+.wifi-pad[data-bars="0"] .pad-video{background:transparent;border:5px solid rgba(22,25,58,.2);border-top-color:var(--ink);animation:spin .9s linear infinite;font-size:0}
+.drag-hint{position:absolute;left:50%;bottom:-38px;transform:translateX(-50%);font:900 22px/1 var(--f-body);color:var(--ink);background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:2px 10px}
+.signal-card{position:absolute;left:22px;right:22px;top:22px;display:flex;align-items:center;gap:16px;background:var(--paper);border:3px solid var(--ink);border-radius:20px;padding:14px 18px;box-shadow:0 4px 0 var(--ink)}
+.signal-card .bars{height:36px;gap:4px}
+.signal-card .bars i{width:11px}
+.signal-card .bars i:nth-child(1){height:10px}.signal-card .bars i:nth-child(2){height:18px}.signal-card .bars i:nth-child(3){height:27px}.signal-card .bars i:nth-child(4){height:36px}
+.signal-card .bars i.on{background:var(--wifi)}
+.signal-card b{font:800 22px/1.1 var(--f-display);display:block}
+.signal-card small{font:700 15px/1.2 var(--f-body);color:var(--ink-soft)}
+.wifi-toggles{position:absolute;left:0;right:0;bottom:24px;display:flex;justify-content:center;gap:10px}
+.wifi-cable{position:absolute;inset:0;width:600px;height:640px;pointer-events:none}
+.wifi-cable .socket{fill:#fff;transition:fill .2s}
+.wifi-cable .spark{opacity:0;transition:opacity .2s}
+.wifi-scene.unplugged .wifi-cable .socket{fill:#FFD2D2}
+.wifi-scene.unplugged .wifi-cable .spark{opacity:1}
+.isp-tag{position:absolute;left:40px;top:296px;font:800 13px/1 var(--f-body);background:var(--paper);border:2px solid var(--ink);border-radius:999px;padding:6px 10px}
+.wifi-scene.unplugged .isp-tag{background:#FFD2D2}
+.wifi-pad[data-net="off"] .pad-video{background:transparent;border:5px solid rgba(22,25,58,.2);border-top-color:var(--bad);animation:spin .9s linear infinite;font-size:0}
+.signal-card.off{background:#FFF1F1}
+
+/* ---------- fiber ---------- */
+.fiber-scene{background:radial-gradient(500px 300px at 50% 30%,#1D2C66,#0E1636);color:#fff}
+.fiber-ends{position:absolute;left:22px;right:22px;top:24px;display:flex;justify-content:space-between}
+.end-chip{display:inline-flex;align-items:center;gap:8px;font:800 15px/1 var(--f-body);background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.5);border-radius:999px;padding:8px 14px}
+.end-chip svg{width:18px;height:18px}
+.fiber-svg{position:absolute;left:0;top:70px;width:600px;height:200px}
+.fiber-tube{transition:filter .15s}
+.fiber-tube.flash{filter:brightness(1.6)}
+.rx{position:absolute;left:0;right:0;top:300px;text-align:center}
+.rx-label{font:800 14px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.slots{display:flex;justify-content:center;gap:9px;margin-top:12px}
+.slot{width:54px;height:64px;border-radius:12px;border:2px dashed rgba(255,255,255,.35);display:grid;place-items:center;font:700 32px/1 var(--f-mono)}
+.slot.b1{background:#FFF6A8;color:var(--ink);border:2px solid #fff;box-shadow:0 0 22px #FFF6A8}
+.slot.b0{background:#232F5E;border:2px solid rgba(255,255,255,.6)}
+.decoded{margin-top:14px;font:800 22px/1.2 var(--f-display);min-height:30px}
+.decoded .big{display:inline-block;background:var(--sun);color:var(--ink);border-radius:12px;padding:2px 14px;margin-left:6px;font-size:30px}
+.fiber-ctrl{position:absolute;left:0;right:0;top:470px;display:flex;justify-content:center;gap:12px}
+.fiber-ctrl .b1{background:#FFF6A8}
+.fiber-ctrl .b0{background:#3A4677;color:#fff}
+.fiber-fact{position:absolute;left:22px;right:22px;bottom:22px;color:var(--ink)}
+
+/* ---------- memo (takeaway) ---------- */
+.memo{display:flex;flex-direction:column;gap:8px;align-self:stretch;background:#FFF6D6;border:2px solid var(--ink);border-radius:16px;padding:10px 14px 12px;box-shadow:3px 3px 0 var(--ink)}
+.memo small{font:900 11px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--sun-deep)}
+.memo > b{font:800 16px/1.35 var(--f-body)}
+.flow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:700 14.5px/1.15 var(--f-body)}
+.flow span{background:var(--paper);border:2px solid var(--ink);border-radius:10px;padding:6px 8px}
+.flow i{font-style:normal;font-weight:900}
+.flow code{font:700 13.5px/1 var(--f-mono)}
+.pkt{display:flex;border:2px solid var(--ink);border-radius:10px;overflow:hidden;font:800 13px/1 var(--f-body)}
+.pkt span{padding:9px 8px;white-space:nowrap}
+.pkt .p1{background:var(--bit);border-right:2px solid var(--ink)}
+.pkt .p2{background:#E3DBFF;border-right:2px solid var(--ink);font-family:var(--f-mono);font-weight:700}
+.pkt .p3{flex:1;background:repeating-linear-gradient(90deg,#fff 0 8px,#FFE4C7 8px 16px);color:var(--ink-soft)}
+
+/* ---------- bytes ---------- */
+.bytes-scene{background:#EAF7FA}
+.by-top,.by-bottom{position:absolute;left:18px;right:18px;background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.by-top{top:18px;height:272px}
+.by-bottom{top:304px;bottom:18px}
+.by-input{display:flex;align-items:center;gap:12px}
+.by-input input{flex:1;min-width:0;font:800 26px/1.1 var(--f-display);color:var(--ink);border:0;border-bottom:3px dashed var(--ink);border-radius:0;padding:4px 2px;background:transparent;outline:0}
+.by-stats{font:800 14px/1.3 var(--f-body);color:var(--ink-soft);text-align:right;white-space:nowrap}
+.by-stats b{color:var(--byte)}
+.letters{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-content:start;flex:1;overflow:hidden}
+.lt{border:2px solid var(--ink);border-radius:12px;padding:5px 3px 6px;text-align:center;animation:pop .35s backwards}
+.lt b{display:block;font:800 21px/1.15 var(--f-display)}
+.lt code{display:block;font:700 11.5px/1.4 var(--f-mono);color:#7C86B3;letter-spacing:.02em}
+.lt code em{font-style:normal;color:var(--ink)}
+.by-hint{margin:0;font:700 13px/1.2 var(--f-body);color:var(--ink-soft)}
+.by-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.by-head b{font:800 18px/1 var(--f-display)}
+
+.by-tip{font:800 13px/1 var(--f-body);color:var(--ink-soft)}
+.sizes{display:flex;flex-direction:column;gap:8px}
+.size-row{display:flex;align-items:center;gap:10px;height:44px;border:2px solid var(--ink);border-radius:14px;background:#F2FAFC;padding:0 10px;text-align:left;cursor:pointer;font:800 15px/1.2 var(--f-body);transition:background .25s}
+.size-row.shown{background:var(--paper);cursor:default}
+.size-row .si{flex:none;width:30px;height:30px;border-radius:50%;background:#CFF1F7;border:2px solid var(--ink);display:grid;place-items:center;font:800 14px/1 var(--f-display)}
+.size-row .si svg{width:17px;height:17px}
+.size-row .sl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.size-row .sv{display:flex;align-items:center;white-space:nowrap;font:700 14px/1 var(--f-mono);animation:pop .35s}
+.size-row .su{font:800 12px/1 var(--f-body);background:var(--byte);color:#fff;border-radius:999px;padding:4px 8px;margin-left:8px}
+.size-row .q{background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:4px 12px;font:900 14px/1 var(--f-body)}
+
+/* ---------- IP ---------- */
+.ip-scene{background:#F6F3FF}
+.label-card{position:absolute;left:22px;right:22px;top:22px;height:178px;background:#FFFDF6;border:3px solid var(--ink);border-radius:18px;display:flex;gap:16px;padding:14px 18px;align-items:center;box-shadow:0 4px 0 var(--ink)}
+.label-card .bit-slot{width:108px;flex:none;position:relative}
+.label-card .tag{position:absolute;left:24px;top:62px;width:62px;height:36px;background:#fff;border:2px solid var(--ink);border-radius:6px;transform:rotate(-8deg) scale(0);transition:transform .4s cubic-bezier(.3,1.6,.5,1);font:700 8px/1.1 var(--f-mono);padding:4px;overflow:hidden}
+.label-card.signed .tag{transform:rotate(-8deg) scale(1)}
+.label-fields{flex:1;display:flex;flex-direction:column;gap:9px;min-width:0}
+.lf{display:flex;align-items:baseline;gap:10px;border-bottom:2px dashed var(--line);padding-bottom:6px}
+.lf small{font:900 13px/1 var(--f-body);letter-spacing:.1em;width:56px;color:var(--ink-soft)}
+.lf b{font:700 21px/1.1 var(--f-mono);min-height:24px;color:var(--ip)}
+.lf i{font:700 13px/1 var(--f-body);font-style:normal;color:var(--ink-soft)}
+.barcode{height:22px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 5px,var(--ink) 5px 9px,transparent 9px 11px,var(--ink) 11px 12px,transparent 12px 16px);width:150px;border-radius:2px;opacity:.8}
+.tiles{position:absolute;left:22px;right:22px;top:222px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{height:122px;perspective:800px;background:none;border:0;padding:0;cursor:pointer}
+.tile-in{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,1.2,.5,1);transform-style:preserve-3d}
+.tile.flipped .tile-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border:3px solid var(--ink);border-radius:18px;display:flex;align-items:center;gap:12px;padding:12px 14px;-webkit-backface-visibility:hidden;backface-visibility:hidden;text-align:left;box-shadow:0 4px 0 var(--ink)}
+.face.front{background:var(--paper)}
+.face.front svg{height:60px;width:auto;flex:none}
+.face.front b{font:800 17px/1.2 var(--f-body)}
+.face.front em{display:block;font:800 12px/1 var(--f-body);font-style:normal;color:var(--ip);margin-top:6px;letter-spacing:.08em;text-transform:uppercase}
+.face.back{background:var(--ip);color:#fff;transform:rotateY(180deg);flex-direction:column;align-items:flex-start;justify-content:center;gap:6px}
+.face.back b{font:700 23px/1 var(--f-mono)}
+.face.back small{font:700 13.5px/1.3 var(--f-body);opacity:.92}
+.ip-anatomy{position:absolute;left:22px;right:22px;bottom:22px;background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:14px 16px;text-align:center}
+.ip-parts{display:flex;justify-content:center;align-items:center;gap:6px;font:700 30px/1 var(--f-mono)}
+.ip-parts span{border:2px solid var(--ink);border-radius:10px;padding:6px 10px}
+.ip-parts span:nth-of-type(1){background:#E3DBFF}.ip-parts span:nth-of-type(2){background:#D5E6FF}.ip-parts span:nth-of-type(3){background:#D2F4EA}.ip-parts span:nth-of-type(4){background:#FFE2CC}
+.ip-anatomy p{margin:10px 0 0;font:700 15px/1.3 var(--f-body);color:var(--ink-soft)}
+
+/* ---------- DNS ---------- */
+.dns-scene{background:#EEF5FF}
+.addr{position:absolute;left:22px;right:22px;top:22px;display:flex;align-items:center;gap:10px;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:6px 6px 6px 16px;box-shadow:0 4px 0 var(--ink)}
+.addr svg{width:20px;height:20px;flex:none;color:var(--good)}
+.addr input{flex:1;min-width:0;border:0;outline:0;font:700 22px/1 var(--f-mono);color:var(--ink);background:transparent;padding:8px 0}
+.addr .btn{padding:12px 18px;box-shadow:0 3px 0 var(--ink);background:var(--dns);color:#fff}
+.dns-chips{position:absolute;left:22px;right:22px;top:100px;display:flex;flex-wrap:wrap;gap:8px}
+.dns-chips button{font:700 14px/1 var(--f-mono);background:var(--paper);border:2px solid var(--ink);border-radius:999px;padding:8px 12px;cursor:pointer}
+.book{position:absolute;left:40px;top:180px;width:520px;height:318px;perspective:1400px}
+.book.shake{animation:shake .45s}
+.page{position:absolute;top:0;width:262px;height:318px;background:#FFFDF4;border:3px solid var(--ink);padding:16px 16px 12px}
+.page.l{left:0;border-radius:16px 4px 4px 16px;border-right-width:1.5px}
+.page.r{left:258px;border-radius:4px 16px 16px 4px;border-left-width:1.5px}
+.page h4{margin:0 0 10px;font:900 12px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--dns)}
+.page ol{list-style:none;margin:0;padding:0}
+.page li{font:700 15px/1 var(--f-mono);height:36px;display:flex;align-items:center;padding:0 8px;border-bottom:1.5px dotted var(--line);border-radius:6px;white-space:nowrap;transition:background .3s}
+.page li.hit{background:var(--sun)}
+.flip{position:absolute;left:258px;top:0;width:262px;height:318px;background:#FFF7DD;border:3px solid var(--ink);border-radius:4px 16px 16px 4px;transform-origin:left center;opacity:0;pointer-events:none}
+.book.flipping .flip{animation:flip .32s ease-in 3}
+@keyframes flip{0%{opacity:1;transform:rotateY(0)}100%{opacity:1;transform:rotateY(-180deg)}}
+.dns-result{position:absolute;left:22px;right:22px;bottom:22px;min-height:86px;background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:14px 18px;display:flex;align-items:center;gap:14px;font:800 18px/1.35 var(--f-body)}
+.dns-result .arrow{font:800 26px/1 var(--f-display);color:var(--dns)}
+.dns-result code{font:700 22px/1 var(--f-mono);background:#D5E6FF;border-radius:8px;padding:6px 10px}
+.dns-result .res-lines{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.dns-result code.nm{font-size:16px;background:none;padding:0}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+
+/* ---------- packets ---------- */
+.pk-scene{background:#FFF8EC}
+.pk-title{position:absolute;left:0;right:0;top:16px;text-align:center;font:800 14px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.slotgrid{position:absolute;left:150px;top:44px;width:300px;height:200px;display:grid;grid-template-columns:repeat(3,1fr);opacity:0;transition:opacity .4s}
+.pk-scene.cut .slotgrid{opacity:1}
+.slotgrid div{border:2px dashed var(--ink-soft);display:grid;place-items:center;font:800 26px/1 var(--f-display);color:var(--line)}
+.piece{position:absolute;width:100px;height:100px;padding:0;border:0;background:none;cursor:pointer;transition:transform .7s cubic-bezier(.3,1.25,.5,1)}
+.piece .pk-in{width:100%;height:100%;position:relative}
+.piece svg{display:block;width:100px;height:100px}
+.pk-scene.cut .piece .pk-in{outline:3px solid var(--ink);outline-offset:-1px;box-shadow:0 5px 0 var(--ink);border-radius:4px}
+.piece .num{position:absolute;left:-10px;top:-10px;width:32px;height:32px;border-radius:50%;background:var(--bit);border:3px solid var(--ink);font:800 15px/26px var(--f-display);text-align:center;opacity:0;transition:opacity .3s}
+.pk-scene.cut .piece .num{opacity:1}
+.piece.placed .pk-in{box-shadow:none;outline-color:transparent}
+.piece.placed .num{opacity:0 !important}
+.piece.wrong .pk-in{animation:shake .45s}
+.pk-scene.done .slotgrid{opacity:0}
+.pk-frame{position:absolute;left:144px;top:38px;width:312px;height:212px;border:4px solid var(--ink);border-radius:10px;pointer-events:none;opacity:0;transition:opacity .4s}
+.pk-scene.done .pk-frame{opacity:1;box-shadow:0 0 0 8px var(--sun)}
+.pk-cta{position:absolute;left:0;right:0;top:300px;display:flex;justify-content:center}
+.pk-count{position:absolute;right:20px;bottom:18px;font:800 15px/1 var(--f-body);color:var(--ink-soft)}
+
+/* ---------- routers ---------- */
+.rt-scene{background:#FFFBEF}
+.rt-svg{position:absolute;left:0;top:0;width:600px;height:540px}
+.edge{stroke:var(--line);stroke-width:7;stroke-linecap:round;transition:stroke .3s}
+.edge.on{stroke:var(--route);stroke-width:9}
+.edge.cut{stroke:var(--bad);stroke-dasharray:4 12;stroke-width:6}
+.hit{stroke:transparent;stroke-width:30;cursor:pointer}
+.scis{font:900 24px/1 var(--f-body);fill:var(--bad);pointer-events:none}
+.rt-status{position:absolute;left:18px;right:18px;bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:10px 12px 10px 18px;font:800 18px/1.25 var(--f-body)}
+.rt-status b{font-family:var(--f-display);color:var(--route)}
+.rt-status.blocked{background:#FFE4E4}
+
+/* ---------- terminal ---------- */
+.term-scene{background:#1A1D2E;color:#E8ECFF}
+.term-bar{height:44px;background:#2A2E45;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:2px solid #11131F}
+.term-bar i{width:13px;height:13px;border-radius:50%;display:block}
+.term-bar i:nth-child(1){background:#FF5F57}.term-bar i:nth-child(2){background:#FEBC2E}.term-bar i:nth-child(3){background:#28C840}
+.term-bar span{flex:1;text-align:center;font:700 14px/1 var(--f-body);color:#A9B0D6;margin-right:50px}
+.term-body{position:absolute;left:0;right:0;top:44px;bottom:90px;padding:16px 18px;font:500 14.5px/1.55 var(--f-mono);white-space:pre-wrap;overflow:hidden}
+.term-body .p{color:#7EE787}.term-body .c{color:#fff;font-weight:700}.term-body .dim{color:#8A90B8}.term-body .hl{color:#FFC93C}
+.caret{display:inline-block;width:9px;height:17px;background:#E8ECFF;vertical-align:-3px;animation:led 1s steps(2,jump-none) infinite}
+.term-ctrl{position:absolute;left:0;right:0;bottom:0;height:90px;background:#EEF0FA;border-top:3px solid var(--ink);display:flex;align-items:center;justify-content:center;gap:12px;color:var(--ink)}
+.term-note{position:absolute;right:16px;bottom:106px;max-width:250px;background:var(--sun);color:var(--ink);border:3px solid var(--ink);border-radius:16px;padding:10px 14px;font:800 15px/1.35 var(--f-body);transform:scale(0) rotate(3deg);transform-origin:bottom right;transition:transform .4s cubic-bezier(.3,1.6,.5,1)}
+.term-note.show{transform:scale(1) rotate(3deg)}
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.steps li{display:flex;gap:12px;align-items:flex-start;font:700 17px/1.4 var(--f-body)}
+.steps li::before{counter-increment:s;content:counter(s);flex:none;width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:800 14px/1 var(--f-display)}
+.steps code,.lead code{font:700 .92em var(--f-mono);background:var(--paper);border:2px solid var(--ink);border-radius:8px;padding:1px 6px}
+
+/* ---------- ocean ---------- */
+.ocean-svg{position:absolute;inset:0;width:1200px;height:800px}
+.ship{animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(5px) rotate(1deg)}}
+.shark{animation:swim 22s linear infinite;cursor:pointer}
+@keyframes swim{0%{transform:translate(600px,430px) scaleX(1)}46%{transform:translate(1010px,460px) scaleX(1)}50%{transform:translate(1010px,460px) scaleX(-1)}96%{transform:translate(600px,430px) scaleX(-1)}100%{transform:translate(600px,430px) scaleX(1)}}
+.fish{animation:fish 16s linear infinite}
+.fish.f2{animation-duration:21s;animation-delay:-8s}
+@keyframes fish{0%{transform:translateX(-80px)}100%{transform:translateX(1300px)}}
+.kelp{animation:sway 5s ease-in-out infinite;transform-box:fill-box;transform-origin:bottom center}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.cable-glow{stroke-dasharray:4 46;animation:flow 2.4s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-100}}
+.bubbles span{position:absolute;bottom:90px;width:10px;height:10px;border-radius:50%;border:2px solid rgba(255,255,255,.55);animation:rise 7s linear infinite}
+@keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:1}100%{transform:translateY(-560px);opacity:0}}
+.ocean-card{position:absolute;left:44px;top:40px;width:440px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;background:rgba(255,255,255,.94);border:3px solid var(--ink);border-radius:26px;padding:22px 24px;box-shadow:8px 8px 0 var(--ink)}
+.ocean-card h2{font-size:36px}
+.ocean-card .lead{font-size:18px}
+.fact-box{width:100%;background:#E3F1FF;border:2px solid var(--ink);border-radius:16px;padding:12px 14px;min-height:150px}
+.fact-box b{display:block;font:800 18px/1.2 var(--f-display);margin-bottom:6px}
+.fact-box p{margin:0;font:700 16px/1.42 var(--f-body)}
+.fact-meta{display:flex;justify-content:space-between;width:100%;align-items:center;gap:10px;font:800 14px/1 var(--f-body);color:var(--ink-soft)}
+.linkbtn{font:800 15px/1 var(--f-body);color:var(--ink);background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:9px 14px;text-decoration:none;white-space:nowrap}
+.hs{position:absolute;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;border:3px solid var(--ink);background:#FFF6A8;cursor:pointer;display:grid;place-items:center;font:900 20px/1 var(--f-display);padding:0}
+.hs::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:3px solid #FFF6A8;animation:ring 1.8s ease-out infinite}
+.hs.seen{background:var(--good);color:#fff}
+.hs.seen::after{display:none}
+@keyframes ring{0%{transform:scale(.7);opacity:1}100%{transform:scale(1.5);opacity:0}}
+
+/* ---------- datacenter ---------- */
+.dc-scene{background:linear-gradient(#1B2342,#10152A)}
+.dc-svg{position:absolute;left:0;top:0;width:600px;height:560px}
+.rack{cursor:pointer}
+.rack:hover .rack-frame{stroke:var(--sun)}
+.unit.found rect.u{fill:#4A2A12;stroke:var(--bit);stroke-width:3}
+.air{animation:air 2.2s linear infinite}
+@keyframes air{0%{transform:translateY(16px);opacity:0}30%{opacity:1}100%{transform:translateY(-30px);opacity:0}}
+.beam{opacity:0}
+.dc-scene.scanning .beam{animation:beam 1.8s ease-in-out forwards}
+@keyframes beam{0%{opacity:.9;transform:translateX(0)}100%{opacity:.9;transform:translateX(560px)}}
+.dc-panel{position:absolute;left:16px;right:16px;bottom:16px;background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:14px 16px;transform:translateY(130%);transition:transform .5s cubic-bezier(.3,1.2,.5,1)}
+.dc-panel.open{transform:none}
+.dc-panel h4{margin:0 0 8px;font:800 17px/1.2 var(--f-display);display:flex;justify-content:space-between;align-items:center}
+.dc-panel ul{list-style:none;margin:0;padding:0;font:600 15px/1 var(--f-mono)}
+.dc-panel li{padding:7px 8px;border-radius:8px;display:flex;justify-content:space-between;gap:8px}
+.dc-panel li.mine{background:var(--sun);font-weight:700}
+.dc-panel .x{border:2px solid var(--ink);background:var(--paper);border-radius:50%;width:30px;height:30px;cursor:pointer;font:900 14px/1 var(--f-body)}
+.facts{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+
+/* ---------- way back ---------- */
+.back-head{display:flex;justify-content:space-between;align-items:flex-end;gap:30px}
+.back-head .copy{gap:12px}
+.timer{text-align:right;flex:none}
+.timer b{display:block;font:800 64px/1 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.timer small{font:800 14px/1.3 var(--f-body);color:var(--ink-soft)}
+.journey{width:1080px;height:300px;background:var(--paper);border:3px solid var(--ink);border-radius:26px;box-shadow:8px 8px 0 var(--ink)}
+.journey svg{width:100%;height:100%;display:block}
+.jstop circle.ring{transition:fill .3s}
+.jstop.lit circle.ring{fill:var(--sun)}
+.back-foot{display:flex;gap:18px;align-items:center}
+.reveal{flex:1;background:var(--paper);border:3px solid var(--ink);border-radius:20px;padding:14px 18px;font:800 18px/1.4 var(--f-body);opacity:.35;transition:opacity .4s}
+.reveal.show{opacity:1;background:#FFF6D6}
+
+/* ---------- safety ---------- */
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.fcard{height:340px;perspective:1000px;background:none;border:0;padding:0;cursor:pointer}
+.fcard .tile-in{border-radius:26px}
+.fcard.flipped .tile-in{transform:rotateY(180deg)}
+.fcard .face{flex-direction:column;justify-content:center;text-align:center;border-radius:26px;box-shadow:0 7px 0 var(--ink);padding:24px}
+.fcard .front{background:var(--fc)}
+.fcard .front .big-ico{width:110px;height:110px;border-radius:50%;background:var(--paper);border:3px solid var(--ink);display:grid;place-items:center}
+.fcard .front .big-ico svg{width:58px;height:58px}
+.fcard .front h3{font-size:28px}
+.fcard .front small{font:800 14px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.fcard .back{background:var(--paper);color:var(--ink)}
+.fcard .back p{margin:0;font:800 21px/1.4 var(--f-body)}
+.fcard .back p b{color:var(--safe)}
+.banner{display:flex;align-items:center;gap:18px;background:var(--ink);color:#fff;border-radius:22px;padding:16px 22px;font:800 20px/1.35 var(--f-body)}
+.banner .bit-slot{width:64px;flex:none}
+
+/* ---------- quiz ---------- */
+.quiz-scene{background:#F1F2FF;padding:30px;display:flex;flex-direction:column;gap:18px}
+.qprog{display:flex;gap:8px}
+.qprog i{flex:1;height:10px;border-radius:6px;background:var(--line);border:2px solid var(--ink)}
+.qprog i.ok{background:var(--good)}.qprog i.cur{background:var(--sun)}
+.qnum{font:900 14px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--quiz)}
+.qtext{font:800 30px/1.2 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.qopts{display:flex;flex-direction:column;gap:12px}
+.qopt{text-align:left;font:800 20px/1.3 var(--f-body);background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:16px 18px;box-shadow:0 4px 0 var(--ink);cursor:pointer;display:flex;gap:14px;align-items:center}
+.qopt i{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font:800 15px/1 var(--f-display);font-style:normal;background:var(--ground)}
+.qopt.right{background:#C8F2D9}.qopt.right i{background:var(--good);color:#fff}
+.qopt.bad{background:#FFD9D9;animation:shake .45s}
+.qopt:disabled{cursor:default}
+.qnext{align-self:flex-end;margin-top:auto}
+.qend{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;margin:auto}
+.qend b{font:800 64px/1 var(--f-display)}
+
+/* ---------- passport ---------- */
+.book2{display:grid;grid-template-columns:360px 1fr;width:1080px;height:520px;border:3px solid var(--ink);border-radius:26px;box-shadow:8px 8px 0 var(--ink);overflow:hidden}
+.pp-left{background:#23366B;color:#fff;padding:28px;display:flex;flex-direction:column;gap:16px;position:relative}
+.pp-left::after{content:"";position:absolute;right:0;top:0;bottom:0;width:18px;background:linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.25))}
+.pp-left h3{font-size:22px;line-height:1.15;color:#FFD98A}
+.pp-photo{width:150px;height:170px;border:3px solid #FFD98A;border-radius:14px;background:#FFF1DE;padding:16px 18px 6px}
+.pp-field{display:flex;flex-direction:column;gap:6px}
+.pp-field label,.pp-field small{font:900 12px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:#AFC0EE}
+.pp-field input{font:800 22px/1 var(--f-display);color:#fff;background:rgba(255,255,255,.08);border:0;border-bottom:3px solid #FFD98A;border-radius:6px 6px 0 0;padding:8px 8px;width:100%}
+.pp-field input::placeholder{color:rgba(255,255,255,.45)}
+.pp-field b{font:700 18px/1 var(--f-mono)}
+.pp-right{background:#FFFBF0;padding:24px 28px;display:flex;flex-direction:column;gap:12px;
+  background-image:repeating-linear-gradient(0deg,rgba(35,54,107,.06) 0 1px,transparent 1px 28px)}
+.pp-right-head{display:flex;justify-content:space-between;align-items:center}
+.pp-right-head b{font:800 20px/1 var(--f-display)}
+.pp-right-head span{font:800 16px/1 var(--f-body);color:var(--ink-soft)}
+.stamps{display:grid;grid-template-columns:repeat(7,1fr);gap:14px 4px;flex:1;align-content:center}
+.stamps .st{display:flex;align-items:center;justify-content:center}
+.stamps svg{width:92px;height:92px}
+.stamps .empty{width:80px;height:80px;font-size:11px !important;border-radius:50%;border:3px dashed var(--line);display:grid;place-items:center;font:800 13px/1.1 var(--f-body);color:#9AA6C6;text-align:center;padding:8px}
+.pp-actions{display:flex;justify-content:space-between;align-items:center;gap:12px}
+
+/* ---------- theory drawer ---------- */
+.kick-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.more-btn{display:inline-flex;align-items:center;gap:6px;font:800 14px/1 var(--f-body);background:var(--paper);border:2px solid var(--ink);border-radius:999px;padding:7px 12px 7px 9px;box-shadow:0 3px 0 var(--ink);cursor:pointer;transition:transform .08s,box-shadow .08s}
+.more-btn svg{width:17px;height:17px;color:var(--c)}
+.more-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.th-backdrop{position:fixed;inset:0;z-index:40;background:rgba(22,25,58,.38);opacity:0;pointer-events:none;transition:opacity .3s}
+.th-backdrop.open{opacity:1;pointer-events:auto}
+.th-drawer{position:fixed;top:0;right:0;bottom:0;z-index:41;width:min(560px,100vw);display:flex;flex-direction:column;background:var(--paper);border-left:3px solid var(--ink);padding-top:env(safe-area-inset-top,0px);transform:translateX(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+.th-drawer.open{transform:none;visibility:visible}
+.th-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px 14px 24px;border-bottom:2px dashed var(--line)}
+.th-label{display:inline-flex;align-items:center;gap:8px;font:900 13px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase}
+.th-label svg{width:20px;height:20px;color:var(--th-c,var(--ink))}
+.th-close{flex:none;width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);background:var(--sun);font:900 16px/1 var(--f-body);cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.th-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:22px 26px calc(36px + env(safe-area-inset-bottom,0px))}
+.th-body h2{font-size:28px;margin:0 0 14px}
+.th-body h3{font:800 18px/1.3 var(--f-display);margin:24px 0 8px;letter-spacing:-.01em}
+.th-body p,.th-body li,.th-body dd{font:600 17px/1.55 var(--f-body);color:var(--ink)}
+.th-body p{margin:0 0 10px}
+.th-body ul,.th-body ol{margin:0 0 10px;padding-left:24px;display:flex;flex-direction:column;gap:6px}
+.th-body b{font-weight:800}
+.th-body code{font:700 .88em var(--f-mono);background:#EEF2FB;border-radius:6px;padding:1px 6px;white-space:nowrap}
+.th-body .fun{margin:20px 0 8px;background:#FFF6D6;border:2px solid var(--ink);border-radius:16px;padding:12px 16px;font:700 16px/1.5 var(--f-body);box-shadow:3px 3px 0 var(--ink)}
+.th-body .fun > b:first-child{display:block;font:900 12px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--sun-deep);margin-bottom:6px}
+.th-body dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:10px 16px;align-items:baseline}
+.th-body dt{font:800 16px/1.4 var(--f-display)}
+.th-body dd{margin:0}
+@media (max-width:520px){.th-body dl{grid-template-columns:1fr;gap:2px}.th-body dd{margin-bottom:10px}}
+
+/* ---------- stamp fx ---------- */
+.stampfx{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;z-index:50}
+.stampfx .fx{width:250px;height:250px;animation:stampIn 1.9s cubic-bezier(.2,.8,.2,1) forwards}
+.stampfx .fx svg{width:100%;height:100%}
+@keyframes stampIn{0%{transform:scale(2.6) rotate(-24deg);opacity:0}16%{transform:scale(.9) rotate(-8deg);opacity:1}24%{transform:scale(1) rotate(-8deg)}78%{transform:scale(1) rotate(-8deg);opacity:1}100%{transform:translate(28vw,42vh) scale(.15) rotate(-8deg);opacity:0}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <button class="brand" id="brandBtn" aria-label="На початок"><span class="brand-bit" data-bit></span><span>Подорож Біта</span></button>
+    <nav class="route" id="route" aria-label="Маршрут подорожі"><div class="route-fill" id="routeFill"></div></nav>
+  </header>
+
+  <main class="viewport" id="viewport">
+    <div class="deck" id="deck">
+
+      <!-- 0 · COVER -->
+      <section class="slide" data-key="cover" data-title="Старт" data-ico="star" style="--c:var(--bit)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="star"></span>Урок 1 · Як працює інтернет</span>
+          <h1 class="mega">Подорож<br><em>Біта</em></h1>
+          <p class="lead">Що відбувається за одну секунду, коли ти натискаєш <span class="playchip">▶</span> на відео?</p>
+          <div class="row"><button class="btn big" data-next>Почати подорож →</button></div>
+          <p class="hint">Mac: ← → гортати, F — повний екран · iPad: свайп або кнопки внизу</p>
+        </div>
+        <div class="cover-art" data-noswipe>
+          <svg class="orbit" id="orbit" viewBox="0 0 600 600" aria-hidden="true"></svg>
+          <button class="cover-bit" id="coverBit" aria-label="Біт" data-bit="big"></button>
+          <div class="bubble cover-bubble" id="coverBubble">Привіт! Я Біт, маленький пакет даних. Полетиш зі мною крізь увесь інтернет?</div>
+        </div>
+      </section>
+
+      <!-- 1 · GUESS -->
+      <section class="slide" data-key="guess" data-title="Загадка" data-ico="question" style="--c:var(--sun)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="question"></span>Загадка</span>
+          <h2>Скільки пристроїв допомагають показати одне відео?</h2>
+          <p class="lead">Ти натискаєш ▶, і за мить відео грає. Хто встиг попрацювати за цю мить?</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Обери відповідь. Я запишу її, а наприкінці перевіримо!</div></div>
+        </div>
+        <div class="scene" data-noswipe>
+          <div class="choices" id="choices">
+            <button class="choice" data-v="1"><b>1</b><span>Тільки мій iPad</span></button>
+            <button class="choice" data-v="10"><b>10</b><span>Кілька штук</span></button>
+            <button class="choice" data-v="100"><b>100</b><span>Ціла купа</span></button>
+            <button class="choice" data-v="1000+"><b>1000+</b><span>Неймовірно багато</span></button>
+          </div>
+        </div>
+        <template class="theory"><h2>Що таке інтернет?</h2>
+<p>Інтернет — це мільярди комп’ютерів, телефонів, планшетів і серверів по всьому світу, з’єднаних між собою кабелями та радіозв’язком. Завдяки цим з’єднанням будь-який пристрій може надіслати дані будь-якому іншому.</p>
+<h3>Чий він?</h3>
+<p>Інтернет не належить одній людині, компанії чи країні. Кожен провайдер володіє своїм шматочком: кабелями, роутерами, серверами. Разом вони домовилися «говорити однією мовою». Ці спільні правила називаються <b>протоколами</b>.</p>
+<h3>Трохи історії</h3>
+<ul>
+<li><b>1969</b> — перша мережа ARPANET у США: лише 4 комп’ютери.</li>
+<li><b>1991</b> — Тім Бернерс-Лі придумав Всесвітню павутину (Web): сайти й посилання між ними.</li>
+<li><b>Сьогодні</b> — інтернетом користуються понад 5 мільярдів людей.</li>
+</ul>
+<h3>Інтернет і сайти — не одне й те саме</h3>
+<p>Інтернет — це «дороги». Сайти — лише один вид «транспорту» на цих дорогах. Тими самими дорогами їздять онлайн-ігри, відеодзвінки, повідомлення в месенджерах і пошта.</p>
+<div class="fun"><b>Цікаво знати</b>Коли ти дивишся відео, у роботі беруть участь кілька десятків пристроїв, і всі вони встигають зробити свою справу швидше, ніж ти кліпнеш оком.</div></template>
+      </section>
+
+      <!-- 2 · NETWORK -->
+      <section class="slide" data-key="network" data-title="Мережа" data-ico="net" style="--c:var(--net)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="net"></span>Станція 1 · Мережа</span>
+          <h2>Мережа — це пристрої, що тримаються за руки</h2>
+          <p class="lead">Коли пристрої з’єднані, вони передають одне одному повідомлення, фото й відео.</p>
+          <div class="memo"><small>Запам’ятай</small><div class="flow"><span>пристрої + з’єднання = <b>мережа</b></span><span>мільйони мереж разом = <b>інтернет</b></span></div></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Торкнись двох пристроїв по черзі, щоб з’єднати їх. З’єднай усіх!</div></div>
+        </div>
+        <div class="scene net-scene" id="netScene" data-noswipe>
+          <div class="net-room">
+            <svg class="net-lines" id="netLines" viewBox="0 0 600 640"></svg>
+            <button class="dev" data-id="ipad" data-x="110" data-y="140"><span data-icon="ipad"></span><span>iPad</span></button>
+            <button class="dev" data-id="phone" data-x="300" data-y="100"><span data-icon="phone"></span><span>Телефон</span></button>
+            <button class="dev" data-id="laptop" data-x="490" data-y="160"><span data-icon="laptop"></span><span>Ноутбук</span></button>
+            <button class="dev" data-id="tv" data-x="120" data-y="400"><span data-icon="tv"></span><span>Телевізор</span></button>
+            <button class="dev" data-id="pad" data-x="310" data-y="470"><span data-icon="gamepad"></span><span>Приставка</span></button>
+            <button class="dev" data-id="printer" data-x="490" data-y="390"><span data-icon="printer"></span><span>Принтер</span></button>
+          </div>
+          <div class="net-mega" id="netMega"></div>
+          <div class="net-actions"><button class="btn small" id="megaBtn" hidden>Показати мережу мереж →</button></div>
+        </div>
+        <template class="theory"><h2>Що таке мережа?</h2>
+<p><b>Мережа</b> — це два чи більше пристроїв, які можуть обмінюватися даними. Вони можуть бути з’єднані дротом або «по повітрю», через Wi-Fi.</p>
+<h3>Домашня мережа</h3>
+<p>Усе, що підключено до твого роутера (iPad, телефон, телевізор, приставка), — це одна домашня мережа. Її ще називають <b>локальною</b>. Пристрої в ній можуть «бачити» одне одного: наприклад, телефон може надіслати відео на телевізор.</p>
+<h3>Як пристрої розуміють одне одного?</h3>
+<p>Вони дотримуються однакових правил — <b>протоколів</b>. Це як мова: якщо обоє говорять українською, то зрозуміють одне одного, хоч один із них iPad, а другий — принтер.</p>
+<h3>Мережа мереж</h3>
+<p>Твоя домашня мережа підключена до мережі провайдера. Мережі провайдерів з’єднуються між собою у великих «вузлах», де сходяться сотні кабелів. Один із найбільших таких вузлів у світі — у Франкфурті (Німеччина). Так мільйони мереж складаються в один інтернет.</p>
+<h3>Клієнт і сервер</h3>
+<p>Твій iPad — <b>клієнт</b>: він просить («дай відео»). Комп’ютер YouTube — <b>сервер</b>: він відповідає. Майже все в інтернеті працює саме так: хтось питає, хтось відповідає.</p></template>
+      </section>
+
+      <!-- 3 · WIFI -->
+      <section class="slide" data-key="wifi" data-title="Wi-Fi" data-ico="wifi" style="--c:var(--wifi)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="wifi"></span>Станція 2 · Wi-Fi</span>
+          <h2>Wi-Fi — невидимі радіохвилі</h2>
+          <p class="lead">Роутер перетворює дані на радіохвилі й розсилає їх по кімнаті. iPad ловить їх, як радіоприймач.</p>
+          <div class="memo"><small>Запам’ятай</small><div class="flow"><span>iPad</span><i>≈</i><span>Wi-Fi</span><i>≈</i><span>роутер</span><i>━</i><span>кабель до провайдера</span></div><b>Wi-Fi — лише останні метри. Далі інтернет біжить кабелем.</b></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Потягни iPad подалі від роутера, постав стіну. А потім висмикни кабель провайдера!</div></div>
+        </div>
+        <div class="scene wifi-scene" id="wifiScene" data-noswipe>
+          <svg class="wifi-waves" viewBox="0 0 600 640" aria-hidden="true"><circle cx="94" cy="436" r="40"/><circle cx="94" cy="436" r="40"/><circle cx="94" cy="436" r="40"/></svg>
+          <div class="wifi-floor"></div>
+          <svg class="wifi-cable" viewBox="0 0 600 640" aria-hidden="true">
+            <path id="cablePath" d="M38 474 C 14 474, 18 440, 18 400 L 18 330" fill="none" stroke="#16193A" stroke-width="7" stroke-linecap="round"/>
+            <rect class="socket" x="5" y="290" width="26" height="40" rx="6" stroke="#16193A" stroke-width="3"/>
+            <circle cx="18" cy="303" r="3" fill="#16193A"/><circle cx="18" cy="316" r="3" fill="#16193A"/>
+            <text class="spark" x="34" y="352" font-family="Nunito, Arial" font-weight="900" font-size="22" fill="#E5484D">✕</text>
+          </svg>
+          <span class="isp-tag">до провайдера</span>
+          <div class="wifi-wall"></div>
+          <div class="wifi-router" data-icon="router"></div>
+          <div class="wifi-micro" data-icon="microwave"></div>
+          <div class="wifi-pad" id="wifiPad" tabindex="0" role="slider" aria-label="iPad: потягни вліво або вправо" aria-valuemin="0" aria-valuemax="4" aria-valuenow="4">
+            <div class="pad-screen"><div class="bars"><i></i><i></i><i></i><i></i></div><div class="pad-video">▶</div></div>
+            <div class="drag-hint">⟷</div>
+          </div>
+          <div class="signal-card"><div class="bars" id="sigBars"><i></i><i></i><i></i><i></i></div><div><b id="sigText">Сигнал супер</b><small id="sigDist">До роутера: 4 м</small></div></div>
+          <div class="wifi-toggles">
+            <button class="btn small ghost" id="wallBtn" aria-pressed="false">Стіна</button>
+            <button class="btn small ghost" id="microBtn" aria-pressed="false">Мікрохвильовка</button>
+            <button class="btn small ghost" id="cableBtn" aria-pressed="false">Висмикнути кабель</button>
+          </div>
+        </div>
+        <template class="theory"><h2>Як працює Wi-Fi</h2>
+<p>Wi-Fi — це радіозв’язок, як у рації чи радіоприймача, тільки дуже швидкий. У роутері й в iPad є антени. Роутер перетворює дані на радіохвилі, а iPad ловить їх і перетворює назад на дані. І навпаки.</p>
+<h3>Радіоканали</h3>
+<p>Wi-Fi працює на кількох «хвилях» (частотах): <b>2,4 ГГц</b> і <b>5 ГГц</b>, а новіші роутери ще й на 6 ГГц.</p>
+<ul>
+<li><b>2,4 ГГц</b> — краще проходить крізь стіни, але повільніша, і їй більше заважають інші пристрої.</li>
+<li><b>5 ГГц</b> — швидша, але гірше проходить крізь стіни.</li>
+</ul>
+<h3>Що заважає сигналу</h3>
+<ul>
+<li>Відстань: що далі від роутера, то слабший сигнал.</li>
+<li>Стіни, особливо бетонні, і металеві предмети.</li>
+<li>Вода: навіть великий акваріум «з’їдає» частину сигналу.</li>
+<li>Мікрохвильовка: вона працює на тій самій частоті 2,4 ГГц, тому «шумить» і заважає.</li>
+</ul>
+<h3>Wi-Fi — це ще не інтернет</h3>
+<p>Wi-Fi з’єднує тільки iPad і роутер, це останні кілька метрів шляху. Сам роутер підключений до провайдера кабелем, найчастіше оптоволоконним. Якщо цей кабель пошкоджено, Wi-Fi показуватиме повний сигнал, але інтернету не буде.</p>
+<h3>Навіщо пароль на Wi-Fi?</h3>
+<p>Щоб сусіди не підключалися без дозволу і щоб ніхто не міг підглянути, що ти передаєш: з паролем радіохвилі шифруються.</p>
+<div class="fun"><b>Цікаво знати</b>Роутер «світить» дуже слабко: десь 0,1 вата. Це в тисячі разів менше, ніж потужність мікрохвильовки (близько 1000 ватів).</div></template>
+      </section>
+
+      <!-- 4 · FIBER -->
+      <section class="slide" data-key="fiber" data-title="Оптоволокно" data-ico="bolt" style="--c:var(--fiber)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="bolt"></span>Станція 3 · Оптоволокно</span>
+          <h2>Далі — світлом по скляній ниточці</h2>
+          <p class="lead">Від роутера дані біжать кабелем до <b>провайдера</b>, компанії, що дає інтернет. У кабелі скло, тонше за волосину, і дані летять ним світлом.</p>
+          <div class="memo"><small>Запам’ятай</small><div class="flow"><span>спалах = <b>1</b></span><span>темрява = <b>0</b></span><span>8 сигналів = <b>1 байт</b> = 1 літера</span></div></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Світло — це 1, темрява — 0. Відправ вісім сигналів, і вийде літера!</div></div>
+        </div>
+        <div class="scene fiber-scene" id="fiberScene" data-noswipe>
+          <div class="fiber-ends"><span class="end-chip"><span data-ri="home"></span>Твій дім</span><span class="end-chip"><span data-ri="server"></span>Провайдер</span></div>
+          <svg class="fiber-svg" id="fiberSvg" viewBox="0 0 600 200" aria-hidden="true">
+            <defs>
+              <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9FD8FF" stop-opacity=".35"/><stop offset=".5" stop-color="#4F7BD9" stop-opacity=".15"/><stop offset="1" stop-color="#9FD8FF" stop-opacity=".35"/></linearGradient>
+              <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <rect class="fiber-tube" x="16" y="46" width="568" height="108" rx="54" fill="url(#glass)" stroke="#8EA6EE" stroke-width="3"/>
+            <rect x="30" y="58" width="540" height="84" rx="42" fill="none" stroke="#8EA6EE" stroke-opacity=".35" stroke-width="2" stroke-dasharray="3 7"/>
+            <path id="fiberPath" fill="none" stroke="#FFF6A8" stroke-opacity=".12" stroke-width="2"/>
+            <g id="pulses"></g>
+          </svg>
+          <div class="rx">
+            <div class="rx-label">Провайдер отримав біти</div>
+            <div class="slots" id="slots"></div>
+            <div class="decoded" id="decoded">&nbsp;</div>
+          </div>
+          <div class="fiber-ctrl">
+            <button class="btn b1" id="send1">1 · Спалах</button>
+            <button class="btn b0" id="send0">0 · Темрява</button>
+            <button class="btn ghost" id="sendA">Надіслати «A»</button>
+          </div>
+          <div class="fiber-fact"><span class="chip fact">У склі світло пролітає приблизно 200 000 км за секунду. Це 5 разів навколо Землі!</span></div>
+        </div>
+        <template class="theory"><h2>Оптоволокно: дані зі світла</h2>
+<p><b>Оптоволокно</b> — це нитка з дуже чистого скла, тонша за людську волосину (приблизно 0,1 мм). У кабелі таких ниток може бути від кількох до сотень.</p>
+<h3>Як світло не вилітає назовні?</h3>
+<p>Світло всередині скла весь час відбивається від стінок, як м’ячик у вузькому коридорі. Тому воно біжить уздовж нитки навіть там, де кабель вигинається.</p>
+<h3>Як світло несе дані?</h3>
+<p>На початку кабелю стоїть крихітний лазер. Він блимає мільярди разів на секунду: <b>спалах означає 1, темрява — 0</b>. На іншому кінці датчик ловить ці спалахи й перетворює їх назад на нулі й одиниці.</p>
+<h3>Кілька кольорів одночасно</h3>
+<p>В одну нитку можна пустити світло різних кольорів. Кожен колір несе свої дані, і вони не заважають одне одному. Так один кабель може передавати дані мільйонів людей одночасно.</p>
+<h3>А які ще бувають кабелі?</h3>
+<p>Є мідні кабелі: вони передають дані електрикою. Вони дешевші, але на великих відстанях сигнал у них слабшає швидше, ніж у склі. Тому між містами й країнами прокладають оптику.</p>
+<div class="fun"><b>Цікаво знати</b>У склі світло летить приблизно 200 000 км за секунду. За одну секунду воно могло б обігнути Землю 5 разів.</div></template>
+      </section>
+
+      <!-- 4b · BYTES -->
+      <section class="slide" data-key="bytes" data-title="Біти й байти" data-ico="bin" style="--c:var(--byte)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="bin"></span>Станція 4 · Байти</span>
+          <h2>З чого зроблені дані?</h2>
+          <p class="lead">Літери, фото, відео — для комп’ютера це числа. А числа записують нулями й одиницями. Саме вони й летять оптоволокном.</p>
+          <div class="memo"><small>Запам’ятай</small><div class="flow"><span>0 або 1 = <b>1 біт</b></span><span>8 бітів = <b>1 байт</b></span><span>1 000 000 байтів = <b>1 МБ</b></span></div></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Напиши своє ім’я, і побачиш, з яких байтів воно зроблене!</div></div>
+        </div>
+        <div class="scene bytes-scene" data-noswipe>
+          <div class="by-top">
+            <form class="by-input" id="byForm" autocomplete="off">
+              <input id="byWord" type="text" maxlength="10" value="Привіт" spellcheck="false" aria-label="Слово">
+              <span class="by-stats" id="byStats"></span>
+            </form>
+            <div class="letters" id="byLetters"></div>
+            <p class="by-hint">Українська літера займає 2 байти, англійська — 1.</p>
+          </div>
+          <div class="by-bottom">
+            <div class="by-head"><b>Скільки це байтів?</b><span class="by-tip">Вгадай, а потім торкнись</span></div>
+            <div class="sizes" id="bySizes"></div>
+          </div>
+        </div>
+        <template class="theory"><h2>Біти й байти</h2>
+<p><b>Біт</b> — найменша частинка даних. Він може бути лише <b>0</b> або <b>1</b>: так чи ні, світло чи темрява, увімкнено чи вимкнено.</p>
+<h3>Чому саме 0 і 1?</h3>
+<p>Усередині комп’ютера мільярди крихітних перемикачів — транзисторів. Кожен може бути або увімкнений (1), або вимкнений (0). Тому комп’ютеру найзручніше рахувати саме так.</p>
+<h3>Байт</h3>
+<p><b>Байт</b> — це 8 бітів поспіль. З восьми нулів і одиниць можна скласти 256 різних комбінацій: від <code>00000000</code> до <code>11111111</code>, тобто числа від 0 до 255.</p>
+<h3>Як літера стає числом?</h3>
+<p>Є спільна для всього світу таблиця, де кожній літері відповідає своє число. Наприклад, англійська «A» — це 65, тобто <code>01000001</code>. Англійським літерам вистачає одного байта, а українським потрібно два.</p>
+<h3>А фото?</h3>
+<p>Фото складається з мільйонів кольорових точок — <b>пікселів</b>. Колір кожної точки записують трьома числами: скільки в ній червоного, зеленого й синього. Тому навіть одне фото — це мільйони байтів. Щоб воно займало менше місця, його стискають.</p>
+<h3>Як рахувати багато байтів</h3>
+<ul>
+<li>1 кілобайт (КБ) ≈ 1 000 байтів</li>
+<li>1 мегабайт (МБ) ≈ 1 000 000 байтів</li>
+<li>1 гігабайт (ГБ) ≈ 1 000 000 000 байтів</li>
+</ul>
+<div class="fun"><b>Цікаво знати</b>Швидкість інтернету міряють у <b>бітах</b> за секунду. «100 Мбіт/с» означає 100 мільйонів нулів і одиниць щосекунди. Це приблизно 12 мегабайтів, тобто кілька фото за секунду.</div></template>
+      </section>
+
+      <!-- 5 · PACKETS -->
+      <section class="slide" data-key="packets" data-title="Пакети" data-ico="grid" style="--c:var(--bit)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="grid"></span>Станція 5 · Пакети</span>
+          <h2>Байти ріжуть на пакети</h2>
+          <p class="lead">Байтів дуже багато, тому їх ріжуть на пакети, приблизно по 1500 байтів. На кожен пакет клеять наклейку з номером і адресою, а твій iPad збирає їх назад по номерах.</p>
+          <div class="memo"><small>Так виглядає пакет</small><div class="pkt"><span class="p1">№3</span><span class="p2">Кому: 142.250.74.14</span><span class="p3">до 1500 байтів даних</span></div><b>1 хвилина відео ≈ 25 000 таких пакетів</b></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Натисни «Розрізати», а потім збери кадр: торкайся пакетів по порядку, від 1 до 6.</div></div>
+        </div>
+        <div class="scene pk-scene" id="pkScene" data-noswipe>
+          <div class="pk-title">Кадр із відео «Кіт-піаніст»</div>
+          <div class="slotgrid"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div></div>
+          <div id="pieces"></div>
+          <div class="pk-frame"></div>
+          <div class="pk-cta"><button class="btn" id="cutBtn">✂ Розрізати на пакети</button><button class="btn ghost" id="pkAgain" hidden>Ще раз</button></div>
+          <div class="pk-count" id="pkCount"></div>
+        </div>
+        <template class="theory"><h2>Пакети</h2>
+<p><b>Пакет</b> — це маленька порція даних, зазвичай до 1500 байтів. Будь-яке відео, фото чи повідомлення перед відправкою ріжуть на такі порції.</p>
+<h3>Що написано на пакеті</h3>
+<p>На кожен пакет клеять «наклейку» — <b>заголовок</b>. У ньому є:</p>
+<ul>
+<li>адреса відправника (від кого);</li>
+<li>адреса одержувача (кому);</li>
+<li>номер пакета, щоб потім скласти все по порядку;</li>
+<li>«лічильник життя»: скільки роутерів пакет ще може пройти, щоб не блукати вічно.</li>
+</ul>
+<h3>Навіщо різати на шматочки?</h3>
+<ul>
+<li><b>Якщо щось загубилося</b>, достатньо надіслати ще раз тільки один пакет, а не все відео.</li>
+<li><b>Кабелем користуються мільйони людей одночасно.</b> Їхні пакети чергуються, як машини на дорозі, і всім вистачає місця.</li>
+<li><b>Пакети можуть летіти різними шляхами</b>: якщо одна дорога зайнята чи зламана, вони поїдуть іншою.</li>
+</ul>
+<h3>Як iPad збирає пакети назад</h3>
+<p>iPad дивиться на номери й складає пакети по порядку. Якщо якогось номера бракує, він просить сервер надіслати цей пакет ще раз. Ці правила називаються <b>TCP</b>.</p>
+<div class="fun"><b>Цікаво знати</b>Онлайн-ігри та відеодзвінки часто не чекають на загублені пакети, а одразу йдуть далі, щоб не було затримки. Тому в грі персонаж інколи раптом «телепортується»: кілька пакетів про його рух загубилися.</div></template>
+      </section>
+
+      <!-- 6 · IP -->
+      <section class="slide" data-key="ip" data-title="IP-адреса" data-ico="tag" style="--c:var(--ip)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="tag"></span>Станція 6 · IP-адреса</span>
+          <h2>У кожного пристрою є адреса</h2>
+          <p class="lead">Щоб пакет не загубився, на ньому пишуть адресу, як на посилці. В інтернеті вона називається <b>IP-адреса</b>.</p>
+          <div class="memo"><small>Запам’ятай</small><b>IP-адреса = 4 числа, як адреса будинку. За нею пакет знаходить потрібний пристрій.</b></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Переверни картки й дізнайся адреси. А потім підпиши мене, як посилку!</div></div>
+        </div>
+        <div class="scene ip-scene" data-noswipe>
+          <div class="label-card" id="labelCard">
+            <div class="bit-slot" data-bit><div class="tag">КОМУ:<br>142.250…</div></div>
+            <div class="label-fields">
+              <div class="lf"><small>ВІД</small><b id="lfFrom"></b><i id="lfFromN"></i></div>
+              <div class="lf"><small>КОМУ</small><b id="lfTo"></b><i id="lfToN"></i></div>
+              <div class="row"><button class="btn small" id="signBtn">Підписати посилку</button><span class="barcode"></span></div>
+            </div>
+          </div>
+          <div class="tiles">
+            <button class="tile"><div class="tile-in"><div class="face front"><span data-icon="ipad"></span><span><b>Твій iPad</b><em>торкнись</em></span></div><div class="face back"><b>192.168.0.12</b><small>Номер «квартири»: працює тільки вдома</small></div></div></button>
+            <button class="tile"><div class="tile-in"><div class="face front"><span data-icon="router"></span><span><b>Твій роутер</b><em>торкнись</em></span></div><div class="face back"><b>93.170.45.8</b><small>Адреса «будинку» в інтернеті</small></div></div></button>
+            <button class="tile"><div class="tile-in"><div class="face front"><span data-icon="play"></span><span><b>YouTube</b><em>торкнись</em></span></div><div class="face back"><b>142.250.74.14</b><small>Сервер, де лежить відео</small></div></div></button>
+            <button class="tile"><div class="tile-in"><div class="face front"><span data-icon="wiki"></span><span><b>Вікіпедія</b><em>торкнись</em></span></div><div class="face back"><b>185.15.59.224</b><small>Велика енциклопедія</small></div></div></button>
+          </div>
+          <div class="ip-anatomy">
+            <div class="ip-parts"><span>142</span>.<span>250</span>.<span>74</span>.<span>14</span></div>
+            <p>4 числа від 0 до 255, розділені крапками. Числа тут для прикладу.</p>
+          </div>
+        </div>
+        <template class="theory"><h2>IP-адреса</h2>
+<p><b>IP</b> означає Internet Protocol — «правила інтернету». <b>IP-адреса</b> — це номер пристрою в мережі. За цією адресою роутери знаходять, куди доставити пакет.</p>
+<h3>Як вона виглядає</h3>
+<p>Звичайна адреса складається з 4 чисел від 0 до 255, розділених крапками, наприклад <code>142.250.74.14</code>. Таких комбінацій приблизно 4 мільярди.</p>
+<h3>Адрес на всіх не вистачило</h3>
+<p>Пристроїв у світі вже більше, ніж 4 мільярди. Тому придумали нові, довші адреси — <b>IPv6</b>, наприклад <code>2001:db8::1</code>. Їх вистачить з величезним запасом.</p>
+<h3>«Квартира» і «будинок»</h3>
+<p>Удома роутер роздає кожному пристрою свою внутрішню адресу, наприклад <code>192.168.0.12</code>. Це як номер квартири: він має сенс тільки всередині твого будинку. Назовні вся сім’я виходить в інтернет з однією адресою роутера, а роутер пам’ятає, кому в домі передати яку відповідь.</p>
+<h3>Хто видає адреси?</h3>
+<p>Адресу роутеру дає провайдер, і вона може час від часу змінюватися.</p>
+<div class="fun"><b>Спробуй</b>На iPad відкрий Налаштування → Wi-Fi → натисни на (i) біля своєї мережі. Там видно IP-адресу твого iPad у домашній мережі.</div></template>
+      </section>
+
+      <!-- 7 · DNS -->
+      <section class="slide" data-key="dns" data-title="DNS" data-ico="book" style="--c:var(--dns)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="book"></span>Станція 7 · DNS</span>
+          <h2>DNS — телефонна книга інтернету</h2>
+          <p class="lead">Люди пам’ятають імена, наприклад <b>youtube.com</b>. А комп’ютерам потрібні числа. DNS-сервер знаходить номер за іменем.</p>
+          <div class="memo"><small>Запам’ятай</small><div class="flow"><span><code>youtube.com</code></span><i>→</i><span>DNS</span><i>→</i><span><code>142.250.74.14</code></span></div></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Напиши або вибери сайт, і я спитаю в DNS, де він живе.</div></div>
+        </div>
+        <div class="scene dns-scene" data-noswipe>
+          <form class="addr" id="dnsForm" autocomplete="off">
+            <span data-ri="lock"></span>
+            <input id="dnsInput" type="text" inputmode="url" autocapitalize="off" spellcheck="false" value="youtube.com" aria-label="Назва сайту">
+            <button class="btn" type="submit">Знайти</button>
+          </form>
+          <div class="dns-chips" id="dnsChips"></div>
+          <div class="book" id="book">
+            <div class="page l"><h4>Ім’я сайту</h4><ol id="bookNames"></ol></div>
+            <div class="page r"><h4>Номер (IP)</h4><ol id="bookNums"></ol></div>
+            <div class="flip"></div>
+          </div>
+          <div class="dns-result" id="dnsResult"><span class="arrow">?</span><span>Тут з’явиться відповідь DNS-сервера.</span></div>
+        </div>
+        <template class="theory"><h2>DNS — телефонна книга інтернету</h2>
+<p><b>DNS</b> (Domain Name System) — система, яка перетворює зрозумілі людям імена сайтів на IP-адреси, потрібні комп’ютерам.</p>
+<h3>Як читати ім’я сайту</h3>
+<p>Ім’я на зразок <code>youtube.com</code> читають справа наліво: <b>.com</b> — це «зона», ніби країна, а <b>youtube</b> — ім’я в цій зоні. Українські сайти часто мають зону <b>.ua</b>.</p>
+<h3>Як DNS шукає адресу</h3>
+<ol>
+<li>iPad питає DNS-сервер свого провайдера: «Де живе youtube.com?»</li>
+<li>Якщо той не знає, він питає головні сервери, а ті підказують сервер зони <b>.com</b>.</li>
+<li>Сервер зони <b>.com</b> підказує сервер самого YouTube, і той називає точну адресу.</li>
+<li>Відповідь запам’ятовують на якийсь час, тому наступного разу все працює ще швидше.</li>
+</ol>
+<p>Уся ця розмова триває кілька тисячних секунди.</p>
+<h3>Обережно з помилками</h3>
+<p>Якщо помилитися в імені, DNS нічого не знайде. Але буває гірше: шахраї спеціально реєструють схожі імена, наприклад <code>yuotube.com</code>, щоб обманювати людей. Тому завжди уважно дивись на адресу сайту.</p></template>
+      </section>
+
+      <!-- 8 · ROUTERS -->
+      <section class="slide" data-key="routers" data-title="Роутери" data-ico="nodes" style="--c:var(--route)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="nodes"></span>Станція 8 · Роутери</span>
+          <h2>Роутери — сортувальні станції</h2>
+          <p class="lead">Між тобою і YouTube стоять десятки роутерів. Кожен дивиться на адресу пакета й передає його далі, ближче до цілі.</p>
+          <div class="memo"><small>Запам’ятай</small><div class="flow"><span>ти</span><i>→</i><span>роутер</span><i>→</i><span>роутер</span><i>→ … →</i><span>YouTube</span></div><b>Зламався кабель? Пакети йдуть іншим шляхом.</b></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Торкнись кабелю, щоб його «перерізати». Подивись, як пакети шукають обхід!</div></div>
+        </div>
+        <div class="scene rt-scene" data-noswipe>
+          <svg class="rt-svg" id="rtSvg" viewBox="0 0 600 540"></svg>
+          <div class="rt-status" id="rtStatus"><span id="rtText"></span><button class="btn small ghost" id="rtFix">Полагодити</button></div>
+        </div>
+        <template class="theory"><h2>Роутери: як пакет знаходить дорогу</h2>
+<p><b>Роутер</b> (маршрутизатор) — це комп’ютер, який пересилає пакети з однієї мережі в іншу. Домашній роутер маленький, а в провайдерів роутери завбільшки з шафу й пропускають дані мільйонів людей одночасно.</p>
+<h3>Роутер не знає всього шляху</h3>
+<p>Жоден роутер не знає дороги до YouTube повністю. У кожного є <b>таблиця маршрутів</b>: «пакети для таких адрес — відправляй ось туди». Тобто роутер знає лише наступний крок. Пакет так і йде: від роутера до роутера, крок за кроком.</p>
+<h3>Якщо кабель зламався</h3>
+<p>Роутери постійно повідомляють сусідам, які дороги працюють. Якщо кабель пошкоджено, вони за лічені секунди знаходять обхід. Інтернет із самого початку придумали так, щоб він працював, навіть коли частина доріг зламана.</p>
+<h3>Скільки роутерів на шляху?</h3>
+<p>Зазвичай від 10 до 20. Кожен «стрибок» від роутера до роутера зменшує «лічильник життя» пакета на одиницю. Якщо лічильник дійде до нуля, пакет знищують, щоб він не блукав вічно.</p></template>
+      </section>
+
+      <!-- 9 · TERMINAL BONUS -->
+      <section class="slide" data-key="terminal" data-title="Бонус: Термінал" data-ico="term" style="--c:var(--ink-soft)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="term"></span>Бонус · Для Mac</span>
+          <h2>Подивимось на справжні роутери</h2>
+          <ol class="steps">
+            <li><span>Натисни <code>Cmd + Пробіл</code>, набери «Термінал»</span></li>
+            <li><span><code>ping youtube.com</code>: гукнути «Агов!» і засікти час відповіді</span></li>
+            <li><span><code>traceroute youtube.com</code>: список роутерів на шляху</span></li>
+          </ol>
+          <p class="hint">Праворуч приклад. На справжньому Mac числа будуть інші.</p>
+        </div>
+        <div class="scene term-scene" data-noswipe>
+          <div class="term-bar"><i></i><i></i><i></i><span>Термінал — zsh</span></div>
+          <div class="term-body" id="termBody"></div>
+          <div class="term-note" id="termNote"></div>
+          <div class="term-ctrl"><button class="btn" id="runPing">▶ ping</button><button class="btn" id="runTrace">▶ traceroute</button><button class="btn ghost small" id="termClear">Очистити</button></div>
+        </div>
+        <template class="theory"><h2>ping і traceroute</h2>
+<h3>ping — «Агов, ти тут?»</h3>
+<p>Команда <code>ping</code> надсилає маленький пакет і чекає відповіді «Тут!». Вона показує, скільки часу пакет летів туди й назад, у <b>мілісекундах</b> (1 мс = 0,001 секунди).</p>
+<ul>
+<li>До 50 мс — чудово, в іграх нічого не гальмує.</li>
+<li>50–150 мс — нормально.</li>
+<li>Понад 150 мс — у швидких іграх уже помітні затримки («лаги»).</li>
+</ul>
+<h3>traceroute — список роутерів</h3>
+<p>Команда <code>traceroute</code> хитра. Вона надсилає пакети з дуже маленьким «лічильником життя»: спершу 1, потім 2, потім 3… Кожен роутер, на якому лічильник закінчився, відповідає «пакет зупинився в мене». Так по черзі ми дізнаємося про всі роутери на шляху.</p>
+<p>Зірочки <code>* * *</code> означають, що роутер не відповідає. Він просто так налаштований, але пакети далі пропускає.</p>
+<div class="fun"><b>Порада</b>На Mac команду <code>ping</code> зупиняють клавішами Ctrl + C.</div></template>
+      </section>
+
+      <!-- 10 · OCEAN -->
+      <section class="slide full" data-key="ocean" data-title="Океан" data-ico="wave" style="--c:var(--ocean-2)">
+        <svg class="ocean-svg" id="oceanSvg" viewBox="0 0 1200 800" aria-hidden="true"></svg>
+        <div class="bubbles" id="bubbles" aria-hidden="true"></div>
+        <div id="hotspots" data-noswipe></div>
+        <div class="ocean-card">
+          <span class="kicker"><span class="k-ico" data-ri="wave"></span>Станція 9 · Океан</span>
+          <h2>Інтернет лежить на дні океану</h2>
+          <p class="lead">Між континентами дані біжать кабелями по морському дну. Торкайся жовтих кружечків!</p>
+          <div class="fact-box" id="factBox"><b>Що тут ховається?</b><p>Кораблі, акули, кабелі завдовжки тисячі кілометрів… Обери кружечок.</p></div>
+          <div class="fact-meta"><span id="factCount">Відкрито: 0 з 6</span><a class="linkbtn" href="https://www.submarinecablemap.com/" target="_blank" rel="noopener">Справжня мапа кабелів ↗</a></div>
+        </div>
+        <template class="theory"><h2>Кабелі під океаном</h2>
+<p>Між континентами майже весь інтернет іде підводними кабелями. Їх уже понад 500, і разом вони мають понад 1,4 мільйона кілометрів.</p>
+<h3>З чого складається кабель</h3>
+<p>У самому центрі — кілька скляних волокон. Навколо них шари пластику, сталевого дроту для міцності й міді, по якій подається струм для підсилювачів. Біля берега, де мілко, кабель ще й обгортають бронею.</p>
+<h3>Підсилювачі</h3>
+<p>Світло в склі поступово слабшає. Тому кожні 50–100 км на кабелі стоїть підсилювач, який «підбадьорює» сигнал.</p>
+<h3>Що ламає кабелі</h3>
+<p>Найчастіше — якорі кораблів і рибальські сіті, рідше — землетруси й підводні зсуви. Тоді приходить ремонтний корабель: він піднімає кабель гаком, з’єднує обірвані волокна й опускає кабель назад.</p>
+<h3>А Україна?</h3>
+<p>Україна з’єднана з Європою наземними оптичними кабелями, а вже звідти дані йдуть далі по світу, зокрема під океанами.</p>
+<div class="fun"><b>Цікаво знати</b>Перший кабель через Атлантичний океан проклали ще в 1858 році для телеграфу. Він пропрацював лише кілька тижнів.</div>
+<p>Супутники теж дають інтернет. Наприклад, Starlink має тисячі супутників на низькій орбіті й дуже допомагає там, де немає кабелів. Але більшість даних у світі все одно біжить кабелями.</p></template>
+      </section>
+
+      <!-- 11 · DATACENTER -->
+      <section class="slide" data-key="datacenter" data-title="Дата-центр" data-ico="server" style="--c:var(--dc)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="server"></span>Станція 10 · Дата-центр</span>
+          <h2>Тут живе YouTube</h2>
+          <p class="lead">Відео зберігаються на <b>серверах</b>, комп’ютерах без екранів. Тисячі серверів стоять у шафах у величезних залах.</p>
+          <div class="memo"><small>Запам’ятай</small><b>Сервер = комп’ютер без екрана. Він зберігає відео й надсилає його тобі пакетами, 24 години на добу.</b></div>
+          <div class="row"><button class="btn" id="findBtn">Знайти моє відео</button></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble">Або торкнись будь-якої шафи, щоб зазирнути всередину.</div></div>
+        </div>
+        <div class="scene dc-scene" id="dcScene" data-noswipe>
+          <svg class="dc-svg" id="dcSvg" viewBox="0 0 600 560"></svg>
+          <div class="dc-panel" id="dcPanel"></div>
+        </div>
+        <template class="theory"><h2>Сервери й дата-центри</h2>
+<p><b>Сервер</b> — це комп’ютер без екрана й клавіатури, який увесь час чекає запитів і відповідає на них. Будь-який сайт, онлайн-гра чи «хмара» з фото — це сервери.</p>
+<h3>Що є в дата-центрі</h3>
+<ul>
+<li>Тисячі серверів у високих шафах (їх називають стійками).</li>
+<li>Потужне охолодження: сервери дуже гріються.</li>
+<li>Запасне живлення: великі акумулятори й генератори на випадок, якщо зникне світло.</li>
+<li>Кілька кабелів від різних провайдерів, щоб зв’язок не обірвався.</li>
+<li>Охорона: туди не можна просто так зайти.</li>
+</ul>
+<p>Великий дата-центр споживає стільки електрики, скільки десятки тисяч будинків.</p>
+<h3>Відео ближче до тебе</h3>
+<p>YouTube тримає копії популярних відео не тільки у великих дата-центрах, а й на менших серверах у різних містах, навіть у провайдерів. Тому твоє відео часто летить не з Америки, а з сервера у твоїй країні. Так швидше.</p>
+<div class="fun"><b>Цікаво знати</b>«Хмара», де зберігаються твої фото чи збереження ігор, — це не хмара в небі. Це просто сервери в дата-центрах.</div></template>
+      </section>
+
+      <!-- 12 · WAY BACK -->
+      <section class="slide stack" data-key="back" data-title="Шлях додому" data-ico="back" style="--c:var(--bit-deep)">
+        <div class="back-head">
+          <div class="copy">
+            <span class="kicker"><span class="k-ico" data-ri="back"></span>Шлях додому</span>
+            <h2>Туди й назад за 0,1 секунди</h2>
+            <p class="lead">Запит летить до YouTube, а пакети з відео повертаються до тебе. Ось уся подорож, уповільнена в 60 разів.</p>
+          </div>
+          <div class="timer"><b id="timer">0,000 с</b><small>справжній час подорожі</small></div>
+        </div>
+        <div class="journey" data-noswipe><svg id="jSvg" viewBox="0 0 1080 300"></svg></div>
+        <div class="back-foot">
+          <button class="btn big" id="runBack">Запустити ▶</button>
+          <div class="reveal" id="reveal">Після подорожі тут з’явиться відповідь на загадку.</div>
+        </div>
+        <template class="theory"><h2>Що відбувається за 0,1 секунди</h2>
+<ol>
+<li><b>DNS:</b> iPad дізнається IP-адресу YouTube.</li>
+<li><b>«Рукостискання»:</b> iPad і сервер домовляються, що почнуть розмову.</li>
+<li><b>Шифрування:</b> вони обмінюються «ключами», щоб ніхто по дорозі не прочитав їхньої розмови (той самий замочок у браузері).</li>
+<li><b>Запит:</b> iPad просить: «Дай відео».</li>
+<li><b>Відповідь:</b> сервер надсилає перші пакети з відео, а iPad складає їх по номерах і показує.</li>
+</ol>
+<h3>Відео вантажиться шматками</h3>
+<p>Поки ти дивишся початок, iPad уже докачує наступні секунди — це називається <b>буфер</b>. Тому навіть якщо інтернет на мить зник, відео ще трохи грає.</p>
+<h3>Чому інколи якість падає</h3>
+<p>Якщо інтернет повільний, YouTube сам перемикає відео на нижчу якість. Картинка стає менш чіткою, зате відео не зависає.</p>
+<h3>Скільки пристроїв попрацювало?</h3>
+<p>iPad, роутер удома, DNS-сервери, 10–20 роутерів по дорозі й сервер YouTube — разом кілька десятків пристроїв.</p></template>
+      </section>
+
+      <!-- 14 · SAFETY -->
+      <section class="slide stack" data-key="safety" data-title="Безпека" data-ico="shield" style="--c:var(--safe)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="shield"></span>Станція 11 · Безпека</span>
+          <h2>Три правила мандрівника</h2>
+        </div>
+        <div class="cards3" data-noswipe>
+          <button class="fcard" style="--fc:#FFE9A8"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="key"></span><h3>Пароль</h3><small>торкнись</small></div>
+            <div class="face back"><p>Пароль — як зубна щітка: <b>тільки твій</b>. Не кажи його навіть найкращому другові.</p></div>
+          </div></button>
+          <button class="fcard" style="--fc:#C8F2D9"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="lock"></span><h3>Замочок</h3><small>торкнись</small></div>
+            <div class="face back"><p>Замочок біля адреси сайту означає: <b>розмова зашифрована</b>, ніхто по дорозі не підгляне.</p></div>
+          </div></button>
+          <button class="fcard" style="--fc:#FFD2D2"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="user"></span><h3>Незнайомці</h3><small>торкнись</small></div>
+            <div class="face back"><p>Незнайомцям <b>не пиши</b> свою адресу, школу, телефон і не надсилай фото.</p></div>
+          </div></button>
+        </div>
+        <div class="banner"><span class="bit-slot" data-bit></span><span>Щось налякало або здалося дивним? Скажи дорослому. Це завжди правильно.</span></div>
+        <template class="theory"><h2>Безпека в інтернеті</h2>
+<h3>Пароль</h3>
+<ul>
+<li>Довгий пароль надійніший за короткий. Добрий спосіб — фраза з кількох слів, яку легко запам’ятати.</li>
+<li>Для різних сайтів і ігор — різні паролі.</li>
+<li>Знати твій пароль можуть тільки батьки.</li>
+</ul>
+<h3>Замочок і https</h3>
+<p>Літера <b>s</b> в «https» означає «безпечно». Дані між тобою й сайтом шифруються: перетворюються на «кашу», яку може прочитати тільки одержувач.</p>
+<p>Але замочок означає лише, що розмову ніхто не підслухає. Він не обіцяє, що сам сайт добрий: шахрайський сайт теж може мати замочок. Тому дивись і на адресу сайту.</p>
+<h3>Обман і пастки</h3>
+<p>Повідомлення на кшталт «Ти виграв приз!», «Введи пароль, щоб отримати безкоштовні робакси» — майже завжди обман. Не натискай на такі посилання, покажи дорослому.</p>
+<h3>Що не можна публікувати</h3>
+<p>Домашню адресу, школу, номер телефону, де ти зараз, фото документів.</p>
+<h3>Незнайомці</h3>
+<p>В інтернеті людина може назватися ким завгодно: ровесником, гравцем, другом друга. Якщо незнайомець просить фото, адресу чи щось тримати в секреті від батьків — це тривожний знак. Розкажи дорослому.</p>
+<div class="fun"><b>Запам’ятай</b>Усе, що потрапило в інтернет, може залишитися там назавжди, навіть якщо ти це видалив.</div></template>
+      </section>
+
+      <!-- 14 · QUIZ -->
+      <section class="slide" data-key="quiz" data-title="Квіз" data-ico="quiz" style="--c:var(--quiz)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="quiz"></span>Перевірка</span>
+          <h2>Міні-квіз</h2>
+          <p class="lead">Чотири питання про нашу подорож. Помилятися можна: Біт підкаже.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="quizBubble">Готовий? Обирай відповідь!</div></div>
+        </div>
+        <div class="scene quiz-scene" id="quizScene" data-noswipe></div>
+      </section>
+
+      <!-- 15 · PASSPORT -->
+      <section class="slide stack" data-key="passport" data-title="Паспорт" data-ico="passport" style="--c:var(--bit)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="passport"></span>Фініш</span>
+          <h2>Твій паспорт</h2>
+        </div>
+        <div class="book2" data-noswipe>
+          <div class="pp-left">
+            <h3>Паспорт мандрівника інтернетом</h3>
+            <div class="pp-photo" data-bit></div>
+            <div class="pp-field"><label for="ppName">Ім’я мандрівника</label><input id="ppName" type="text" maxlength="24" placeholder="Напиши своє ім’я"></div>
+            <div class="pp-field"><small>Дата подорожі</small><b id="ppDate"></b></div>
+          </div>
+          <div class="pp-right">
+            <div class="pp-right-head"><b>Штампи станцій</b><span id="ppCount"></span></div>
+            <div class="stamps" id="stamps"></div>
+            <div class="pp-actions"><span class="hint" id="ppHint"></span><button class="btn small ghost" id="resetBtn">Почати знову</button></div>
+          </div>
+        </div>
+        <template class="theory"><h2>Словничок мандрівника</h2>
+<dl>
+<dt>Мережа</dt><dd>Пристрої, з’єднані між собою, щоб обмінюватися даними.</dd>
+<dt>Інтернет</dt><dd>Мільйони мереж по всьому світу, з’єднані в одну.</dd>
+<dt>Wi-Fi</dt><dd>Радіозв’язок між пристроєм і роутером.</dd>
+<dt>Провайдер</dt><dd>Компанія, яка підключає тебе до інтернету.</dd>
+<dt>Оптоволокно</dt><dd>Скляна нитка, якою дані летять у вигляді світла.</dd>
+<dt>Біт</dt><dd>Найменша частинка даних: 0 або 1.</dd>
+<dt>Байт</dt><dd>8 бітів. Наприклад, одна англійська літера.</dd>
+<dt>Пакет</dt><dd>Маленька порція даних (до ~1500 байтів) з номером і адресою.</dd>
+<dt>IP-адреса</dt><dd>Номер пристрою в інтернеті, наприклад 142.250.74.14.</dd>
+<dt>DNS</dt><dd>«Телефонна книга», яка за назвою сайту знаходить IP-адресу.</dd>
+<dt>Роутер</dt><dd>Пристрій, який пересилає пакети далі, ближче до цілі.</dd>
+<dt>Сервер</dt><dd>Комп’ютер, який зберігає сайти й відео та відповідає на запити.</dd>
+<dt>Дата-центр</dt><dd>Будівля, де стоять тисячі серверів.</dd>
+<dt>ping</dt><dd>Час, за який пакет долітає до сервера й назад.</dd>
+<dt>https</dt><dd>Зашифрована розмова з сайтом (замочок біля адреси).</dd>
+</dl></template>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="bottombar">
+    <button class="nav-btn" id="prevBtn">← Назад</button>
+    <div class="where"><span id="whereNum">1 / 16</span><b id="whereTitle">Старт</b></div>
+    <div class="tools">
+      <button class="tool" id="homeBtn" aria-label="На початок"><span data-ri="home"></span><span class="tl">Початок</span></button>
+      <button class="tool" id="soundBtn" aria-label="Звук"></button>
+      <button class="tool" id="passBtn" aria-label="Паспорт"><span data-ri="passport"></span><span class="tl">Паспорт</span><span class="count" id="passCount">0/12</span></button>
+      <button class="tool" id="fsBtn" aria-label="Повний екран"><span data-ri="full"></span></button>
+    </div>
+    <button class="nav-btn next" id="nextBtn">Далі →</button>
+  </footer>
+
+  <div class="th-backdrop" id="thBack"></div>
+  <aside class="th-drawer" id="thDrawer" role="dialog" aria-modal="true" aria-label="Детальніше" aria-hidden="true">
+    <div class="th-head"><span class="th-label"><span data-ri="book"></span>Для допитливих</span><button class="th-close" id="thClose" aria-label="Закрити">✕</button></div>
+    <div class="th-body" id="thBody"></div>
+  </aside>
+  <div class="stampfx" id="stampFx" aria-live="polite"></div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="catpic" viewBox="0 0 300 200">
+      <rect width="300" height="200" fill="#BFE3FF"/>
+      <circle cx="258" cy="38" r="22" fill="#FFC93C"/>
+      <text x="34" y="74" font-size="38" fill="#7A5CFA" font-family="Arial, sans-serif">♪</text>
+      <text x="62" y="44" font-size="30" fill="#E5487B" font-family="Arial, sans-serif">♫</text>
+      <text x="226" y="104" font-size="30" fill="#2F80ED" font-family="Arial, sans-serif">♪</text>
+      <ellipse cx="150" cy="150" rx="62" ry="36" fill="#FF8A3D" stroke="#16193A" stroke-width="4"/>
+      <path d="M110 70 L116 30 L142 54 Z" fill="#FF8A3D" stroke="#16193A" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M190 70 L184 30 L158 54 Z" fill="#FF8A3D" stroke="#16193A" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M118 58 L120 40 L134 52 Z M182 58 L180 40 L166 52 Z" fill="#FF9FB2"/>
+      <circle cx="150" cy="92" r="46" fill="#FF8A3D" stroke="#16193A" stroke-width="4"/>
+      <path d="M132 58 q6 8 0 16 M150 52 q6 8 0 16 M168 58 q6 8 0 16" stroke="#E2632A" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="133" cy="90" rx="7" ry="9" fill="#16193A"/><ellipse cx="167" cy="90" rx="7" ry="9" fill="#16193A"/>
+      <circle cx="135" cy="87" r="2.5" fill="#fff"/><circle cx="169" cy="87" r="2.5" fill="#fff"/>
+      <path d="M144 104 L156 104 L150 111 Z" fill="#FF5E7E"/>
+      <path d="M150 111 Q144 120 137 115 M150 111 Q156 120 163 115" stroke="#16193A" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M126 106 L100 102 M126 112 L102 116 M174 106 L200 102 M174 112 L198 116" stroke="#16193A" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="0" y="152" width="300" height="48" fill="#16193A"/>
+      <g fill="#fff" stroke="#16193A" stroke-width="2">
+        <rect x="2" y="156" width="20" height="44"/><rect x="22" y="156" width="20" height="44"/><rect x="42" y="156" width="20" height="44"/><rect x="62" y="156" width="20" height="44"/><rect x="82" y="156" width="20" height="44"/><rect x="102" y="156" width="20" height="44"/><rect x="122" y="156" width="20" height="44"/><rect x="142" y="156" width="20" height="44"/><rect x="162" y="156" width="20" height="44"/><rect x="182" y="156" width="20" height="44"/><rect x="202" y="156" width="20" height="44"/><rect x="222" y="156" width="20" height="44"/><rect x="242" y="156" width="20" height="44"/><rect x="262" y="156" width="20" height="44"/><rect x="282" y="156" width="20" height="44"/>
+      </g>
+      <g fill="#16193A"><rect x="16" y="156" width="12" height="26"/><rect x="36" y="156" width="12" height="26"/><rect x="76" y="156" width="12" height="26"/><rect x="96" y="156" width="12" height="26"/><rect x="116" y="156" width="12" height="26"/><rect x="156" y="156" width="12" height="26"/><rect x="176" y="156" width="12" height="26"/><rect x="216" y="156" width="12" height="26"/><rect x="236" y="156" width="12" height="26"/><rect x="256" y="156" width="12" height="26"/></g>
+      <ellipse cx="116" cy="160" rx="17" ry="10" fill="#FFD7B5" stroke="#16193A" stroke-width="3"/>
+      <ellipse cx="184" cy="162" rx="17" ry="10" fill="#FFD7B5" stroke="#16193A" stroke-width="3"/>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+(function(){
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const $ = (s, el) => (el || document).querySelector(s);
+const $$ = (s, el) => Array.prototype.slice.call((el || document).querySelectorAll(s));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+/* ---------- storage (best effort) ---------- */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem("bit-journey:" + k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem("bit-journey:" + k, JSON.stringify(v)); } catch(e){} }
+};
+
+/* ---------- sound (synthesised, no files) ---------- */
+const Sound = (function(){
+  let ctx = null, on = store.get("sound", true);
+  function ac(){
+    if (!ctx){ const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try { ctx = new C(); } catch(e){ return null; } }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+  function tone(f, d, type, v, f2, delay){
+    if (!on) return; const c = ac(); if (!c) return;
+    const t = c.currentTime + (delay || 0);
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v || .15, t + .012); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + d + .05);
+  }
+  function noise(d, f1, f2, v, delay){
+    if (!on) return; const c = ac(); if (!c) return;
+    const t = c.currentTime + (delay || 0);
+    const buf = c.createBuffer(1, Math.floor(c.sampleRate * d), c.sampleRate);
+    const data = buf.getChannelData(0); for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource(); src.buffer = buf;
+    const bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.2;
+    bp.frequency.setValueAtTime(f1, t); bp.frequency.exponentialRampToValueAtTime(f2, t + d);
+    const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + d * .3); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    src.connect(bp); bp.connect(g); g.connect(c.destination); src.start(t); src.stop(t + d + .05);
+  }
+  return {
+    unlock: ac,
+    pop(){ tone(560, .12, "sine", .18, 280); },
+    click(){ tone(1300, .04, "square", .03); },
+    ding(){ tone(880, .5, "sine", .13); tone(1320, .6, "sine", .07, null, .06); },
+    whoosh(){ noise(.32, 300, 2600, .07); },
+    buzz(){ tone(150, .2, "square", .05, 110); },
+    flash(){ tone(1500, .1, "sine", .07, 2400); },
+    dark(){ tone(220, .1, "triangle", .06); },
+    stamp(){ tone(120, .2, "sine", .3, 55); noise(.09, 1800, 700, .12); },
+    win(){ [523, 659, 784, 1046].forEach((f, i) => tone(f, .25, "triangle", .1, null, i * .1)); },
+    dialup(){
+      const dtmf = [[697,1209],[770,1336],[852,1477],[697,1336],[941,1336],[770,1209],[852,1336]];
+      let t = 0; dtmf.forEach(p => { tone(p[0], .09, "sine", .07, null, t); tone(p[1], .09, "sine", .07, null, t); t += .13; });
+      t += .35; tone(2100, .9, "sine", .06, null, t); t += 1;
+      tone(1650, .3, "sawtooth", .03, null, t); tone(1850, .3, "square", .025, null, t + .3);
+      noise(1.2, 1000, 3200, .07, t + .6); tone(980, .45, "triangle", .05, null, t + 1.9); noise(.9, 2400, 700, .06, t + 2.3);
+    },
+    toggle(){ on = !on; store.set("sound", on); return on; },
+    get on(){ return on; }
+  };
+})();
+
+/* ---------- artwork ---------- */
+const RI = {
+  star:'<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+  question:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.6"/><path d="M12 17h.01"/>',
+  net:'<circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18.5" r="2.5"/><path d="M7.5 6h9M6.3 8.2l4.4 8M17.7 8.2l-4.4 8"/>',
+  wifi:'<path d="M2.5 9a14 14 0 0 1 19 0M5.8 12.4a9.3 9.3 0 0 1 12.4 0M9.2 15.8a4.6 4.6 0 0 1 5.6 0"/><path d="M12 19.3h.01"/>',
+  bolt:'<path d="M13 2.5L4.5 13.5h6.5l-1 8 8.5-11h-6.5z"/>',
+  tag:'<path d="M3 12.2V4a1 1 0 0 1 1-1h8.2l8.6 8.6a1.4 1.4 0 0 1 0 2l-7.2 7.2a1.4 1.4 0 0 1-2 0z"/><circle cx="7.8" cy="7.8" r="1.6"/>',
+  book:'<path d="M2.5 5h6.5a3 3 0 0 1 3 3v12a2.5 2.5 0 0 0-2.5-2.5h-7zM21.5 5H15a3 3 0 0 0-3 3v12a2.5 2.5 0 0 1 2.5-2.5h7z"/>',
+  grid:'<rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/>',
+  nodes:'<circle cx="4.5" cy="12" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19.5" cy="12" r="2"/><path d="M6.2 10.6l4.2-4.2M6.2 13.4l4.2 4.2M13.6 6.4l4.2 4.2M13.6 17.6l4.2-4.2M12 7v10"/>',
+  term:'<rect x="2.5" y="4" width="19" height="16" rx="2.5"/><path d="M7 9.5l3 2.5-3 2.5M12.5 15h4.5"/>',
+  wave:'<path d="M2 8.5c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 14c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 19.5c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/>',
+  server:'<rect x="4" y="3" width="16" height="7.5" rx="1.8"/><rect x="4" y="13.5" width="16" height="7.5" rx="1.8"/><path d="M8 6.75h.01M8 17.25h.01M12 6.75h4M12 17.25h4"/>',
+  back:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  shield:'<path d="M12 2.8l8 3v6.1c0 4.9-3.4 8.2-8 9.3-4.6-1.1-8-4.4-8-9.3V5.8z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+  quiz:'<path d="M4 4h16v12H9l-5 4z"/><path d="M10 8.2a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6 1v.3"/><path d="M12 13.3h.01"/>',
+  passport:'<rect x="5" y="2.5" width="14" height="19" rx="2"/><circle cx="12" cy="10" r="3.5"/><path d="M9 16.5h6"/>',
+  home:'<path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/>',
+  lock:'<rect x="4.5" y="10.5" width="15" height="10.5" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><path d="M12 15v2"/>',
+  key:'<circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16.5 6.5l2.5 2.5M14 9l2 2"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M17.5 3.5l3 3M20.5 3.5l-3 3"/>',
+  full:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  photo:'<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/>',
+  video:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5l5 2.5-5 2.5z"/>',
+  game:'<path d="M7 8h10a4 4 0 0 1 4 4v1.5a3.5 3.5 0 0 1-6.3 2.1L14 15h-4l-.7.6A3.5 3.5 0 0 1 3 13.5V12a4 4 0 0 1 4-4z"/><path d="M7.5 10.5v3M6 12h3M16 11.5h.01M18 13h.01"/>',
+  bin:'<rect x="3.5" y="5" width="7" height="14" rx="3.5"/><path d="M15 8l3-2.5V19M15 19h6"/>',
+  env:'<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>',
+  addr:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M6.5 11h6M6.5 15h10"/><rect x="15" y="7.5" width="3.5" height="3.5" rx=".5"/>',
+  dir:'<path d="M6 3.5h11a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6z"/><path d="M6 3.5v17M10 8.5h5M10 12.5h5"/>',
+  sort:'<path d="M12 21v-7M12 14L6 8M12 14l6-6M6 8V3.5M18 8V3.5M3.5 6L6 3.5 8.5 6M15.5 6L18 3.5 20.5 6"/>',
+  store:'<path d="M3 10l9-6 9 6v10H3z"/><path d="M8 20v-6h8v6M8 17h8"/>',
+  soundOn:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>',
+  soundOff:'<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>'
+};
+const ri = (n, extra) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ' + (extra || "") + '>' + RI[n] + '</svg>';
+
+const ICON = {
+  ipad:'<svg viewBox="0 0 84 110"><rect x="3" y="3" width="78" height="104" rx="12" fill="#16193A"/><rect x="9" y="11" width="66" height="86" rx="5" fill="#BFE3FF"/><circle cx="42" cy="54" r="15" fill="#FF3B3B"/><path d="M37 46.5L50 54 37 61.5z" fill="#fff"/><circle cx="42" cy="102" r="2.4" fill="#4E5584"/></svg>',
+  phone:'<svg viewBox="0 0 56 100"><rect x="3" y="3" width="50" height="94" rx="11" fill="#16193A"/><rect x="8" y="12" width="40" height="74" rx="4" fill="#C8F2D9"/><rect x="14" y="22" width="24" height="9" rx="4.5" fill="#22A867"/><rect x="18" y="36" width="24" height="9" rx="4.5" fill="#fff"/><rect x="14" y="50" width="18" height="9" rx="4.5" fill="#22A867"/><rect x="22" y="90" width="12" height="3" rx="1.5" fill="#4E5584"/></svg>',
+  laptop:'<svg viewBox="0 0 130 86"><rect x="17" y="4" width="96" height="64" rx="7" fill="#16193A"/><rect x="23" y="10" width="84" height="52" rx="3" fill="#FFE9A8"/><rect x="31" y="20" width="40" height="6" rx="3" fill="#F2A007"/><rect x="31" y="32" width="64" height="5" rx="2.5" fill="#fff"/><rect x="31" y="42" width="54" height="5" rx="2.5" fill="#fff"/><path d="M4 70h122l-8 12H12z" fill="#4E5584"/><rect x="54" y="70" width="22" height="4" rx="2" fill="#16193A"/></svg>',
+  tv:'<svg viewBox="0 0 130 100"><rect x="4" y="4" width="122" height="78" rx="9" fill="#16193A"/><rect x="11" y="11" width="108" height="64" rx="4" fill="#FFC6D6"/><circle cx="48" cy="43" r="15" fill="#E5487B"/><path d="M43 35.5L56 43 43 50.5z" fill="#fff"/><rect x="72" y="32" width="36" height="7" rx="3.5" fill="#fff"/><rect x="72" y="46" width="26" height="7" rx="3.5" fill="#fff"/><path d="M48 96l8-14h18l8 14z" fill="#4E5584"/></svg>',
+  gamepad:'<svg viewBox="0 0 130 84"><path d="M30 10h70c16 0 26 14 28 34 2 20-4 34-16 34-9 0-14-7-20-16H38c-6 9-11 16-20 16C6 78 0 64 2 44 4 24 14 10 30 10z" fill="#16193A"/><rect x="24" y="33" width="26" height="8" rx="2" fill="#fff"/><rect x="33" y="24" width="8" height="26" rx="2" fill="#fff"/><circle cx="94" cy="27" r="6.5" fill="#FFC93C"/><circle cx="107" cy="39" r="6.5" fill="#12B5A4"/><circle cx="81" cy="39" r="6.5" fill="#E5487B"/><circle cx="94" cy="51" r="6.5" fill="#2F80ED"/></svg>',
+  printer:'<svg viewBox="0 0 120 100"><rect x="30" y="4" width="60" height="30" rx="3" fill="#fff" stroke="#16193A" stroke-width="4"/><rect x="6" y="30" width="108" height="46" rx="10" fill="#16193A"/><circle cx="96" cy="44" r="4.5" fill="#22A867"/><rect x="28" y="62" width="64" height="34" rx="3" fill="#fff" stroke="#16193A" stroke-width="4"/><rect x="38" y="72" width="36" height="5" rx="2.5" fill="#7A5CFA"/><rect x="38" y="82" width="26" height="5" rx="2.5" fill="#C9D5EC"/></svg>',
+  router:'<svg viewBox="0 0 140 96"><line x1="34" y1="44" x2="22" y2="6" stroke="#16193A" stroke-width="6" stroke-linecap="round"/><line x1="106" y1="44" x2="118" y2="6" stroke="#16193A" stroke-width="6" stroke-linecap="round"/><rect x="6" y="40" width="128" height="44" rx="14" fill="#16193A"/><rect x="16" y="48" width="108" height="6" rx="3" fill="#4E5584"/><circle class="led" cx="34" cy="68" r="5" fill="#2BE38A"/><circle class="led l2" cx="52" cy="68" r="5" fill="#2BE38A"/><circle class="led l3" cx="70" cy="68" r="5" fill="#FFC93C"/><circle class="led l4" cx="88" cy="68" r="5" fill="#2BE38A"/><rect x="26" y="84" width="14" height="8" rx="2" fill="#16193A"/><rect x="100" y="84" width="14" height="8" rx="2" fill="#16193A"/></svg>',
+  microwave:'<svg viewBox="0 0 110 74"><rect x="3" y="3" width="104" height="62" rx="9" fill="#F4F6FB" stroke="#16193A" stroke-width="4"/><rect x="12" y="12" width="64" height="44" rx="5" fill="#2A3555" stroke="#16193A" stroke-width="3"/><rect x="18" y="18" width="30" height="8" rx="4" fill="#4E5C88"/><rect x="84" y="14" width="16" height="9" rx="2" fill="#2BE38A" stroke="#16193A" stroke-width="2"/><circle cx="92" cy="38" r="6" fill="#fff" stroke="#16193A" stroke-width="3"/><circle cx="92" cy="54" r="3" fill="#16193A"/><rect x="14" y="65" width="12" height="6" rx="2" fill="#16193A"/><rect x="84" y="65" width="12" height="6" rx="2" fill="#16193A"/></svg>',
+  rack:'<svg viewBox="0 0 70 96"><rect x="3" y="3" width="64" height="90" rx="9" fill="#3C4A6B" stroke="#16193A" stroke-width="4"/><g fill="#16193A"><rect x="11" y="12" width="48" height="15" rx="3"/><rect x="11" y="32" width="48" height="15" rx="3"/><rect x="11" y="52" width="48" height="15" rx="3"/><rect x="11" y="72" width="48" height="13" rx="3"/></g><g fill="#2BE38A"><circle cx="18" cy="19.5" r="3"/><circle cx="18" cy="39.5" r="3"/><circle cx="18" cy="59.5" r="3"/><circle cx="18" cy="78.5" r="3"/></g></svg>',
+  house:'<svg viewBox="0 0 100 92"><path d="M18 40v46h64V40L50 13z" fill="#FFD7B5" stroke="#16193A" stroke-width="5" stroke-linejoin="round"/><path d="M8 44L50 8l42 36" fill="none" stroke="#16193A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><rect x="40" y="58" width="20" height="28" rx="3" fill="#FF8A3D" stroke="#16193A" stroke-width="4"/><rect x="62" y="48" width="13" height="13" rx="2" fill="#BFE3FF" stroke="#16193A" stroke-width="3"/></svg>',
+  play:'<svg viewBox="0 0 90 64"><rect x="3" y="3" width="84" height="58" rx="18" fill="#FF3B3B" stroke="#16193A" stroke-width="4"/><path d="M37 19L60 32 37 45z" fill="#fff"/></svg>',
+  wiki:'<svg viewBox="0 0 70 70"><circle cx="35" cy="35" r="31" fill="#fff" stroke="#16193A" stroke-width="4"/><text x="35" y="47" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="700" fill="#16193A">W</text></svg>'
+};
+const place = (svg, x, y, w, h) => svg.replace("<svg ", '<svg x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" ');
+
+function bitSVG(){
+  return '<svg class="bit" viewBox="0 0 120 130" aria-hidden="true">' +
+    '<ellipse cx="60" cy="124" rx="32" ry="5" fill="rgba(22,25,58,.15)"/>' +
+    '<g class="bit-body">' +
+      '<line x1="60" y1="31" x2="60" y2="14" stroke="#16193A" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle class="bit-ant" cx="60" cy="11" r="7" fill="#FFC93C" stroke="#16193A" stroke-width="3"/>' +
+      '<rect x="40" y="104" width="13" height="16" rx="5" fill="#16193A"/><rect x="67" y="104" width="13" height="16" rx="5" fill="#16193A"/>' +
+      '<rect x="15" y="30" width="90" height="80" rx="20" fill="#FF8A3D" stroke="#16193A" stroke-width="4"/>' +
+      '<path d="M53 32h14v18l-7-4-7 4z" fill="#FFD7B5" stroke="#16193A" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '<g class="bit-eyes">' +
+        '<ellipse cx="44" cy="70" rx="11.5" ry="13.5" fill="#fff" stroke="#16193A" stroke-width="3"/>' +
+        '<ellipse cx="76" cy="70" rx="11.5" ry="13.5" fill="#fff" stroke="#16193A" stroke-width="3"/>' +
+        '<circle cx="46.5" cy="72" r="6.5" fill="#16193A"/><circle cx="73.5" cy="72" r="6.5" fill="#16193A"/>' +
+        '<circle cx="49" cy="69" r="2.2" fill="#fff"/><circle cx="76" cy="69" r="2.2" fill="#fff"/>' +
+      '</g>' +
+      '<ellipse cx="29" cy="88" rx="7" ry="4" fill="#FF5E7E" opacity=".5"/><ellipse cx="91" cy="88" rx="7" ry="4" fill="#FF5E7E" opacity=".5"/>' +
+      '<path d="M51 90 Q60 99 69 90" fill="none" stroke="#16193A" stroke-width="4" stroke-linecap="round"/>' +
+    '</g></svg>';
+}
+
+/* ---------- stamps ---------- */
+const STAMPS = {
+  network:{label:"МЕРЕЖА", c:"#2BAA6B", ico:"net"},
+  wifi:{label:"WI-FI", c:"#0E9C8D", ico:"wifi"},
+  fiber:{label:"СВІТЛО", c:"#E5487B", ico:"bolt"},
+  bytes:{label:"БАЙТИ", c:"#0B8FB0", ico:"bin"},
+  packets:{label:"ПАКЕТИ", c:"#E2632A", ico:"grid"},
+  ip:{label:"IP", c:"#7A5CFA", ico:"tag"},
+  dns:{label:"DNS", c:"#2F80ED", ico:"book"},
+  routers:{label:"РОУТЕРИ", c:"#D48C00", ico:"nodes"},
+  ocean:{label:"ОКЕАН", c:"#1B6FC0", ico:"wave"},
+  datacenter:{label:"СЕРВЕРИ", c:"#3C4A6B", ico:"server"},
+  back:{label:"ДОДОМУ", c:"#C2410C", ico:"back"},
+  safety:{label:"БЕЗПЕКА", c:"#E04848", ico:"shield"},
+  quiz:{label:"КВІЗ", c:"#5B6CFF", ico:"quiz"}
+};
+const STAMP_KEYS = Object.keys(STAMPS);
+function stampSVG(key, rot){
+  const s = STAMPS[key];
+  return '<svg viewBox="0 0 140 140" aria-label="Штамп ' + s.label + '"><g transform="rotate(' + rot + ' 70 70)" style="color:' + s.c + '">' +
+    '<circle cx="70" cy="70" r="64" fill="#fff" fill-opacity=".9"/>' +
+    '<circle cx="70" cy="70" r="62" fill="none" stroke="currentColor" stroke-width="5"/>' +
+    '<circle cx="70" cy="70" r="53" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 5"/>' +
+    '<g transform="translate(48 30) scale(1.85)" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + RI[s.ico] + '</g>' +
+    '<text x="70" y="102" text-anchor="middle" font-family="Unbounded, Arial, sans-serif" font-size="12.5" font-weight="800" fill="currentColor" letter-spacing=".5">' + s.label + '</text>' +
+    '</g></svg>';
+}
+let stamps = new Set(store.get("stamps", []).filter(k => STAMPS[k]));
+function stamp(key){
+  if (stamps.has(key)) return;
+  stamps.add(key); store.set("stamps", Array.from(stamps));
+  const fx = $("#stampFx");
+  fx.innerHTML = '<div class="fx">' + stampSVG(key, 0) + '</div>';
+  Sound.stamp();
+  setTimeout(() => { fx.innerHTML = ""; }, 1950);
+  const pc = $("#passCount"); pc.classList.remove("bump"); void pc.offsetWidth; pc.classList.add("bump");
+  updateChrome();
+}
+
+/* ---------- helpers ---------- */
+function say(slideEl, text){
+  const b = $(".say .bubble", slideEl) || $(".bubble", slideEl);
+  if (!b || b.textContent === text) return;
+  b.textContent = text; b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+}
+function happy(slideEl){
+  const s = $(".say svg.bit", slideEl); if (!s) return;
+  s.classList.remove("happy"); void s.getBoundingClientRect(); s.classList.add("happy");
+}
+function svgEl(tag, attrs, parent){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+/* ---------- deck ---------- */
+const deck = $("#deck"), viewport = $("#viewport");
+const slides = $$(".slide", deck);
+let cur = 0, scale = 1, booted = false;
+const H = {};
+
+function fit(){
+  const w = viewport.clientWidth, h = viewport.clientHeight;
+  scale = Math.min(w / 1200, h / 800);
+  deck.style.transform = "translate(" + (w - 1200 * scale) / 2 + "px," + (h - 800 * scale) / 2 + "px) scale(" + scale + ")";
+}
+
+function buildRoute(){
+  const route = $("#route");
+  slides.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.className = "stop"; b.title = s.dataset.title; b.setAttribute("aria-label", (i + 1) + ". " + s.dataset.title);
+    b.dataset.label = s.dataset.title;
+    b.style.setProperty("--sc", s.style.getPropertyValue("--c"));
+    b.innerHTML = ri(s.dataset.ico);
+    b.addEventListener("click", () => go(i));
+    route.appendChild(b);
+  });
+}
+
+function updateChrome(){
+  const stops = $$(".stop");
+  stops.forEach((b, i) => {
+    const key = slides[i].dataset.key;
+    b.classList.toggle("current", i === cur);
+    b.classList.toggle("passed", i < cur);
+    b.classList.toggle("done", stamps.has(key));
+  });
+  const fill = $("#routeFill"), route = $("#route");
+  if (stops[cur]){
+    const r = route.getBoundingClientRect(), s = stops[cur].getBoundingClientRect();
+    fill.style.width = Math.max(0, s.left + s.width / 2 - r.left - 12) + "px";
+  }
+  $("#whereNum").textContent = (cur + 1) + " / " + slides.length;
+  $("#whereTitle").textContent = slides[cur].dataset.title;
+  $("#passCount").textContent = stamps.size + "/" + STAMP_KEYS.length;
+  $("#prevBtn").disabled = cur === 0;
+  $("#homeBtn").disabled = cur === 0;
+  $("#nextBtn").disabled = cur === slides.length - 1;
+  $("#nextBtn").classList.toggle("ready", stamps.has(slides[cur].dataset.key));
+}
+
+function go(i){
+  i = clamp(i, 0, slides.length - 1);
+  if (booted && i === cur) return;
+  if (typeof closeTheory === "function") closeTheory();
+  const old = slides[cur];
+  if (booted){
+    old.classList.remove("active");
+    if (H[old.dataset.key] && H[old.dataset.key].leave) H[old.dataset.key].leave(old);
+    Sound.whoosh();
+  }
+  cur = i;
+  const el = slides[i];
+  el.classList.add("active");
+  if (H[el.dataset.key] && H[el.dataset.key].enter) H[el.dataset.key].enter(el);
+  try { history.replaceState(null, "", "#s" + (i + 1)); } catch(e){}
+  updateChrome();
+}
+const next = () => go(cur + 1), prev = () => go(cur - 1);
+
+/* ================= SLIDES ================= */
+
+/* cover */
+H.cover = { init(el){
+  const o = $("#orbit");
+  let html = '<circle cx="300" cy="300" r="262" fill="#FFE4C7" stroke="#16193A" stroke-width="3"/>' +
+    '<circle cx="300" cy="300" r="232" fill="none" stroke="#16193A" stroke-width="3" stroke-dasharray="2 12" stroke-linecap="round"/>' +
+    '<circle cx="300" cy="300" r="170" fill="#FFF3E4"/>';
+  html += '<g class="spin">';
+  for (let k = 0; k < 6; k++){
+    const a = k / 6 * Math.PI * 2, x = 300 + Math.cos(a) * 170, y = 300 + Math.sin(a) * 170;
+    html += '<g transform="translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + (k * 23 - 20) + ')"><rect x="-15" y="-13" width="30" height="26" rx="6" fill="#FF8A3D" stroke="#16193A" stroke-width="3"/><text y="5" text-anchor="middle" font-family="Unbounded, Arial" font-size="13" font-weight="800" fill="#16193A">' + (k + 1) + '</text></g>';
+  }
+  html += '</g>';
+  const st = [["wifi","#12B5A4"],["bolt","#E5487B"],["tag","#7A5CFA"],["book","#2F80ED"],["grid","#FF8A3D"],["nodes","#F2A007"],["wave","#1B6FC0"],["server","#3C4A6B"]];
+  st.forEach((s, k) => {
+    const a = -Math.PI / 2 + k / st.length * Math.PI * 2, x = 300 + Math.cos(a) * 232, y = 300 + Math.sin(a) * 232;
+    html += '<circle cx="' + x + '" cy="' + y + '" r="27" fill="' + s[1] + '" stroke="#16193A" stroke-width="3"/>' +
+      '<g transform="translate(' + (x - 13) + ' ' + (y - 13) + ') scale(1.08)" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' + RI[s[0]] + '</g>';
+  });
+  o.innerHTML = html;
+  let taps = 0, tt = null;
+  $("#coverBit").addEventListener("click", () => {
+    Sound.pop(); taps++; clearTimeout(tt); tt = setTimeout(() => { taps = 0; }, 1500);
+    const s = $("#coverBit svg"); s.classList.remove("happy"); void s.getBoundingClientRect(); s.classList.add("happy");
+    if (taps >= 5){
+      taps = 0; Sound.dialup();
+      const b = $("#coverBubble"); b.textContent = "Пі-пі-ш-ш-ш! Так звучав інтернет 30 років тому: модем дзвонив по телефонній лінії.";
+      b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+    }
+  });
+}};
+
+/* guess */
+H.guess = { init(el){
+  const box = $("#choices"); const saved = store.get("guess", null);
+  const mark = v => { $$(".choice", box).forEach(c => c.classList.toggle("picked", c.dataset.v === v)); box.classList.toggle("has-pick", !!v); };
+  if (saved) mark(saved);
+  $$(".choice", box).forEach(c => c.addEventListener("click", () => {
+    const v = c.dataset.v; store.set("guess", v); mark(v); Sound.ding(); happy(el);
+    say(el, "Записав: «" + v + "». Перевіримо наприкінці подорожі!");
+  }));
+}};
+
+/* network */
+H.network = { init(el){
+  const scene = $("#netScene"), lines = $("#netLines"), devs = $$(".dev", scene);
+  devs.forEach(d => {
+    d.style.left = (+d.dataset.x - 64) + "px"; d.style.top = (+d.dataset.y - 58) + "px";
+    const ic = $("[data-icon]", d); ic.outerHTML = ICON[ic.dataset.icon];
+  });
+  let sel = null; const links = new Set(); let done = false;
+  devs.forEach(d => d.addEventListener("click", () => {
+    if (scene.classList.contains("zoomed")) return;
+    if (sel === d){ d.classList.remove("sel"); sel = null; return; }
+    if (!sel){ sel = d; d.classList.add("sel"); Sound.click(); return; }
+    const a = sel; sel = null; a.classList.remove("sel");
+    const k = [a.dataset.id, d.dataset.id].sort().join("-");
+    if (links.has(k)){ Sound.buzz(); say(el, "Ці двоє вже з’єднані. Спробуй інших!"); return; }
+    links.add(k);
+    const x1 = +a.dataset.x, y1 = +a.dataset.y - 10, x2 = +d.dataset.x, y2 = +d.dataset.y - 10;
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    const ln = svgEl("line", {x1:x1, y1:y1, x2:x2, y2:y2}, lines);
+    ln.style.strokeDasharray = len; ln.style.strokeDashoffset = len;
+    lines.insertBefore(ln, lines.firstChild);
+    requestAnimationFrame(() => requestAnimationFrame(() => { ln.style.strokeDashoffset = 0; }));
+    setTimeout(() => {
+      const dot = svgEl("circle", {r:7, fill:"#FF8A3D", stroke:"#16193A", "stroke-width":2.5}, lines);
+      svgEl("animateMotion", {dur:(1 + Math.random()).toFixed(2) + "s", repeatCount:"indefinite", path:"M" + x1 + " " + y1 + " L" + x2 + " " + y2}, dot);
+    }, 500);
+    a.classList.add("linked"); d.classList.add("linked"); Sound.pop();
+    if (!done && devs.every(x => x.classList.contains("linked"))){
+      done = true; happy(el); Sound.ding();
+      say(el, "Ура, це мережа! А інтернет — це мережа з мільйонів таких мереж.");
+      $("#megaBtn").hidden = false; stamp("network");
+    } else if (!done){
+      say(el, "Є з’єднання! Ще не всі пристрої в мережі.");
+    }
+  }));
+  // network of networks
+  const C = [["Твій дім",112,172,"#FFE4C7"],["Школа",488,172,"#D5E6FF"],["Кафе",112,468,"#D2F4EA"],["YouTube",488,468,"#FFD2D2"]];
+  const CX = 300, CY = 320;
+  let m = '<svg viewBox="0 0 600 640" width="600" height="640">';
+  m += '<text x="300" y="52" text-anchor="middle" font-family="Nunito, Arial" font-weight="800" font-size="17" fill="#4E5584">…і ще мільйони мереж по всьому світу</text>';
+  C.forEach(c => { m += '<path d="M' + c[1] + ' ' + c[2] + ' L' + CX + ' ' + CY + '" stroke="#16193A" stroke-width="7" stroke-linecap="round"/>'; });
+  C.forEach((c, i) => {
+    const dx = CX - c[1], dy = CY - c[2], len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
+    const a = [c[1] + ux * 80, c[2] + uy * 80], b = [CX - ux * 102, CY - uy * 102];
+    m += '<circle r="8" fill="#FF8A3D" stroke="#16193A" stroke-width="2.5"><animateMotion dur="' + (1.2 + i * .25) + 's" repeatCount="indefinite" path="M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) + ' L' + b[0].toFixed(1) + ' ' + b[1].toFixed(1) + '"/></circle>';
+  });
+  C.forEach(c => {
+    const x = c[1], y = c[2], hub = [0, -16], pts = [[-32,-42],[32,-42],[-32,10],[32,10]];
+    m += '<circle cx="' + x + '" cy="' + y + '" r="70" fill="' + c[3] + '" stroke="#16193A" stroke-width="3"/>';
+    pts.forEach(p => { m += '<line x1="' + (x + p[0]) + '" y1="' + (y + p[1]) + '" x2="' + (x + hub[0]) + '" y2="' + (y + hub[1]) + '" stroke="#16193A" stroke-width="3"/>'; });
+    pts.concat([hub]).forEach(p => { m += '<circle cx="' + (x + p[0]) + '" cy="' + (y + p[1]) + '" r="9" fill="#fff" stroke="#16193A" stroke-width="3"/>'; });
+    m += '<text x="' + x + '" y="' + (y + 48) + '" text-anchor="middle" font-family="Nunito, Arial" font-weight="900" font-size="17" fill="#16193A">' + c[0] + '</text>';
+  });
+  const cl = [[CX - 54,CY + 10,50],[CX,CY - 22,62],[CX + 54,CY + 10,50],[CX,CY + 30,52]];
+  cl.forEach(c => { m += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + (c[2] + 3) + '" fill="#16193A"/>'; });
+  cl.forEach(c => { m += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '" fill="#fff"/>'; });
+  m += '<text x="' + CX + '" y="' + (CY + 8) + '" text-anchor="middle" font-family="Unbounded, Arial" font-weight="800" font-size="22" fill="#16193A">Інтернет</text></svg>';
+  $("#netMega").innerHTML = m;
+  $("#megaBtn").addEventListener("click", () => {
+    const z = scene.classList.toggle("zoomed"); Sound.whoosh();
+    $("#megaBtn").textContent = z ? "← Назад до кімнати" : "Показати мережу мереж →";
+    say(el, z ? "Кожен кружечок — окрема мережа. Разом вони і є інтернет!" : "Ось наша маленька мережа вдома.");
+  });
+}};
+
+/* wifi */
+H.wifi = { init(el){
+  const scene = $("#wifiScene"), pad = $("#wifiPad");
+  const padBars = $$(".pad-screen .bars i", pad), sigBars = $$("#sigBars i");
+  const MIN = 200, MAX = 540; let X = 236, wall = false, micro = false, unplugged = false, last = -1, low = false;
+  const PLUGGED = "M38 474 C 14 474, 18 440, 18 400 L 18 330", LOOSE = "M38 474 C 20 478, 12 488, 22 496 C 30 500, 40 498, 46 497";
+  const TXT = ["Зв’язку немає", "Ледь-ледь", "Слабенький", "Добрий", "Сигнал супер"];
+  const SAY = ["Ой! Зв’язку нема, відео зависло.", "Ледь чую роутер… Відео гальмує!", "Хм, сигнал слабшає.", "Ще нормально ловить.", "Сигнал супер! Відео летить."];
+  function render(){
+    pad.style.left = (X - 43) + "px";
+    const base = clamp(4 - Math.floor((X - MIN) / 90), 1, 4);
+    const b = clamp(base - (wall && X > 340 ? 2 : 0) - (micro ? 1 : 0), 0, 4);
+    padBars.forEach((i, k) => i.classList.toggle("on", k < b));
+    sigBars.forEach((i, k) => i.classList.toggle("on", k < b));
+    pad.dataset.bars = b; pad.setAttribute("aria-valuenow", b);
+    pad.dataset.net = unplugged ? "off" : "on";
+    $(".signal-card", el).classList.toggle("off", unplugged);
+    if (unplugged){
+      $("#sigText").textContent = "Wi-Fi є, інтернету немає";
+      $("#sigDist").textContent = "Кабель від роутера до провайдера відключено";
+    } else {
+      $("#sigText").textContent = TXT[b];
+      $("#sigDist").textContent = "До роутера: " + Math.max(1, Math.round((X - 94) / 28)) + " м" + (wall && X > 340 ? " · заважає стіна" : "") + (micro ? " · заважає мікрохвильовка" : "");
+    }
+    const state = unplugged ? "off" : b;
+    if (state !== last){
+      if (last !== -1) say(el, unplugged ? "Wi-Fi є, а відео не вантажиться! Роутер втратив зв’язок з провайдером. Wi-Fi — лише останні метри шляху." : SAY[b]);
+      last = state;
+    }
+    if ((b <= 1 || unplugged) && !low){ low = true; stamp("wifi"); }
+  }
+  let sx = 0, sv = 0, drag = false;
+  pad.addEventListener("pointerdown", e => { drag = true; sx = e.clientX; sv = X; try { pad.setPointerCapture(e.pointerId); } catch(_){} e.preventDefault(); });
+  pad.addEventListener("pointermove", e => { if (!drag) return; X = clamp(sv + (e.clientX - sx) / scale, MIN, MAX); render(); });
+  const end = () => { drag = false; };
+  pad.addEventListener("pointerup", end); pad.addEventListener("pointercancel", end);
+  pad.addEventListener("keydown", e => {
+    if (e.key === "ArrowRight"){ X = clamp(X + 30, MIN, MAX); render(); e.preventDefault(); }
+    if (e.key === "ArrowLeft"){ X = clamp(X - 30, MIN, MAX); render(); e.preventDefault(); }
+  });
+  $("#wallBtn").addEventListener("click", e => { wall = !wall; scene.classList.toggle("walled", wall); e.currentTarget.setAttribute("aria-pressed", wall); Sound.pop(); render(); });
+  $("#microBtn").addEventListener("click", e => {
+    micro = !micro; scene.classList.toggle("noisy", micro); e.currentTarget.setAttribute("aria-pressed", micro); Sound.pop(); render();
+    if (micro && !unplugged) say(el, "Мікрохвильовка теж працює радіохвилями, тому заважає Wi-Fi!");
+  });
+  $("#cableBtn").addEventListener("click", e => {
+    unplugged = !unplugged; scene.classList.toggle("unplugged", unplugged);
+    e.currentTarget.setAttribute("aria-pressed", unplugged);
+    e.currentTarget.textContent = unplugged ? "Вставити кабель" : "Висмикнути кабель";
+    $("#cablePath").setAttribute("d", unplugged ? LOOSE : PLUGGED);
+    Sound[unplugged ? "buzz" : "ding"](); render();
+  });
+  render();
+}};
+
+/* fiber */
+H.fiber = (function(){
+  let path, L, pulses = [], raf = 0, running = false, received = [], tube;
+  function frame(now){
+    pulses = pulses.filter(p => {
+      const k = (now - p.t0) / 1500;
+      if (k >= 1){ p.el.remove(); arrive(p.bit); return false; }
+      const pt = path.getPointAtLength(k * L); p.el.setAttribute("cx", pt.x); p.el.setAttribute("cy", pt.y); return true;
+    });
+    if (running) raf = requestAnimationFrame(frame);
+  }
+  function renderSlots(){
+    $$("#slots .slot").forEach((s, i) => { const b = received[i]; s.textContent = b == null ? "" : b; s.className = "slot" + (b == null ? "" : " b" + b); });
+  }
+  function arrive(bit){
+    if (received.length === 8){ received = []; $("#decoded").innerHTML = "&nbsp;"; }
+    received.push(bit); renderSlots();
+    if (received.length === 8){
+      const code = parseInt(received.join(""), 2);
+      const ch = code >= 33 && code < 127 ? String.fromCharCode(code) : null;
+      $("#decoded").innerHTML = "8 бітів = 1 байт →" + (ch ? '<span class="big">' + ch.replace(/[<&>]/g, "?") + '</span>' : ' це не літера, спробуй ще');
+      if (ch){ Sound.ding(); happy(slides[cur]); say(slides[cur], "Провайдер прочитав байт: «" + ch + "». Так байти й летять світлом!"); stamp("fiber"); }
+    }
+  }
+  function send(bit){
+    const c = bit === 1
+      ? svgEl("circle", {r:12, fill:"#FFF6A8", filter:"url(#glow)"}, $("#pulses"))
+      : svgEl("circle", {r:10, fill:"none", stroke:"#8EA6EE", "stroke-width":3, "stroke-dasharray":"4 4"}, $("#pulses"));
+    const p0 = path.getPointAtLength(0); c.setAttribute("cx", p0.x); c.setAttribute("cy", p0.y);
+    pulses.push({el:c, bit:bit, t0:performance.now()});
+    if (bit === 1){ Sound.flash(); tube.classList.add("flash"); setTimeout(() => tube.classList.remove("flash"), 140); } else Sound.dark();
+  }
+  return {
+    init(el){
+      path = $("#fiberPath"); tube = $(".fiber-tube", el);
+      let d = "M30 100", up = true;
+      for (let x = 62; x <= 540; x += 40){ d += " L" + x + " " + (up ? 64 : 136); up = !up; }
+      d += " L572 100"; path.setAttribute("d", d); L = path.getTotalLength();
+      $("#slots").innerHTML = '<div class="slot"></div>'.repeat(8);
+      $("#send1").addEventListener("click", () => send(1));
+      $("#send0").addEventListener("click", () => send(0));
+      $("#sendA").addEventListener("click", async e => {
+        const b = e.currentTarget; b.disabled = true;
+        if (received.length && received.length < 8){ received = []; renderSlots(); $("#decoded").innerHTML = "&nbsp;"; }
+        for (const ch of "01000001"){ send(+ch); await wait(260); }
+        b.disabled = false;
+      });
+    },
+    enter(){ running = true; raf = requestAnimationFrame(frame); },
+    leave(){ running = false; cancelAnimationFrame(raf); }
+  };
+})();
+
+/* bytes */
+H.bytes = { init(el){
+  const enc = window.TextEncoder ? new TextEncoder() : null;
+  const input = $("#byWord"), L = $("#byLetters"), box = $("#bySizes");
+  const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+  const pl = (n, f) => { const a = n % 10, b = n % 100; return n + " " + (a === 1 && b !== 11 ? f[0] : a >= 2 && a <= 4 && (b < 12 || b > 14) ? f[1] : f[2]); };
+  const toBytes = ch => enc ? Array.from(enc.encode(ch)) : [ch.charCodeAt(0) & 255];
+  const bits = n => n.toString(2).padStart(8, "0").replace(/1/g, "<em>1</em>");
+  const TINT = ["#FFE1C2","#D5E6FF","#D2F4EA","#F4D9F0","#FFF0B3","#E3DBFF","#FFD6D6","#D9F2C9","#CFF1F7","#F1E2D0"];
+  const SIZES = [
+    {k:"letter", ico:"A", t:"Літера «A»", v:"1 байт"},
+    {k:"word", ico:"bin", t:"", v:""},
+    {k:"photo", ico:"photo", t:"Фото з телефона", v:"≈ 3 000 000 байтів", u:"3 МБ"},
+    {k:"video", ico:"video", t:"1 хвилина відео", v:"≈ 37 000 000 байтів", u:"37 МБ"},
+    {k:"game", ico:"game", t:"Велика гра на iPad", v:"≈ 2 000 000 000 байтів", u:"2 ГБ"}
+  ];
+  box.innerHTML = SIZES.map(z => '<button class="size-row' + (z.k === "word" ? " shown" : "") + '" data-k="' + z.k + '"><span class="si">' + (RI[z.ico] ? ri(z.ico) : z.ico) + '</span><span class="sl">' + z.t + '</span><span class="sv"><span class="q">?</span></span></button>').join("");
+  const seen = new Set(["word"]);
+  function showRow(z){
+    const r = $('.size-row[data-k="' + z.k + '"]', box);
+    $(".sv", r).innerHTML = z.v + (z.u ? '<span class="su">' + z.u + "</span>" : "");
+    r.classList.add("shown");
+  }
+  function render(){
+    const word = input.value.trim(), chars = Array.from(word); let html = "", total = 0;
+    chars.forEach((ch, i) => {
+      const b = toBytes(ch); total += b.length;
+      html += '<div class="lt" style="background:' + TINT[i % TINT.length] + ';animation-delay:' + i * 40 + 'ms"><b>' + esc(ch) + "</b>" + b.map(x => "<code>" + bits(x) + "</code>").join("") + "</div>";
+    });
+    L.innerHTML = html;
+    $("#byStats").innerHTML = chars.length ? pl(chars.length, ["літера","літери","літер"]) + "<br><b>" + pl(total, ["байт","байти","байтів"]) + "</b> = " + pl(total * 8, ["біт","біти","бітів"]) : "Напиши слово";
+    const w = SIZES[1]; w.t = chars.length ? "Твоє слово «" + esc(word) + "»" : "Твоє слово"; w.v = pl(total, ["байт","байти","байтів"]);
+    $('.size-row[data-k="word"] .sl', box).innerHTML = w.t; showRow(w);
+  }
+  $("#byForm").addEventListener("submit", e => { e.preventDefault(); input.blur(); });
+  input.addEventListener("input", render);
+  $$(".size-row", box).forEach(r => r.addEventListener("click", () => {
+    const z = SIZES.find(x => x.k === r.dataset.k); if (seen.has(z.k)) return;
+    seen.add(z.k); showRow(z); Sound.pop();
+    if (seen.size === SIZES.length){ Sound.win(); happy(el); say(el, "Від 1 байта до мільярдів! Тому байти й ріжуть на пакети. Про це наступна станція."); stamp("bytes"); }
+    else if (z.k === "photo") say(el, "Одне фото — це вже мільйони байтів!");
+    else if (z.k === "video") say(el, "А хвилина відео ще в 12 разів більша за фото!");
+  }));
+  render();
+}};
+
+/* IP */
+H.ip = { init(el){
+  $$("[data-icon]", el).forEach(n => { n.outerHTML = ICON[n.dataset.icon]; });
+  $$(".tile", el).forEach(t => t.addEventListener("click", () => { t.classList.toggle("flipped"); Sound.pop(); }));
+  let signed = false;
+  async function type(node, text){ node.textContent = ""; for (const ch of text){ node.textContent += ch; Sound.click(); await wait(45); } }
+  $("#signBtn").addEventListener("click", async e => {
+    if (signed) return; signed = true; e.currentTarget.disabled = true;
+    await type($("#lfFrom"), "93.170.45.8"); $("#lfFromN").textContent = "твій дім";
+    await type($("#lfTo"), "142.250.74.14"); $("#lfToN").textContent = "YouTube";
+    $("#labelCard").classList.add("signed"); Sound.ding(); happy(el);
+    say(el, "Тепер я точно не загублюся! Кожен роутер прочитає адресу «Кому».");
+    stamp("ip");
+  });
+}};
+
+/* DNS */
+H.dns = { init(el){
+  const DB = [["youtube.com","142.250.74.14"],["google.com","142.250.74.46"],["wikipedia.org","185.15.59.224"],["roblox.com","128.116.123.3"],["minecraft.net","13.107.246.40"],["scratch.mit.edu","146.75.38.248"],["code.org","18.155.68.43"]];
+  $("#bookNames").innerHTML = DB.map(r => "<li>" + r[0] + "</li>").join("");
+  $("#bookNums").innerHTML = DB.map(r => "<li>" + r[1] + "</li>").join("");
+  $("#dnsChips").innerHTML = DB.slice(0, 6).map(r => '<button type="button">' + r[0] + "</button>").join("");
+  const input = $("#dnsInput"), book = $("#book"), res = $("#dnsResult");
+  let busy = false;
+  async function lookup(raw){
+    if (busy) return; busy = true;
+    const name = raw.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+    $$(".page li", book).forEach(li => li.classList.remove("hit"));
+    res.innerHTML = '<span class="arrow">…</span><span>Біт питає DNS-сервер про <b>' + (name || "порожнечу").replace(/[<&>]/g, "") + '</b>…</span>';
+    book.classList.remove("flipping"); void book.offsetWidth; book.classList.add("flipping");
+    Sound.whoosh(); await wait(1000); book.classList.remove("flipping");
+    const i = DB.findIndex(r => r[0] === name);
+    if (i >= 0){
+      $$("#bookNames li")[i].classList.add("hit"); $$("#bookNums li")[i].classList.add("hit");
+      res.innerHTML = '<span class="arrow">→</span><span class="res-lines"><span><code class="nm">' + name + '</code> живе за адресою</span><code>' + DB[i][1] + '</code></span>';
+      Sound.ding(); happy(el); say(el, "Знайшов! Тепер я знаю, куди летіти."); stamp("dns");
+    } else {
+      book.classList.remove("shake"); void book.offsetWidth; book.classList.add("shake");
+      res.innerHTML = '<span class="arrow">✕</span><span>Такого імені в книзі немає. Може, помилка в слові?</span>';
+      Sound.buzz(); say(el, "Хм, такого сайту я не знайшов.");
+    }
+    busy = false;
+  }
+  $("#dnsForm").addEventListener("submit", e => { e.preventDefault(); input.blur(); lookup(input.value); });
+  $$("#dnsChips button").forEach(b => b.addEventListener("click", () => { input.value = b.textContent; lookup(b.textContent); }));
+}};
+
+/* packets */
+H.packets = { init(el){
+  const scene = $("#pkScene"), box = $("#pieces");
+  const GX = 150, GY = 44;
+  const SCAT = [[30,316],[250,346],[466,306],[48,476],[258,500],[462,462]];
+  let pieces = [], expected = 1, state = "whole";
+  for (let n = 1; n <= 6; n++){
+    const col = (n - 1) % 3, row = Math.floor((n - 1) / 3);
+    const b = document.createElement("button");
+    b.className = "piece"; b.dataset.n = n; b.setAttribute("aria-label", "Пакет " + n);
+    b.style.left = (GX + col * 100) + "px"; b.style.top = (GY + row * 100) + "px";
+    b.innerHTML = '<div class="pk-in"><svg viewBox="' + col * 100 + " " + row * 100 + ' 100 100"><use href="#catpic" width="300" height="200"/></svg><span class="num">' + n + "</span></div>";
+    box.appendChild(b); pieces.push(b);
+  }
+  function scatter(){
+    const order = [3,0,5,1,4,2].sort(() => Math.random() - .5);
+    pieces.forEach((p, i) => {
+      const n = i, col = n % 3, row = Math.floor(n / 3), s = SCAT[order[i]];
+      const dx = s[0] - (GX + col * 100), dy = s[1] - (GY + row * 100), r = Math.round(Math.random() * 28 - 14);
+      p.style.transform = "translate(" + dx + "px," + dy + "px) rotate(" + r + "deg)";
+      p.classList.remove("placed");
+    });
+  }
+  function count(){ $("#pkCount").textContent = state === "whole" ? "" : "Зібрано пакетів: " + (expected - 1) + " з 6"; }
+  $("#cutBtn").addEventListener("click", async e => {
+    if (state !== "whole") return; state = "cutting"; e.currentTarget.hidden = true;
+    scene.classList.add("cut"); Sound.whoosh();
+    pieces.forEach((p, i) => { const col = i % 3, row = Math.floor(i / 3); p.style.transform = "translate(" + (col - 1) * 10 + "px," + (row - .5) * 14 + "px)"; });
+    await wait(450); scatter(); state = "play"; expected = 1; count();
+    say(el, "Ой, пакети розлетілися! Збирай: спершу №1.");
+  });
+  pieces.forEach(p => p.addEventListener("click", () => {
+    if (state !== "play" || p.classList.contains("placed")) return;
+    const n = +p.dataset.n;
+    if (n === expected){
+      p.style.transform = "none"; p.classList.add("placed"); Sound.pop(); expected++; count();
+      if (expected > 6){
+        state = "done"; scene.classList.add("done"); Sound.win(); happy(el);
+        say(el, "Кадр зібрано! Твій iPad щосекунди складає так тисячі пакетів.");
+        $("#pkAgain").hidden = false; stamp("packets");
+      }
+    } else {
+      p.classList.remove("wrong"); void p.offsetWidth; p.classList.add("wrong"); Sound.buzz();
+      say(el, "Ой, спершу пакет №" + expected + "!");
+    }
+  }));
+  $("#pkAgain").addEventListener("click", e => {
+    e.currentTarget.hidden = true; scene.classList.remove("done"); scatter(); state = "play"; expected = 1; count();
+    say(el, "Ще раз! Спершу №1.");
+  });
+}};
+
+/* routers */
+H.routers = (function(){
+  const N = {home:[64,270], r1:[178,128], r2:[178,412], r3:[300,68], r4:[300,270], r5:[300,472], r6:[422,150], r7:[422,390], server:[540,270]};
+  const E = [["home","r1"],["home","r2"],["r1","r3"],["r1","r4"],["r2","r4"],["r2","r5"],["r3","r6"],["r4","r6"],["r4","r7"],["r5","r7"],["r6","r7"],["r6","server"],["r7","server"]];
+  const cut = new Set(); let path = null, pts = [], segs = [], total = 0, pk = [], raf = 0, running = false, lastT = 0, spawnT = 0, el, edgeEls = [], layer;
+  function bfs(){
+    const adj = {}; Object.keys(N).forEach(k => adj[k] = []);
+    E.forEach((e, i) => { if (cut.has(i)) return; adj[e[0]].push(e[1]); adj[e[1]].push(e[0]); });
+    const prev = {home:null}, q = ["home"];
+    while (q.length){ const n = q.shift(); if (n === "server") break; adj[n].forEach(m => { if (!(m in prev)){ prev[m] = n; q.push(m); } }); }
+    if (!("server" in prev)) return null;
+    const p = []; for (let n = "server"; n; n = prev[n]) p.unshift(n); return p;
+  }
+  function onPath(i){ if (!path) return false; const a = E[i][0], b = E[i][1]; for (let k = 0; k < path.length - 1; k++){ if ((path[k] === a && path[k + 1] === b) || (path[k] === b && path[k + 1] === a)) return true; } return false; }
+  function recompute(){
+    path = bfs(); pk.forEach(p => p.el.remove()); pk = [];
+    edgeEls.forEach((g, i) => { g.line.classList.toggle("on", onPath(i)); g.line.classList.toggle("cut", cut.has(i)); g.sc.style.display = cut.has(i) ? "" : "none"; });
+    const st = $("#rtStatus");
+    if (path){
+      pts = path.map(n => N[n]); segs = []; total = 0;
+      for (let k = 0; k < pts.length - 1; k++){ const l = Math.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]); segs.push(l); total += l; }
+      $("#rtText").innerHTML = "Роутерів на шляху: <b>" + (path.length - 2) + "</b>";
+      st.classList.remove("blocked");
+    } else {
+      $("#rtText").textContent = "Усі шляхи перерізано! Пакети чекають…";
+      st.classList.add("blocked");
+    }
+  }
+  function posAt(d){
+    for (let k = 0; k < segs.length; k++){ if (d <= segs[k]){ const t = d / segs[k]; return [pts[k][0] + (pts[k + 1][0] - pts[k][0]) * t, pts[k][1] + (pts[k + 1][1] - pts[k][1]) * t]; } d -= segs[k]; }
+    return pts[pts.length - 1];
+  }
+  function frame(now){
+    const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+    if (path){
+      spawnT -= dt;
+      if (spawnT <= 0){ spawnT = .45; const c = svgEl("rect", {width:16, height:14, rx:3, fill:"#FF8A3D", stroke:"#16193A", "stroke-width":2.5}, layer); pk.push({el:c, d:0}); }
+      pk = pk.filter(p => { p.d += 230 * dt; if (p.d >= total){ p.el.remove(); return false; } const xy = posAt(p.d); p.el.setAttribute("x", xy[0] - 8); p.el.setAttribute("y", xy[1] - 7); return true; });
+    }
+    if (running) raf = requestAnimationFrame(frame);
+  }
+  return {
+    init(s){
+      el = s; const svg = $("#rtSvg"); let h = "";
+      svg.innerHTML = '<g id="rtEdges"></g><g id="rtNodes"></g><g id="rtPk"></g>';
+      const ge = $("#rtEdges"), gn = $("#rtNodes"); layer = $("#rtPk");
+      E.forEach((e, i) => {
+        const a = N[e[0]], b = N[e[1]];
+        const g = svgEl("g", {}, ge);
+        const line = svgEl("line", {x1:a[0], y1:a[1], x2:b[0], y2:b[1], "class":"edge"}, g);
+        const hit = svgEl("line", {x1:a[0], y1:a[1], x2:b[0], y2:b[1], "class":"hit"}, g);
+        const sc = svgEl("text", {x:(a[0] + b[0]) / 2 - 12, y:(a[1] + b[1]) / 2 + 9, "class":"scis"}, g); sc.textContent = "✂"; sc.style.display = "none";
+        hit.addEventListener("click", () => {
+          const was = onPath(i);
+          if (cut.has(i)) cut.delete(i); else cut.add(i);
+          Sound[cut.has(i) ? "buzz" : "pop"](); recompute();
+          if (cut.has(i) && was && path){ say(el, "Кабель перерізано, а пакети вже летять в обхід!"); happy(el); stamp("routers"); }
+          else if (cut.has(i) && !path){ say(el, "Ой-ой, шляху немає. Натисни «Полагодити» або торкнись червоного кабелю."); }
+          else if (cut.has(i)){ say(el, "Цей кабель не на шляху, тож пакетам байдуже. Переріж помаранчевий!"); }
+        });
+        edgeEls.push({line:line, sc:sc});
+      });
+      Object.keys(N).forEach(k => {
+        const p = N[k];
+        if (k === "home") h += place(ICON.house, p[0] - 32, p[1] - 30, 64, 59) + '<text x="' + p[0] + '" y="' + (p[1] + 48) + '" text-anchor="middle" font-family="Nunito, Arial" font-weight="900" font-size="16" fill="#16193A">Ти</text>';
+        else if (k === "server") h += place(ICON.rack, p[0] - 24, p[1] - 33, 48, 66) + '<text x="' + p[0] + '" y="' + (p[1] + 54) + '" text-anchor="middle" font-family="Nunito, Arial" font-weight="900" font-size="16" fill="#16193A">YouTube</text>';
+        else h += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="30" fill="#FFF3D1" stroke="#16193A" stroke-width="3"/>' + place(ICON.router, p[0] - 23, p[1] - 17, 46, 32);
+      });
+      gn.innerHTML = h;
+      $("#rtFix").addEventListener("click", () => { cut.clear(); recompute(); Sound.ding(); say(el, "Усі кабелі цілі. Можна різати знову!"); });
+      recompute();
+    },
+    enter(){ running = true; lastT = performance.now(); raf = requestAnimationFrame(frame); },
+    leave(){ running = false; cancelAnimationFrame(raf); }
+  };
+})();
+
+/* terminal */
+H.terminal = { init(el){
+  const body = $("#termBody"), note = $("#termNote");
+  let busy = false;
+  const PROMPT = '<span class="p">учень@Mac ~ %</span> ';
+  const PING = ["PING youtube.com (142.250.74.14): 56 data bytes",
+    '64 bytes from 142.250.74.14: icmp_seq=0 ttl=117 <span class="hl">time=18.4 ms</span>',
+    '64 bytes from 142.250.74.14: icmp_seq=1 ttl=117 <span class="hl">time=17.9 ms</span>',
+    '64 bytes from 142.250.74.14: icmp_seq=2 ttl=117 <span class="hl">time=19.2 ms</span>',
+    '<span class="dim">--- 3 packets transmitted, 3 packets received, 0.0% packet loss</span>'];
+  const TRACE = ['traceroute to youtube.com (142.250.74.14), 64 hops max',
+    ' <span class="hl">1</span>  router.home (192.168.0.1)  2.1 ms',
+    ' <span class="hl">2</span>  10.20.0.1  6.8 ms',
+    ' <span class="hl">3</span>  isp-core (93.170.40.1)  8.3 ms',
+    ' <span class="hl">4</span>  ix-exchange (194.50.85.10)  9.0 ms',
+    ' <span class="hl">5</span>  <span class="dim">* * *</span>',
+    ' <span class="hl">6</span>  108.170.250.33  15.6 ms',
+    ' <span class="hl">7</span>  142.250.224.89  17.4 ms',
+    ' <span class="hl">8</span>  142.250.74.14  18.2 ms'];
+  function clear(){ body.innerHTML = PROMPT + '<span class="caret"></span>'; note.classList.remove("show"); }
+  async function run(cmd, out, msg){
+    if (busy) return; busy = true; note.classList.remove("show");
+    if (body.textContent.length > 600) clear();
+    $(".caret", body) && $(".caret", body).remove();
+    const c = document.createElement("span"); c.className = "c"; body.appendChild(c);
+    for (const ch of cmd){ c.textContent += ch; Sound.click(); await wait(55); }
+    body.insertAdjacentHTML("beforeend", "\n");
+    for (const line of out){ await wait(cmd.indexOf("trace") === 0 ? 420 : 520); body.insertAdjacentHTML("beforeend", line + "\n"); }
+    body.insertAdjacentHTML("beforeend", PROMPT + '<span class="caret"></span>');
+    note.textContent = msg; note.classList.add("show"); Sound.ding(); busy = false;
+  }
+  $("#runPing").addEventListener("click", () => run("ping -c 3 youtube.com", PING, "time = 18 ms: пакет злітав до YouTube і назад за 18 тисячних секунди!"));
+  $("#runTrace").addEventListener("click", () => { clear(); run("traceroute youtube.com", TRACE, "Кожен рядок — роутер на шляху. * * * означає, що роутер мовчить, так буває."); });
+  $("#termClear").addEventListener("click", () => { if (!busy) clear(); });
+  clear();
+}};
+
+/* ocean */
+H.ocean = { init(el){
+  const svg = $("#oceanSvg");
+  let s = '<defs>' +
+    '<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BFE3FF"/><stop offset="1" stop-color="#EAF6FF"/></linearGradient>' +
+    '<linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A8BD8"/><stop offset=".45" stop-color="#11497F"/><stop offset="1" stop-color="#061A33"/></linearGradient>' +
+    '<linearGradient id="ray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
+    '</defs>';
+  s += '<rect width="1200" height="160" fill="url(#sky)"/><rect y="150" width="1200" height="650" fill="url(#sea)"/>';
+  s += '<path d="M560 150 L640 150 L760 560 L600 560Z M820 150 L870 150 L1000 520 L880 520Z M1000 150 L1030 150 L1130 460 L1060 460Z" fill="url(#ray)"/>';
+  s += '<path d="M0 152 Q 25 142 50 152 T 100 152 T 150 152 T 200 152 T 250 152 T 300 152 T 350 152 T 400 152 T 450 152 T 500 152 T 550 152 T 600 152 T 650 152 T 700 152 T 750 152 T 800 152 T 850 152 T 900 152 T 950 152 T 1000 152 T 1050 152 T 1100 152 T 1150 152 T 1200 152" fill="none" stroke="#fff" stroke-width="4" stroke-opacity=".8"/>';
+  // satellite
+  s += '<g transform="translate(1100 58) rotate(-18)"><rect x="-34" y="-9" width="22" height="18" fill="#2F80ED" stroke="#16193A" stroke-width="3"/><rect x="12" y="-9" width="22" height="18" fill="#2F80ED" stroke="#16193A" stroke-width="3"/><rect x="-12" y="-13" width="24" height="26" rx="5" fill="#E9EDF7" stroke="#16193A" stroke-width="3"/><line x1="0" y1="13" x2="0" y2="22" stroke="#16193A" stroke-width="3"/></g>';
+  // buoy
+  s += '<g transform="translate(560 150)"><path d="M-16 0 L16 0 L10 -26 L-10 -26Z" fill="#EF5B5B" stroke="#16193A" stroke-width="3"/><rect x="-10" y="-16" width="20" height="6" fill="#fff"/><line x1="0" y1="-26" x2="0" y2="-40" stroke="#16193A" stroke-width="3"/><circle cx="0" cy="-42" r="4" fill="#FFC93C" stroke="#16193A" stroke-width="2"/></g>';
+  // ship laying cable
+  s += '<path d="M905 160 C 900 260, 960 420, 1000 700" fill="none" stroke="#0B0F1E" stroke-width="5" stroke-dasharray="10 8" opacity=".75"/>';
+  s += '<g class="ship"><g transform="translate(800 92)">' +
+    '<path d="M0 40 L210 40 L190 74 L22 74 Z" fill="#EF5B5B" stroke="#16193A" stroke-width="4" stroke-linejoin="round"/>' +
+    '<rect x="20" y="58" width="170" height="6" fill="#fff" opacity=".8"/>' +
+    '<rect x="30" y="12" width="64" height="28" rx="4" fill="#fff" stroke="#16193A" stroke-width="4"/>' +
+    '<rect x="40" y="20" width="10" height="9" fill="#BFE3FF" stroke="#16193A" stroke-width="2"/><rect x="56" y="20" width="10" height="9" fill="#BFE3FF" stroke="#16193A" stroke-width="2"/><rect x="72" y="20" width="10" height="9" fill="#BFE3FF" stroke="#16193A" stroke-width="2"/>' +
+    '<rect x="44" y="-6" width="14" height="18" fill="#FFC93C" stroke="#16193A" stroke-width="3"/>' +
+    '<circle cx="140" cy="24" r="16" fill="#FFC93C" stroke="#16193A" stroke-width="4"/><circle cx="140" cy="24" r="6" fill="#16193A"/>' +
+    '<path d="M170 40 L196 -6 L206 -2" fill="none" stroke="#16193A" stroke-width="4" stroke-linecap="round"/>' +
+    '</g></g>';
+  // fish
+  s += '<g class="fish"><g transform="translate(0 300)"><path d="M0 0 q 16 -12 32 0 q -16 12 -32 0z" fill="#FFC93C" stroke="#16193A" stroke-width="2.5"/><path d="M0 0 l -10 -8 v 16z" fill="#FFC93C" stroke="#16193A" stroke-width="2.5"/><circle cx="24" cy="-2" r="2" fill="#16193A"/></g></g>';
+  s += '<g class="fish f2"><g transform="translate(0 560) scale(.8)"><path d="M0 0 q 16 -12 32 0 q -16 12 -32 0z" fill="#FF9FB2" stroke="#16193A" stroke-width="2.5"/><path d="M0 0 l -10 -8 v 16z" fill="#FF9FB2" stroke="#16193A" stroke-width="2.5"/><circle cx="24" cy="-2" r="2" fill="#16193A"/></g></g>';
+  // seafloor + kelp
+  s += '<path class="kelp" d="M140 700 C 120 640, 160 610, 140 560 C 125 520, 150 500, 145 470" fill="none" stroke="#2BAA6B" stroke-width="9" stroke-linecap="round"/>';
+  s += '<path class="kelp" d="M380 710 C 360 660, 400 630, 380 590" fill="none" stroke="#22A867" stroke-width="8" stroke-linecap="round" style="animation-delay:-2s"/>';
+  s += '<path class="kelp" d="M1080 705 C 1060 650, 1100 620, 1078 570 C 1066 540, 1090 520, 1085 500" fill="none" stroke="#2BAA6B" stroke-width="9" stroke-linecap="round" style="animation-delay:-1s"/>';
+  s += '<path d="M0 700 C 200 668, 380 732, 600 704 S 1000 668, 1200 708 V800 H0Z" fill="#203554" stroke="#16193A" stroke-width="3"/>';
+  s += '<ellipse cx="260" cy="722" rx="46" ry="16" fill="#2C4469"/><ellipse cx="760" cy="712" rx="60" ry="18" fill="#2C4469"/>';
+  // cable
+  s += '<path d="M-10 704 C 200 674, 380 736, 600 709 S 1000 674, 1210 712" fill="none" stroke="#0B0F1E" stroke-width="13" stroke-linecap="round"/>';
+  s += '<path class="cable-glow" d="M-10 704 C 200 674, 380 736, 600 709 S 1000 674, 1210 712" fill="none" stroke="#7FE8FF" stroke-width="5" stroke-linecap="round"/>';
+  // depth ruler
+  s += '<g font-family="Nunito, Arial" font-weight="800" font-size="13" fill="#CFE6FF">';
+  [["0 м",165],["2 км",300],["4 км",435],["6 км",570],["8 км",690]].forEach(t => { s += '<line x1="1150" x2="1170" y1="' + t[1] + '" y2="' + t[1] + '" stroke="#CFE6FF" stroke-width="3"/><text x="1144" y="' + (t[1] + 5) + '" text-anchor="end">' + t[0] + '</text>'; });
+  s += '<line x1="1170" y1="165" x2="1170" y2="690" stroke="#CFE6FF" stroke-width="3"/></g>';
+  // shark
+  s += '<g class="shark" id="shark"><g transform="translate(-70 -24)">' +
+    '<path d="M0 26 C 30 2, 100 0, 140 22 C 110 40, 40 46, 0 26 Z" fill="#8FA3BF" stroke="#16193A" stroke-width="3.5" stroke-linejoin="round"/>' +
+    '<path d="M58 10 L74 -14 L84 12" fill="#8FA3BF" stroke="#16193A" stroke-width="3.5" stroke-linejoin="round"/>' +
+    '<path d="M0 26 L-22 6 L-16 26 L-22 46 Z" fill="#8FA3BF" stroke="#16193A" stroke-width="3.5" stroke-linejoin="round"/>' +
+    '<path d="M50 34 C 70 42, 100 40, 130 26" fill="#E9EEF6"/>' +
+    '<circle cx="118" cy="20" r="3.5" fill="#16193A"/>' +
+    '<path d="M112 31 l4 4 4 -4 4 4 4 -4" fill="none" stroke="#16193A" stroke-width="2"/>' +
+    '<path d="M92 18 v10 M98 17 v10 M104 17 v10" stroke="#16193A" stroke-width="2" stroke-linecap="round"/>' +
+    '</g></g>';
+  svg.innerHTML = s;
+  let bb = "";
+  for (let i = 0; i < 16; i++){ const x = 520 + Math.random() * 640, sz = 6 + Math.random() * 10; bb += '<span style="left:' + x.toFixed(0) + 'px;width:' + sz.toFixed(0) + 'px;height:' + sz.toFixed(0) + 'px;animation-delay:-' + (Math.random() * 7).toFixed(1) + 's;animation-duration:' + (5 + Math.random() * 4).toFixed(1) + 's"></span>'; }
+  $("#bubbles").innerHTML = bb;
+  const F = {
+    ship:["Корабель-кабелеукладач","Кабелі кладуть спеціальні кораблі. Вони розмотують кабель з велетенських котушок і опускають на дно: тисячі кілометрів за одну подорож."],
+    cable:["Завтовшки як шланг","На великій глибині кабель завтовшки як садовий шланг. Усередині кілька скляних волокон, тонших за волосину, а навколо захисні шари."],
+    shark:["Акули й кабелі","Підводні камери бачили, як акули кусали кабелі. Чому, ніхто точно не знає. Тепер у небезпечних місцях кабелі мають міцну броню."],
+    depth:["Дуже глибоко","Деякі кабелі лежать на глибині близько 8 кілометрів. Це майже як висота Евересту, тільки вниз!"],
+    count:["Скільки їх?","Під водою прокладено понад 500 кабелів. Разом це понад 1,4 мільйона кілометрів: ними можна 35 разів обмотати Землю."],
+    sat:["А чому не супутники?","Супутники теж дають інтернет, але між континентами понад 95% даних біжить саме кабелями. Так швидше, і даних влазить набагато більше."]
+  };
+  const HS = [["ship",900,74],["cable",690,700],["shark",780,370],["depth",1170,430],["count",560,96],["sat",1100,110]];
+  const seen = new Set();
+  function show(k){
+    $("#factBox").innerHTML = "<b>" + F[k][0] + "</b><p>" + F[k][1] + "</p>";
+    const hs = $('.hs[data-k="' + k + '"]'); if (hs) hs.classList.add("seen");
+    Sound.pop(); seen.add(k); $("#factCount").textContent = "Відкрито: " + seen.size + " з 6";
+    if (seen.size >= 3) stamp("ocean");
+  }
+  $("#hotspots").innerHTML = HS.map(h => '<button class="hs" data-k="' + h[0] + '" style="left:' + h[1] + 'px;top:' + h[2] + 'px" aria-label="Факт">!</button>').join("");
+  $$(".hs").forEach(b => b.addEventListener("click", () => show(b.dataset.k)));
+  $("#shark").addEventListener("click", () => show("shark"));
+}};
+
+/* datacenter */
+H.datacenter = { init(el){
+  const svg = $("#dcSvg"), scene = $("#dcScene"), panel = $("#dcPanel");
+  const L = ["A","B","C","D"];
+  let s = '<defs><linearGradient id="beamG" x1="0" x2="1"><stop offset="0" stop-color="#7FE8FF" stop-opacity="0"/><stop offset=".5" stop-color="#7FE8FF" stop-opacity=".55"/><stop offset="1" stop-color="#7FE8FF" stop-opacity="0"/></linearGradient></defs>';
+  s += '<path d="M0 492 H600 V560 H0Z" fill="#232C4D"/>';
+  for (let x = 0; x < 600; x += 50) s += '<line x1="' + x + '" y1="492" x2="' + (x - 20) + '" y2="560" stroke="#323D66" stroke-width="2"/>';
+  s += '<line x1="0" y1="522" x2="600" y2="522" stroke="#323D66" stroke-width="2"/>';
+  for (let r = 0; r < 4; r++){
+    const x = 26 + r * 140;
+    s += '<g class="rack" data-r="' + r + '"><rect class="rack-frame" x="' + x + '" y="60" width="124" height="432" rx="10" fill="#2A3555" stroke="#0B0F1E" stroke-width="4"/>';
+    s += '<text x="' + (x + 62) + '" y="46" text-anchor="middle" font-family="Unbounded, Arial" font-weight="800" font-size="18" fill="#AFC0EE">' + L[r] + '</text>';
+    for (let u = 0; u < 9; u++){
+      const y = 74 + u * 46;
+      s += '<g class="unit" data-u="' + u + '"><rect class="u" x="' + (x + 10) + '" y="' + y + '" width="104" height="38" rx="5" fill="#141A33" stroke="#0B0F1E" stroke-width="2"/>';
+      for (let v = 0; v < 5; v++) s += '<line x1="' + (x + 50 + v * 10) + '" y1="' + (y + 10) + '" x2="' + (x + 50 + v * 10) + '" y2="' + (y + 28) + '" stroke="#2A3555" stroke-width="3" stroke-linecap="round"/>';
+      const c1 = Math.random() > .25 ? "#2BE38A" : "#FFC93C";
+      s += '<circle class="led" cx="' + (x + 22) + '" cy="' + (y + 13) + '" r="4" fill="' + c1 + '" style="animation-delay:-' + (Math.random() * 1.2).toFixed(2) + 's;animation-duration:' + (.5 + Math.random()).toFixed(2) + 's"/>';
+      s += '<circle class="led" cx="' + (x + 34) + '" cy="' + (y + 13) + '" r="4" fill="#2BE38A" style="animation-delay:-' + (Math.random() * 1.2).toFixed(2) + 's"/>';
+      s += '<rect x="' + (x + 18) + '" y="' + (y + 23) + '" width="22" height="5" rx="2.5" fill="#2A3555"/></g>';
+    }
+    s += '</g>';
+  }
+  for (let k = 0; k < 6; k++){ const x = 96 + k * 84; s += '<g class="air" style="animation-delay:-' + (k * .37).toFixed(2) + 's"><path d="M' + x + ' 548 v-30 m-8 8 l8 -8 8 8" fill="none" stroke="#7FE8FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>'; }
+  s += '<rect class="beam" x="-60" y="56" width="60" height="440" fill="url(#beamG)"/>';
+  svg.innerHTML = s;
+  const VIDS = ["динозаври-для-дітей.mp4","як-скласти-кубик.mp4","мультик-про-космос.mp4","смішні-собаки.mp4","майнкрафт-будиночок.mp4","вулкан-вибух.mp4"];
+  function open(r, u, mine){
+    const pick = VIDS.slice().sort(() => Math.random() - .5).slice(0, 3);
+    let list = mine ? '<li class="mine"><span>кіт-піаніст.mp4</span><span>ТВОЄ ВІДЕО ✓</span></li>' : "";
+    list += pick.slice(0, mine ? 2 : 3).map(v => "<li><span>" + v + "</span><span>▶</span></li>").join("");
+    list += '<li><span>…і ще ' + (40000 + Math.floor(Math.random() * 9000)).toLocaleString("uk-UA") + ' відео</span><span></span></li>';
+    panel.innerHTML = '<h4><span>Шафа ' + L[r] + ' · Сервер ' + (u + 1) + '</span><button class="x" aria-label="Закрити">✕</button></h4><ul>' + list + "</ul>";
+    panel.classList.add("open"); Sound.pop();
+    $(".x", panel).addEventListener("click", () => panel.classList.remove("open"));
+    if (mine){ happy(el); say(el, "Ось воно! Сервер надсилає це відео тобі пакетами."); stamp("datacenter"); }
+    else say(el, "Тут тисячі чужих відео. Натисни «Знайти моє відео»!");
+  }
+  $$(".rack", svg).forEach(g => g.addEventListener("click", e => {
+    const r = +g.dataset.r; const unit = e.target.closest(".unit"); const u = unit ? +unit.dataset.u : Math.floor(Math.random() * 9);
+    open(r, u, r === 2 && u === 5);
+  }));
+  $("#findBtn").addEventListener("click", async e => {
+    const b = e.currentTarget; b.disabled = true; panel.classList.remove("open");
+    $$(".unit.found", svg).forEach(n => n.classList.remove("found"));
+    scene.classList.remove("scanning"); void scene.getBoundingClientRect(); scene.classList.add("scanning"); Sound.whoosh();
+    say(el, "Шукаю серед тисяч серверів…");
+    await wait(1900); scene.classList.remove("scanning");
+    const target = $('.rack[data-r="2"] .unit[data-u="5"]', svg); target.classList.add("found"); Sound.ding();
+    await wait(400); open(2, 5, true); b.disabled = false;
+  });
+}};
+
+/* way back */
+H.back = (function(){
+  const STOPS = [["iPad",70,"#BFE3FF","ipad"],["Роутер",225,"#C9F1EC","router"],["Провайдер",380,"#FFD2E1","rack"],["DNS",535,"#D5E6FF","book"],["Роутери",690,"#FFEFC2","router"],["Океан",845,"#CFE6FF","wave"],["YouTube",1005,"#FFD2D2","play"]];
+  let el, running = false, raf = 0;
+  return {
+    init(s){
+      el = s; const svg = $("#jSvg");
+      let h = '<line x1="70" y1="62" x2="1005" y2="62" stroke="#FF8A3D" stroke-width="6" stroke-dasharray="2 14" stroke-linecap="round"/>' +
+        '<line x1="70" y1="256" x2="1005" y2="256" stroke="#2BAA6B" stroke-width="6" stroke-dasharray="2 14" stroke-linecap="round"/>' +
+        '<text x="540" y="26" text-anchor="middle" font-family="Nunito, Arial" font-weight="900" font-size="15" fill="#E2632A">ЗАПИТ: «ДАЙ ВІДЕО» →</text>' +
+        '<text x="540" y="288" text-anchor="middle" font-family="Nunito, Arial" font-weight="900" font-size="15" fill="#22A867">← ПАКЕТИ З ВІДЕО</text>';
+      STOPS.forEach((st, i) => {
+        h += '<g class="jstop" data-i="' + i + '"><line x1="' + st[1] + '" y1="80" x2="' + st[1] + '" y2="242" stroke="#C9D5EC" stroke-width="3" stroke-dasharray="4 6"/>' +
+          '<circle class="ring" cx="' + st[1] + '" cy="140" r="42" fill="' + st[2] + '" stroke="#16193A" stroke-width="3"/>';
+        if (RI[st[3]]) h += '<g transform="translate(' + (st[1] - 18) + ' 122) scale(1.5)" fill="none" stroke="#16193A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + RI[st[3]] + '</g>';
+        else h += place(ICON[st[3]], st[1] - 26, 118, 52, 44);
+        h += '<text x="' + st[1] + '" y="208" text-anchor="middle" font-family="Nunito, Arial" font-weight="900" font-size="16" fill="#16193A">' + st[0] + '</text></g>';
+      });
+      h += '<g id="jPk"></g><g id="jBit">' + place(bitSVG(), -26, -30, 52, 56) + '</g>';
+      svg.innerHTML = h;
+      $("#jBit").setAttribute("transform", "translate(70 62)");
+      $("#runBack").addEventListener("click", () => this.run());
+    },
+    run(){
+      if (running) return; running = true; $("#runBack").disabled = true;
+      const bit = $("#jBit"), pkG = $("#jPk"), stops = $$(".jstop", el), timer = $("#timer");
+      pkG.innerHTML = ""; stops.forEach(s => s.classList.remove("lit")); $("#reveal").classList.remove("show");
+      const pks = []; for (let i = 0; i < 10; i++) pks.push(svgEl("rect", {width:18, height:16, rx:3, fill: i % 2 ? "#2BAA6B" : "#FF8A3D", stroke:"#16193A", "stroke-width":2.5, x:-40, y:-40}, pkG));
+      const T = 6400, t0 = performance.now(); Sound.whoosh();
+      const step = now => {
+        const t = now - t0, k = Math.min(1, t / T);
+        timer.textContent = (k * .1).toFixed(3).replace(".", ",") + " с";
+        if (t < 3000){
+          const x = 70 + (1005 - 70) * (t / 3000); bit.setAttribute("transform", "translate(" + x + " 62)");
+          stops.forEach((s, i) => { if (x >= STOPS[i][1] - 5) s.classList.add("lit"); });
+        } else {
+          bit.setAttribute("transform", "translate(1005 62)");
+          pks.forEach((p, i) => {
+            const kk = clamp((t - 3000 - i * 140) / 2700, 0, 1);
+            const x = 1005 - (1005 - 70) * kk; p.setAttribute("x", x - 9); p.setAttribute("y", 248 + (i % 3 - 1) * 5);
+            if (kk === 1) p.setAttribute("opacity", 0);
+          });
+        }
+        if (k < 1) raf = requestAnimationFrame(step);
+        else { running = false; $("#runBack").disabled = false; $("#runBack").textContent = "Ще раз ▶"; this.reveal(); }
+      };
+      raf = requestAnimationFrame(step);
+    },
+    reveal(){
+      const g = store.get("guess", null);
+      const M = {
+        "1":"Твоя відповідь: 1. Насправді їх кілька десятків! iPad, роутер удома, роутери провайдера, DNS-сервер, роутери по дорозі й сервери YouTube.",
+        "10":"Твоя відповідь: 10. Тепло! Насправді їх кілька десятків: роутер удома, роутери провайдера, DNS-сервер, роутери по дорозі й сервери YouTube.",
+        "100":"Твоя відповідь: 100. Дуже близько! Зазвичай на шляху кілька десятків пристроїв, а пакети довгого відео можуть іти різними шляхами, тож їх стає ще більше.",
+        "1000+":"Твоя відповідь: 1000+. Для одного шляху забагато, але якщо порахувати всі сервери YouTube, що тримають відео напоготові, то ти правий!"
+      };
+      $("#reveal").textContent = g ? M[g] : "Ти ще не вгадав на слайді «Загадка». Повернись і обери відповідь!";
+      $("#reveal").classList.add("show"); Sound.win(); stamp("back");
+    },
+    leave(){ cancelAnimationFrame(raf); running = false; $("#runBack").disabled = false; }
+  };
+})();
+
+/* safety */
+H.safety = { init(el){
+  const cards = $$(".fcard", el);
+  cards.forEach(c => c.addEventListener("click", () => {
+    c.classList.toggle("flipped"); Sound.pop();
+    c.dataset.seen = "1";
+    if (cards.every(x => x.dataset.seen)){ happy(el); stamp("safety"); }
+  }));
+}};
+
+/* quiz */
+H.quiz = (function(){
+  const Q = [
+    {q:"Чим Wi-Fi передає дані від роутера до iPad?", a:["Радіохвилями","Звуком, який ми не чуємо","Тоненькими невидимими дротиками"], ok:0, hint:"Згадай станцію Wi-Fi: від роутера розходилися хвилі."},
+    {q:"Що робить DNS?", a:["Охолоджує сервери","Знаходить IP-адресу за назвою сайту","Розрізає відео на шматочки"], ok:1, hint:"Це телефонна книга інтернету."},
+    {q:"Навіщо відео ріжуть на пакети?", a:["Щоб влізло в поштовий конверт","Так ніхто не робить","Маленькі шматочки легше доставити, навіть різними шляхами"], ok:2, hint:"Згадай кота-піаніста з шести шматочків."},
+    {q:"Як дані потрапляють з Європи в Америку?", a:["Кабелями по дну океану","Літаком щоночі","Через антену на Місяці"], ok:0, hint:"Згадай акулу!"}
+  ];
+  let i = 0, score = 0, miss = false, el, box;
+  function render(){
+    if (i >= Q.length){
+      box.innerHTML = '<div class="qprog">' + Q.map(() => '<i class="ok"></i>').join("") + '</div><div class="qend"><b>' + score + " з " + Q.length + '</b><div class="qtext">' + (score === Q.length ? "Ідеально! Ти справжній мандрівник." : "Чудова робота, мандрівнику!") + '</div><button class="btn" id="qAgain">Пройти ще раз</button></div>';
+      $("#qAgain", box).addEventListener("click", () => { i = 0; score = 0; render(); });
+      say(el, "Квіз пройдено! Тримай штамп."); Sound.win(); happy(el); stamp("quiz");
+      return;
+    }
+    miss = false; const q = Q[i];
+    box.innerHTML = '<div class="qprog">' + Q.map((_, k) => '<i class="' + (k < i ? "ok" : k === i ? "cur" : "") + '"></i>').join("") + '</div>' +
+      '<div class="qnum">Питання ' + (i + 1) + " / " + Q.length + '</div><div class="qtext">' + q.q + '</div><div class="qopts">' +
+      q.a.map((t, k) => '<button class="qopt" data-k="' + k + '"><i>' + "АБВ"[k] + "</i><span>" + t + "</span></button>").join("") + "</div>";
+    say(el, "Обирай відповідь!");
+    $$(".qopt", box).forEach(b => b.addEventListener("click", () => {
+      const k = +b.dataset.k;
+      if (k === q.ok){
+        b.classList.add("right"); $$(".qopt", box).forEach(x => x.disabled = true); Sound.ding();
+        if (!miss) score++;
+        say(el, "Так! Правильно.");
+        const n = document.createElement("button"); n.className = "btn qnext"; n.textContent = i === Q.length - 1 ? "Результат →" : "Наступне →";
+        n.addEventListener("click", () => { i++; render(); }); box.appendChild(n);
+      } else {
+        miss = true; b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad"); Sound.buzz(); say(el, "Не зовсім. Підказка: " + q.hint);
+      }
+    }));
+  }
+  return { init(s){ el = s; box = $("#quizScene"); render(); } };
+})();
+
+/* passport */
+H.passport = (function(){
+  let armed = false;
+  function render(){
+    const rot = k => ((k.charCodeAt(0) * 7 + k.length * 13) % 24) - 12;
+    $("#stamps").innerHTML = STAMP_KEYS.map(k => '<div class="st">' + (stamps.has(k) ? stampSVG(k, rot(k)) : '<div class="empty">' + STAMPS[k].label + "</div>") + "</div>").join("");
+    $("#ppCount").textContent = stamps.size + " з " + STAMP_KEYS.length;
+    $("#ppHint").textContent = stamps.size === STAMP_KEYS.length ? "Усі штампи зібрано. Ти справжній мандрівник!" : "Порожні кружечки: станції, де ще чекає штамп.";
+  }
+  return {
+    init(){
+      $("#ppDate").textContent = new Date().toLocaleDateString("uk-UA");
+      const name = $("#ppName"); name.value = store.get("name", "");
+      name.addEventListener("input", () => store.set("name", name.value));
+      $("#resetBtn").addEventListener("click", e => {
+        const b = e.currentTarget;
+        if (!armed){ armed = true; b.textContent = "Точно? Натисни ще раз"; setTimeout(() => { armed = false; b.textContent = "Почати знову"; }, 3000); return; }
+        armed = false; b.textContent = "Почати знову";
+        stamps = new Set(); store.set("stamps", []); store.set("guess", null); store.set("name", ""); name.value = "";
+        try { location.hash = ""; } catch(_){}
+        location.reload();
+      });
+    },
+    enter(){ render(); }
+  };
+})();
+
+/* ================= BOOT ================= */
+$$("[data-bit]").forEach(n => { n.insertAdjacentHTML("afterbegin", bitSVG()); });
+$$("[data-ri]").forEach(n => { n.innerHTML = ri(n.dataset.ri); });
+$$("[data-icon]").forEach(n => { if (ICON[n.dataset.icon] && !n.closest(".dev") && !n.closest('[data-key="ip"]')) n.innerHTML = ICON[n.dataset.icon]; });
+
+buildRoute();
+slides.forEach(s => { const h = H[s.dataset.key]; if (h && h.init) h.init(s); });
+
+/* theory drawer */
+const thDrawer = $("#thDrawer"), thBack = $("#thBack"), thBody = $("#thBody");
+let thOpen = false;
+function openTheory(slide){
+  const t = $("template.theory", slide); if (!t) return;
+  thBody.innerHTML = ""; thBody.appendChild(t.content.cloneNode(true)); thBody.scrollTop = 0;
+  thDrawer.style.setProperty("--th-c", slide.style.getPropertyValue("--c"));
+  thDrawer.classList.add("open"); thBack.classList.add("open"); thDrawer.setAttribute("aria-hidden", "false");
+  thOpen = true; Sound.pop(); setTimeout(() => $("#thClose").focus(), 60);
+}
+function closeTheory(){
+  if (!thOpen) return;
+  thDrawer.classList.remove("open"); thBack.classList.remove("open"); thDrawer.setAttribute("aria-hidden", "true"); thOpen = false;
+}
+$("#thClose").addEventListener("click", closeTheory);
+thBack.addEventListener("click", closeTheory);
+slides.forEach(s => {
+  const k = $(".kicker", s); if (!k || !$("template.theory", s)) return;
+  const row = document.createElement("div"); row.className = "kick-row";
+  k.parentNode.insertBefore(row, k); row.appendChild(k);
+  const b = document.createElement("button"); b.className = "more-btn"; b.innerHTML = ri("book") + (s.dataset.key === "passport" ? "Словничок" : "Детальніше");
+  b.addEventListener("click", () => openTheory(s)); row.appendChild(b);
+});
+
+$$("[data-next]").forEach(b => b.addEventListener("click", next));
+$("#nextBtn").addEventListener("click", next);
+$("#prevBtn").addEventListener("click", prev);
+$("#homeBtn").addEventListener("click", () => go(0));
+$("#brandBtn").addEventListener("click", () => go(0));
+$("#passBtn").addEventListener("click", () => go(slides.findIndex(s => s.dataset.key === "passport")));
+
+function paintSound(){ $("#soundBtn").innerHTML = ri(Sound.on ? "soundOn" : "soundOff"); $("#soundBtn").setAttribute("aria-label", Sound.on ? "Вимкнути звук" : "Увімкнути звук"); }
+$("#soundBtn").addEventListener("click", () => { Sound.toggle(); paintSound(); });
+paintSound();
+
+function toggleFS(){
+  const d = document, r = d.documentElement;
+  try {
+    if (d.fullscreenElement || d.webkitFullscreenElement){ (d.exitFullscreen || d.webkitExitFullscreen).call(d); }
+    else { const p = (r.requestFullscreen || r.webkitRequestFullscreen); if (p){ const res = p.call(r); if (res && res.catch) res.catch(() => {}); } }
+  } catch(e){}
+}
+$("#fsBtn").addEventListener("click", toggleFS);
+
+document.addEventListener("keydown", e => {
+  if (thOpen){ if (e.key === "Escape") closeTheory(); return; }
+  const t = e.target;
+  if (t.closest && (t.closest("input,textarea") || t.closest('[role="slider"]'))) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ e.preventDefault(); next(); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ e.preventDefault(); prev(); }
+  else if (e.key === "Home"){ e.preventDefault(); go(0); }
+  else if (e.key === " " && !(t.closest && t.closest("button"))){ e.preventDefault(); next(); }
+  else if (e.code === "KeyF"){ toggleFS(); }
+  else if (e.code === "KeyM"){ Sound.toggle(); paintSound(); }
+});
+
+let sw = null;
+viewport.addEventListener("pointerdown", e => {
+  Sound.unlock && Sound.unlock();
+  if (e.pointerType === "mouse"){ sw = null; return; }
+  if (e.target.closest("[data-noswipe],button,input,a")){ sw = null; return; }
+  sw = {x:e.clientX, y:e.clientY, t:Date.now()};
+});
+viewport.addEventListener("pointerup", e => {
+  if (!sw) return;
+  const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+  if (Math.abs(dx) > 60 && Math.abs(dy) < 70 && Date.now() - sw.t < 800){ if (dx < 0) next(); else prev(); }
+  sw = null;
+});
+
+window.addEventListener("resize", () => { fit(); updateChrome(); });
+if (window.ResizeObserver) new ResizeObserver(() => { fit(); updateChrome(); }).observe(viewport);
+fit();
+const m = /^#s(\d+)$/.exec(location.hash || "");
+go(m ? clamp(+m[1] - 1, 0, slides.length - 1) : 0);
+booted = true;
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateChrome);
+})();
+</script>

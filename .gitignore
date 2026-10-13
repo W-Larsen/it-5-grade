@@ -1,0 +1,5 @@
+# Word / Office lock files
+~$*
+*.tmp
+.DS_Store
+Thumbs.db
