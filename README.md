@@ -86,7 +86,10 @@
 
 ## Файли
 
-Опублікована версія сайту (приватне посилання): https://claude.ai/artifact/P5hV7NPwVHqWVs1ejpT6uv
+Сайт курсу (GitHub Pages, публічний): https://w-larsen.github.io/it-5-grade/ — урок 1: https://w-larsen.github.io/it-5-grade/lesson-01-internet/
+Деплой автоматичний: кожен пуш у `main` запускає `.github/workflows/pages.yml` (головна сторінка — `site/index.html`, кожна тека `lesson-*/index.html` стає окремою сторінкою).
+
+Опублікована версія сайту (приватне посилання Claude Artifact): https://claude.ai/artifact/P5hV7NPwVHqWVs1ejpT6uv
 
 - [`course-plan.md`](course-plan.md) — план семестру
 - [`lesson-01-internet/index.html`](lesson-01-internet/index.html) — сайт-презентація

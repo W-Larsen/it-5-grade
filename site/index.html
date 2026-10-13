@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>IT для 5 класу</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@800&family=Nunito:wght@700;800&display=swap">
+<style>
+/* One-column course index in the same comic-sticker look as the lessons. */
+:root{
+  color-scheme: light;
+  --ground:#E9F0FB; --paper:#FFFFFF; --ink:#16193A; --ink-soft:#4E5584;
+  --bit:#FF8A3D; --sun:#FFC93C; --line:#C9D5EC;
+  --f-display:"Unbounded","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --f-body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body)}
+main{max-width:760px;margin:0 auto;padding:clamp(32px,8vw,72px) 20px 48px}
+.eyebrow{display:inline-block;font:800 13px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:8px 14px}
+h1{margin:18px 0 10px;font:800 clamp(36px,8vw,64px)/1 var(--f-display);letter-spacing:-.03em;text-wrap:balance}
+p.lead{margin:0 0 32px;font:700 clamp(17px,2.4vw,20px)/1.5 var(--f-body);color:var(--ink-soft);max-width:56ch}
+.lessons{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px}
+.lesson{display:flex;align-items:center;gap:18px;text-decoration:none;color:inherit;background:var(--paper);border:3px solid var(--ink);border-radius:24px;padding:18px 20px;box-shadow:6px 6px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.lesson:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--ink)}
+.lesson:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.lesson:focus-visible{outline:3px solid #2F80ED;outline-offset:4px}
+.num{flex:none;width:56px;height:56px;border-radius:50%;background:var(--bit);border:3px solid var(--ink);display:grid;place-items:center;font:800 22px/1 var(--f-display)}
+.lesson b{display:block;font:800 clamp(18px,3vw,22px)/1.2 var(--f-display)}
+.lesson span.d{display:block;margin-top:4px;font:700 15px/1.4 var(--f-body);color:var(--ink-soft)}
+.lesson .go{margin-left:auto;flex:none;font:800 15px/1 var(--f-body);background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:9px 14px;white-space:nowrap}
+.soon{border-style:dashed;box-shadow:none;opacity:.6;pointer-events:none}
+.soon .num{background:var(--paper)}
+footer{margin-top:40px;font:700 14px/1.4 var(--f-body);color:var(--ink-soft)}
+@media (max-width:520px){.lesson .go{display:none}}
+</style>
+</head>
+<body>
+<main>
+  <span class="eyebrow">Додатковий курс · 5 клас</span>
+  <h1>IT для 5 класу</h1>
+  <p class="lead">Інтерактивні уроки: як влаштовані інтернет, комп’ютери й програми. Найкраще відкривати на планшеті горизонтально або на комп’ютері.</p>
+  <ol class="lessons">
+    <li><a class="lesson" href="lesson-01-internet/">
+      <span class="num">1</span>
+      <span><b>Подорож Біта</b><span class="d">Як працює інтернет: Wi-Fi, байти, пакети, IP, DNS, роутери й кабелі під океаном</span></span>
+      <span class="go">Відкрити →</span>
+    </a></li>
+    <li><div class="lesson soon">
+      <span class="num">2</span>
+      <span><b>Скоро</b><span class="d">Алгоритми й перші програми з Lightbot</span></span>
+    </div></li>
+  </ol>
+  <footer>Матеріали курсу оновлюються щотижня.</footer>
+</main>
+</body>
+</html>
