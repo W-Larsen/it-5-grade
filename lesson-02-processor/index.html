@@ -212,6 +212,8 @@
 .game-tip{font:700 17px/1.35 var(--f-body);color:var(--ink-soft);min-width:0}
 .game-wrap{position:absolute;left:36px;right:36px;top:78px;bottom:14px}
 
+.reset-link{position:absolute;right:28px;top:16px;z-index:5}
+
 /* ---------- recap ---------- */
 .rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .rule{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
@@ -244,6 +246,7 @@
 
       <!-- 0 · BACK -->
       <section class="slide stack" data-key="back" data-title="Повтор" data-ico="back" style="--c:var(--bit)">
+        <button class="btn small ghost reset-link" id="resetTop" hidden data-noswipe>↺ Скинути прогрес</button>
         <div class="copy">
           <span class="kicker"><span class="k-ico" data-ri="back"></span>Урок 2 · Біт у процесорі</span>
           <h2>Біт повернувся!</h2>
@@ -717,12 +720,26 @@ const { H, Sound, store, stamp, happy } = D;
 const LEVEL_IDS = BitGame.levelIds();
 
 /* back: three question cards, then Bit dives into the iPad */
-H.back = { init(el){
+/* Clears stamps, name and game stars; both reset buttons ask for a second tap first. */
+function armReset(btn, label){
+  let armed = false;
+  btn.addEventListener("click", () => {
+    if (!armed){ armed = true; btn.textContent = "Точно? Натисни ще раз"; setTimeout(() => { armed = false; btn.textContent = label; }, 3000); return; }
+    armed = false; btn.textContent = label;
+    D.clearStamps(); BitGame.progress.clear(LEVEL_IDS); store.set("name", ""); const n = $("#ppName"); if (n) n.value = "";
+    try { location.hash = ""; } catch(_){}
+    location.reload();
+  });
+}
+const hasProgress = () => D.stampCount() > 0 || BitGame.progress.total(LEVEL_IDS) > 0 || !!store.get("name", "");
+
+H.back = { enter(){ $("#resetTop").hidden = !hasProgress(); }, init(el){
+  armReset($("#resetTop"), "↺ Скинути прогрес");
   const cards = $$(".fcard", el);
   cards.forEach(c => c.addEventListener("click", () => {
     c.classList.toggle("flipped"); Sound.pop();
     c.dataset.seen = "1";
-    if (cards.every(x => x.dataset.seen)){ happy(el); stamp("back"); }
+    if (cards.every(x => x.dataset.seen)){ happy(el); stamp("back"); $("#resetTop").hidden = false; }
   }));
   $("#diveBtn").addEventListener("click", () => dive(el));
 }};
@@ -1260,7 +1277,6 @@ H.race = (function(){
 
 /* badge: stamps, game stars, name, reset */
 H.badge = (function(){
-  let armed = false;
   function render(){
     const rot = k => ((k.charCodeAt(0) * 7 + k.length * 13) % 24) - 12;
     $("#stamps").innerHTML = D.stampKeys.map(k => '<div class="st">' + (D.hasStamp(k) ? D.stampSVG(k, rot(k)) : '<div class="empty">' + D.stampLabel(k) + "</div>") + "</div>").join("");
@@ -1273,14 +1289,7 @@ H.badge = (function(){
       $("#ppDate").textContent = new Date().toLocaleDateString("uk-UA");
       const name = $("#ppName"); name.value = store.get("name", "");
       name.addEventListener("input", () => store.set("name", name.value));
-      $("#resetBtn").addEventListener("click", e => {
-        const b = e.currentTarget;
-        if (!armed){ armed = true; b.textContent = "Точно? Натисни ще раз"; setTimeout(() => { armed = false; b.textContent = "Почати знову"; }, 3000); return; }
-        armed = false; b.textContent = "Почати знову";
-        D.clearStamps(); BitGame.progress.clear(LEVEL_IDS); store.set("name", ""); name.value = "";
-        try { location.hash = ""; } catch(_){}
-        location.reload();
-      });
+      armReset($("#resetBtn"), "Почати знову");
     },
     enter(){ render(); }
   };
