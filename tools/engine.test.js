@@ -199,3 +199,7 @@ test("progress ignores corrupted stored data", () => {
   s.setItem("bitgame:v1", "[1,2]");
   assert.equal(BitGame.createProgress(s).get("2-01"), 0);
 });
+
+test("keyOf builds the lit-set key", () => {
+  assert.equal(BitGame.keyOf(2, 0), "2,0");
+});

@@ -190,6 +190,7 @@ function browserStorage() {
 }
 
 var BitGame = root.BitGame || {};
+BitGame.keyOf = key;
 BitGame.createProgress = createProgress;
 BitGame.progress = createProgress(browserStorage());
 BitGame.COMMANDS = COMMANDS;
