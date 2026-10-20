@@ -483,6 +483,7 @@ P.resetRun = function (keepBubble) {
 var BUMP_TEXT = {
   "bump-edge": "Далі нічого немає!",
   "bump-step": "Там сходинка — треба стрибнути!",
+  "bump-flat": "Тут рівно, стрибати не треба. Йди вперед!",
   "bump-high": "Так високо я не дістану!",
   "no-target": "Тут немає транзистора."
 };
@@ -518,9 +519,10 @@ P.tween = function (from, to, ms, arc) {
   var a = iso(from.x, from.y, lv.cells[from.y][from.x].h), b = iso(to.x, to.y, lv.cells[to.y][to.x].h);
   this.zPlace(Math.max(from.x + from.y, to.x + to.y));
   this.arrow.setAttribute("opacity", "0");
-  var t0 = Date.now();
+  var t0 = Date.now(), id = this.runId;
   return new Promise(function (resolve) {
     (function frame() {
+      if (id !== self.runId) return resolve();   // ⟲ or an edit pressed mid-move: leave Bit where reset put him
       var k = Math.min(1, (Date.now() - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
       self.bitTransform(a.x + (b.x - a.x) * e, a.y + (b.y - a.y) * e - Math.sin(Math.PI * k) * arc);
       if (k < 1) setTimeout(frame, 16); else resolve();
@@ -529,9 +531,10 @@ P.tween = function (from, to, ms, arc) {
 };
 
 P.shakeBit = function (st) {
-  var self = this, p = iso(st.x, st.y, this.level.cells[st.y][st.x].h), t0 = Date.now(), ms = STEP_MS * 0.9;
+  var self = this, p = iso(st.x, st.y, this.level.cells[st.y][st.x].h), t0 = Date.now(), ms = STEP_MS * 0.9, id = this.runId;
   return new Promise(function (resolve) {
     (function frame() {
+      if (id !== self.runId) return resolve();
       var k = Math.min(1, (Date.now() - t0) / ms);
       self.bitTransform(p.x + Math.sin(k * Math.PI * 6) * 7 * (1 - k), p.y);
       if (k < 1) setTimeout(frame, 16); else { self.bitTransform(p.x, p.y); resolve(); }
@@ -607,6 +610,11 @@ P.win = function () {
   if (this.ids.every(function (x) { return B.progress.get(x) >= 1; })) {
     this.dispatchEvent(new CustomEvent("bitgame:solved-set", { bubbles: true, composed: true, detail: { ids: this.ids.slice() } }));
   }
+};
+
+/* Cancels a running program (used when the host page leaves the slide mid-run). */
+P.stop = function () {
+  if (this.level && (this.running || this.busy)) this.resetRun(true);
 };
 
 P.removeWin = function () {

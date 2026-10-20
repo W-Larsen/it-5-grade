@@ -89,7 +89,7 @@ function step(lv, st, cmd) {
     if (!to) event = "bump-edge";
     else if (cmd === "forward") {
       if (to.h === here.h) { next.x = nx; next.y = ny; event = "move"; } else event = "bump-step";
-    } else if (to.h === here.h) event = "bump-step";
+    } else if (to.h === here.h) event = "bump-flat";
     else if (to.h > here.h + 1) event = "bump-high";
     else { next.x = nx; next.y = ny; event = "jump"; }
   } else if (cmd === "light") {

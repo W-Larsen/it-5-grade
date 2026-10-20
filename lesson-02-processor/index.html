@@ -560,21 +560,24 @@ H.back = { init(el){
 
 function dive(slide){
   if ($(".dive", slide)) return;
+  const from = D.current();
   Sound.whoosh();
   const fx = document.createElement("div");
   fx.className = "dive";
   fx.innerHTML = '<div class="dive-ipad"><svg viewBox="0 0 84 110"><rect x="3" y="3" width="78" height="104" rx="12" fill="#16193A"/><rect x="9" y="11" width="66" height="86" rx="5" fill="#0F3550"/><circle cx="42" cy="102" r="2.4" fill="#4E5584"/></svg><div class="dive-bit">' + Deck.bitSVG() + '</div></div><div class="dive-flash"></div>';
   slide.appendChild(fx);
   const bit = $(".dive-bit", fx), flash = $(".dive-flash", fx);
-  const anim = bit.animate([
+  bit.animate([
     { transform: "translate(-420px,-60px) scale(1.5)", opacity: 1 },
     { transform: "translate(0,-10px) scale(1)", opacity: 1, offset: .6 },
     { transform: "translate(0,0) scale(.05)", opacity: 0 }
   ], { duration: 1100, easing: "cubic-bezier(.5,0,.3,1)", fill: "forwards" });
-  anim.onfinish = () => {
+  /* timers, not animation events, drive the steps; only go on if the student is still on this slide */
+  setTimeout(() => {
     Sound.flash();
-    flash.animate([{ opacity: 0 }, { opacity: .95 }, { opacity: 0 }], { duration: 450 }).onfinish = () => { fx.remove(); D.next(); };
-  };
+    flash.animate([{ opacity: 0 }, { opacity: .95 }, { opacity: 0 }], { duration: 450 });
+    setTimeout(() => { fx.remove(); if (D.current() === from) D.next(); }, 460);
+  }, 1100);
 }
 
 /* teacher: build a program from cards; the teacher then performs it literally, one command per tap */
@@ -764,7 +767,7 @@ H.cpu = (function(){
     { c: "увімкнути()", m: "увімкнути транзистор" }
   ];
   const TXT = ["Беру команду з пам’яті.", "Розумію, що вона означає.", "Виконую!"];
-  let el, scene, pc = 0, phase = 0, finished = false, busy = false, pos = 0, tz;
+  let el, scene, pc = 0, phase = 0, finished = false, busy = false, pos = 0, tz, tok = 0;
 
   function offsetIn(node){
     let x = 0, y = 0;
@@ -781,6 +784,7 @@ H.cpu = (function(){
   }
   let busyPhase = -1;
   function reset(){
+    tok++;   // a step still animating belongs to the old run: it will see the new token and stop
     pc = 0; phase = 0; finished = false; busy = false; pos = 0; busyPhase = -1;
     $("#cpuReg").textContent = "—";
     D.say(el, "Натисни «Крок»: процесор візьме першу команду.");
@@ -790,14 +794,14 @@ H.cpu = (function(){
     return new Promise(res => {
       const f = document.createElement("div"); f.className = "fly"; f.textContent = text;
       f.style.left = from.x + "px"; f.style.top = from.y + "px"; scene.appendChild(f);
-      const a = f.animate([{ transform: "translate(0,0)" }, { transform: "translate(" + (to.x - from.x) + "px," + (to.y - from.y) + "px)" }], { duration: 600, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" });
-      a.onfinish = () => { f.remove(); res(); };
+      f.animate([{ transform: "translate(0,0)" }, { transform: "translate(" + (to.x - from.x) + "px," + (to.y - from.y) + "px)" }], { duration: 600, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" });
+      setTimeout(() => { f.remove(); res(); }, 610);
     });
   }
   async function step(){
     if (finished || busy) return;
     busy = true; busyPhase = phase;
-    const cmd = PROG[pc];
+    const my = tok, cmd = PROG[pc];
     D.say(el, TXT[phase] + " (команда " + (pc + 1) + ")");
     if (phase === 0){
       paint();
@@ -805,15 +809,18 @@ H.cpu = (function(){
       const a = offsetIn(row), b = offsetIn(reg);
       Sound.whoosh();
       await fly(cmd.c, { x: a.x + 40, y: a.y }, { x: b.x, y: b.y - 6 });
+      if (my !== tok) return;
       reg.textContent = cmd.c;
     } else if (phase === 1){
       paint(); Sound.pop();
       $("#cpuReg").textContent = cmd.c + " = " + cmd.m;
       await Deck.wait(700);
+      if (my !== tok) return;
     } else {
       paint();
-      if (cmd.c === "вперед()"){ pos++; Sound.click(); } else { pc; }
+      if (cmd.c === "вперед()"){ pos++; Sound.click(); }
       await Deck.wait(650);
+      if (my !== tok) return;
       if (cmd.c === "увімкнути()") Sound.ding();
       pc++;
     }
@@ -886,9 +893,12 @@ H.race = (function(){
   };
 })();
 
-/* game slides: a stamp once every level of the set has at least one star */
-["game1", "game2", "game3"].forEach(key => {
-  H[key] = { init(el){ el.addEventListener("bitgame:solved-set", () => { happy(el); stamp(key); }); } };
+/* game slides: a stamp once every level of the set has at least one star (bonus has none); leaving a slide stops a running program */
+["game1", "game2", "game3", "bonus"].forEach(key => {
+  H[key] = {
+    init(el){ el.addEventListener("bitgame:solved-set", () => { happy(el); if (key !== "bonus") stamp(key); }); },
+    leave(el){ const g = $("bit-game", el); if (g && g.stop) g.stop(); }
+  };
 });
 
 /* badge: stamps, game stars, name, reset */

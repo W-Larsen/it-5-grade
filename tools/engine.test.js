@@ -203,3 +203,10 @@ test("progress ignores corrupted stored data", () => {
 test("keyOf builds the lit-set key", () => {
   assert.equal(BitGame.keyOf(2, 0), "2,0");
 });
+
+test("jump onto a tile of the same height is bump-flat, not bump-step", () => {
+  const r = BitGame.step(L, at(0, 0, "E"), "jump");
+  assert.equal(r.event, "bump-flat");
+  assert.equal(r.state.x, 0);
+  assert.equal(BitGame.step(L, at(1, 0, "E"), "forward").event, "bump-step");
+});
