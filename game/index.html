@@ -17,7 +17,7 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body)}
 a:focus-visible,button:focus-visible{outline:3px solid #2F80ED;outline-offset:3px}
-.wrap{max-width:1180px;margin:0 auto;padding:20px 20px 48px}
+.wrap{max-width:1700px;margin:0 auto;padding:20px 20px 48px}
 .back{display:inline-block;margin-bottom:14px;font:800 15px/1 var(--f-body);color:var(--ink);text-decoration:none;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:9px 14px;box-shadow:0 3px 0 var(--ink)}
 .back:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
 .hero{display:flex;align-items:center;gap:18px;margin-bottom:22px}
@@ -27,16 +27,18 @@ h1{margin:0 0 6px;font:800 clamp(24px,4vw,40px)/1.1 var(--f-display);letter-spac
 .hero p{margin:0;font:700 clamp(16px,2.2vw,19px)/1.4 var(--f-body);color:var(--ink-soft)}
 .world{margin:0 0 10px;font:800 13px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
 .sets{list-style:none;margin:0 0 22px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
-.set{width:100%;text-align:left;display:block;background:var(--paper);border:3px solid var(--ink);border-radius:22px;padding:14px 16px 16px;box-shadow:5px 5px 0 var(--ink);cursor:pointer;font-family:inherit;color:inherit;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.sets li{display:flex}
+.set{width:100%;text-align:left;display:flex;flex-direction:column;background:var(--paper);border:3px solid var(--ink);border-radius:22px;padding:14px 16px 16px;box-shadow:5px 5px 0 var(--ink);cursor:pointer;font-family:inherit;color:inherit;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .set:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
 .set[aria-pressed="true"]{background:var(--sun)}
 .set b{display:block;font:800 18px/1.2 var(--f-display)}
 .set .d{display:block;margin:5px 0 10px;font:700 14px/1.35 var(--f-body);color:var(--ink-soft)}
 .set[aria-pressed="true"] .d{color:var(--ink)}
-.set .st{display:flex;align-items:center;justify-content:space-between;font:800 15px/1 var(--f-mono)}
+.set .st{display:flex;align-items:center;justify-content:space-between;margin-top:auto;font:800 15px/1 var(--f-mono)}
 .set .stars{color:#E0A100;font-size:18px;letter-spacing:2px;text-shadow:0 1px 0 var(--ink)}
-.stage{height:700px;min-height:560px}
-@media (max-width:900px){.stage{height:640px}}
+/* The game is drawn on a fixed 1128×708 stage and scaled to the screen, like on the lesson slides. */
+.stage-box{position:relative;margin:0 auto}
+.stage{position:absolute;left:0;top:0;width:1128px;height:708px;transform-origin:0 0}
 </style>
 <div class="wrap">
   <a class="back" href="../">← До курсу</a>
@@ -49,7 +51,7 @@ h1{margin:0 0 6px;font:800 clamp(24px,4vw,40px)/1.1 var(--f-display);letter-spac
   </header>
   <div class="world">Урок 2 · Процесор</div>
   <ul class="sets" id="sets"></ul>
-  <div class="stage"><bit-game id="game"></bit-game></div>
+  <div class="stage-box" id="stageBox"><div class="stage" id="stage"><bit-game id="game"></bit-game></div></div>
 </div>
 <script src="../shared/bit-game/engine.js"></script>
 <script src="../shared/bit-game/levels-02.js"></script>
@@ -87,6 +89,21 @@ function pick(i, scroll) {
   paint();
   if (scroll && game.scrollIntoView) game.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+/* scale the stage to the width of the page, but never taller than the screen */
+var box = document.getElementById("stageBox"), stage = document.getElementById("stage");
+function fit() {
+  var host = box.parentElement, cs = getComputedStyle(host);
+  var room = host.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);   // content width, without the page padding
+  var s = Math.min(room / 1128, (window.innerHeight - 70) / 708);
+  s = Math.max(0.5, Math.min(1.9, s));
+  stage.style.transform = "scale(" + s + ")";
+  box.style.width = Math.round(1128 * s) + "px";
+  box.style.height = Math.round(708 * s) + "px";
+}
+window.addEventListener("resize", fit);
+if (window.ResizeObserver) new ResizeObserver(fit).observe(box.parentElement);   // also when the scrollbar appears
+fit();
 
 document.addEventListener("bitgame:win", paint);
 pick(0, false);

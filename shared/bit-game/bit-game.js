@@ -164,7 +164,9 @@ var CSS = [
 ".hint-chip{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;background:var(--ink,#16193A);color:#fff;border-radius:8px;padding:2px 8px;margin:0 2px;font:800 13px/1.4 var(--f-mono,monospace)}",
 ".win{position:absolute;inset:0;display:grid;place-items:center;z-index:5;background:rgba(10,39,64,.55);animation:fade .3s}",
 "@keyframes fade{from{opacity:0}}",
-".win-card{background:var(--paper,#fff);border:3px solid var(--ink,#16193A);border-radius:26px;box-shadow:6px 6px 0 var(--ink,#16193A);padding:22px 30px;text-align:center;max-width:90%;animation:pop .5s cubic-bezier(.3,1.6,.5,1)}",
+".win-x{position:absolute;right:10px;top:10px;width:42px;height:42px;border-radius:50%;border:3px solid var(--ink,#16193A);background:var(--paper,#fff);box-shadow:0 3px 0 var(--ink,#16193A);font:900 16px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center}",
+".win-x:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
+".win-card{position:relative;background:var(--paper,#fff);border:3px solid var(--ink,#16193A);border-radius:26px;box-shadow:6px 6px 0 var(--ink,#16193A);padding:22px 30px;text-align:center;max-width:90%;animation:pop .5s cubic-bezier(.3,1.6,.5,1)}",
 ".win-card h3{margin:0 0 6px;font:800 clamp(20px,3vw,28px)/1.2 var(--f-display,sans-serif)}",
 ".win-stars{font-size:46px;letter-spacing:6px;color:#FFB400;text-shadow:0 3px 0 var(--ink,#16193A);margin:4px 0}",
 ".win-stars .off{color:#D5DCEE;text-shadow:none}",
@@ -605,10 +607,11 @@ P.win = function () {
   var next = this.index + 1 < this.ids.length;
   var card = document.createElement("div");
   card.className = "win";
-  card.innerHTML = '<div class="win-card"><h3>Чип ожив! 🎉</h3><div class="win-stars">' +
+  card.innerHTML = '<div class="win-card"><button class="win-x" data-act="close" type="button" aria-label="Закрити">✕</button><h3>Чип ожив! 🎉</h3><div class="win-stars">' +
     [1, 2, 3].map(function (k) { return k <= stars ? "★" : '<span class="off">★</span>'; }).join("") + "</div><p>" +
     "Команд: " + n + (n > lv.best ? ". Можна коротше: " + lv.best + "." : ". Найкоротший шлях!") + "</p>" +
     '<button class="btn ghost" data-act="again" type="button">↺ Ще раз</button>' +
+    '<button class="btn ghost" data-act="close" type="button">Закрити</button>' +
     (next ? '<button class="btn" data-act="next" type="button">Наступний рівень →</button>' : "") + "</div>";
   var id = this.runId;
   setTimeout(function () { if (self.won && self.runId === id) self.q(".field").appendChild(card); }, 900);
@@ -633,6 +636,14 @@ P.stop = function () {
   if (this.level && (this.running || this.busy)) this.resetRun(true);
 };
 
+/* Closes the «Чип ожив!» card: the lit board stays in view and levels/tabs work again. */
+P.closeWin = function () {
+  if (!this.won) return;
+  this.removeWin();
+  this.won = false;
+  this.syncUI();
+};
+
 P.removeWin = function () {
   var w = this.root && this.q(".win");
   if (w) w.remove();
@@ -650,6 +661,7 @@ P.showHint = function () {
 P.wire = function () {
   var self = this;
   this.root.addEventListener("click", function (e) {
+    if (e.target.classList && e.target.classList.contains("win")) return self.closeWin();   // tap on the dimmed backdrop
     var t = e.target.closest("button");
     if (!t || !self.root.contains(t) || t.disabled) return;
     Sound.unlock();
@@ -666,6 +678,7 @@ P.wire = function () {
       case "run": return self.run();
       case "step": return self.stepOnce();
       case "reset": case "again": return self.resetRun(false);
+      case "close": return self.closeWin();
       case "hint": return self.showHint();
       case "rotate": return self.rotate();
       case "next": Sound.pop(); return self.loadLevel(self.index + 1);
