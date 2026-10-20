@@ -82,13 +82,15 @@ function pick(i) {
   paint();
 }
 
+var UI_SIZE = 0.85;   // how much of the free space the game takes (1 = fill it); lower = smaller interface
+
 /* The whole page must fit one screen: scale the stage to the width left and to the height left below the bar. */
 function fit() {
   var cs = getComputedStyle(page);
   var padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
   var roomW = page.clientWidth - padX;
   var roomH = window.innerHeight - padY - bar.offsetHeight - parseFloat(getComputedStyle(bar).marginBottom);
-  var s = Math.max(0.45, Math.min(1.9, roomW / 1128, roomH / 708));
+  var s = Math.max(0.45, Math.min(1.9, roomW / 1128, roomH / 708) * UI_SIZE);
   stage.style.transform = "scale(" + s + ")";
   box.style.width = Math.round(1128 * s) + "px";
   box.style.height = Math.round(708 * s) + "px";
