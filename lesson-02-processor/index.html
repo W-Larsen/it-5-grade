@@ -81,6 +81,65 @@
 .step-chip.used{visibility:hidden}
 .alg-actions{display:flex;gap:10px;justify-content:center;margin-top:auto}
 
+/* ---------- deep ---------- */
+.deep-scene{background:radial-gradient(circle at 50% 40%,#EDF1FF,#D9E2F7)}
+.crumbs{position:absolute;left:14px;right:14px;top:12px;display:flex;gap:6px;z-index:3;flex-wrap:wrap}
+.crumb{border:2px solid var(--ink);background:var(--paper);border-radius:999px;font:800 13px/1 var(--f-body);padding:7px 11px;cursor:pointer}
+.crumb.on{background:var(--sun)}
+.crumb:disabled{opacity:.45;cursor:default}
+.lv{position:absolute;left:20px;top:64px;width:560px;height:520px;transition:opacity .5s,transform .7s cubic-bezier(.2,.8,.2,1)}
+.lv svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lv[data-pos="before"]{opacity:0;transform:scale(.55);pointer-events:none}
+.lv[data-pos="after"]{opacity:0;transform:scale(1.7);pointer-events:none}
+.hot{position:absolute;border:4px dashed var(--ink);background:rgba(255,201,60,.22);cursor:pointer;padding:0;animation:pulse 1.2s ease-in-out infinite}
+.plabel{font:800 16px var(--f-body);fill:var(--ink)}
+.part{cursor:pointer}
+.tr{cursor:pointer}
+.tr rect.body{fill:#EEF1FA;stroke:var(--ink);stroke-width:4;transition:fill .2s}
+.tr.on rect.body{fill:#FFC93C}
+.tr text{font:800 20px var(--f-mono);fill:var(--ink-soft);text-anchor:middle}
+.tr.on text{fill:var(--ink)}
+
+/* ---------- cpu ---------- */
+.cpu-scene{background:linear-gradient(#F3F8FF,#E7EEFA)}
+.cp-mem{position:absolute;left:18px;right:18px;top:16px;height:226px;background:#1B2040;border:3px solid var(--ink);border-radius:18px;padding:10px 12px;color:#EAF0FF}
+.cp-h{display:flex;justify-content:space-between;align-items:baseline;font:800 13px/1 var(--f-display);letter-spacing:.5px;margin-bottom:8px}
+.cp-h small{font:700 12px var(--f-body);opacity:.7}
+.cp-rows{display:flex;flex-direction:column;gap:6px}
+.cp-row{display:flex;gap:10px;align-items:center;border-radius:10px;background:rgba(255,255,255,.07);padding:9px 12px;font:700 18px/1 var(--f-mono)}
+.cp-row i{font-style:normal;color:#6F7DB8;width:1.2em}
+.cp-row.now{background:#FFC93C;color:var(--ink)}
+.cp-row.done{opacity:.5}
+.cp-cpu{position:absolute;left:18px;right:18px;top:258px;height:190px;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:10px 12px;box-shadow:0 5px 0 var(--ink)}
+.lamps{display:flex;align-items:center;gap:6px}
+.lamps span{font:800 22px/1 var(--f-display);color:var(--ink-soft)}
+.lamp{flex:1;border:3px solid var(--ink);border-radius:14px;padding:8px 4px;text-align:center;font:800 15px/1.2 var(--f-body);background:#EEF1FA;color:var(--ink-soft);transition:background .25s}
+.lamp b{display:block;font:800 20px/1.1 var(--f-display)}
+.lamp.on{background:#FFC93C;color:var(--ink);box-shadow:0 0 0 4px rgba(255,201,60,.45)}
+.reg{margin-top:12px;border:3px dashed #B9C6E0;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:12px;min-height:62px}
+.reg small{font:900 11px/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);width:86px}
+.reg div{font:800 20px/1.1 var(--f-mono)}
+.fly{position:absolute;z-index:5;background:#FFC93C;border:3px solid var(--ink);border-radius:10px;padding:6px 12px;font:700 17px/1 var(--f-mono);pointer-events:none}
+.cp-track{position:absolute;left:18px;right:18px;top:464px;height:104px}
+.t4{position:absolute;bottom:6px;width:120px;height:46px;border:3px solid var(--ink);border-radius:10px;background:#6FE3B8;box-shadow:0 5px 0 #2D8F6C}
+.t4 .tz{position:absolute;left:34px;top:-12px;width:52px;height:26px;border:3px solid var(--ink);border-radius:8px;background:#39467A;color:#8794D6;display:grid;place-items:center;font:800 15px/1 var(--f-mono);transition:background .3s}
+.t4 .tz.on{background:#FFD84D;color:var(--ink);box-shadow:0 0 14px #FFC93C}
+.cp-bit{position:absolute;bottom:34px;left:32px;width:56px;transition:left .5s cubic-bezier(.3,1.3,.5,1)}
+.cp-bit svg{display:block;width:100%}
+.cp-actions{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:10px}
+
+/* ---------- race ---------- */
+.race-scene{background:linear-gradient(#FFF1F5,#FFE3EA);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.race-clock{font:800 72px/1 var(--f-display);letter-spacing:-.03em;color:var(--race)}
+.race-tap{width:220px;height:220px;border-radius:50%;border:5px solid var(--ink);background:var(--race);color:#fff;font:800 42px/1 var(--f-display);box-shadow:0 10px 0 var(--ink);cursor:pointer;touch-action:none}
+.race-tap:active:not(:disabled){transform:translateY(8px);box-shadow:0 2px 0 var(--ink)}
+.race-tap:disabled{opacity:.45;cursor:default}
+.race-res{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:92%}
+.race-res div{background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:12px;text-align:center;box-shadow:0 4px 0 var(--ink)}
+.race-res small{display:block;font:900 12px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+.race-res b{font:800 24px/1.1 var(--f-display)}
+.race-res .cpu b{color:var(--cpu);font-size:19px}
+
 /* ---------- recap ---------- */
 .rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .rule{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
@@ -213,6 +272,116 @@
 <h3>Алгоритм і програма</h3>
 <p>Алгоритм можна розповісти будь-як. <b>Програма</b> — це алгоритм, записаний так, щоб його зрозумів комп’ютер.</p>
 <div class="fun"><b>Спробуй</b>Що буде, якщо спочатку одягти взуття, а потім шкарпетки? Теж порушили порядок кроків.</div></template>
+      </section>
+
+      <!-- deep -->
+      <section class="slide circuit" data-key="deep" data-title="Подорож углиб" data-ico="zoom" style="--c:var(--zoom)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="zoom"></span>Що всередині iPad</span>
+          <h2>Подорож углиб</h2>
+          <p class="lead">Біт зазирає всередину iPad, дедалі глибше й глибше. Торкайся підсвічених місць.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="deepBubble">Що ж там усередині? Торкнись iPad.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Процесор — чип, у якому понад 10 мільярдів крихітних перемикачів: транзисторів.</b></div>
+        </div>
+        <div class="scene deep-scene" data-noswipe>
+          <div class="crumbs" id="deepCrumbs"></div>
+          <div class="lv" data-pos="on">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="140" y="40" width="280" height="420" rx="40" fill="#16193A"/>
+              <rect x="162" y="68" width="236" height="364" rx="16" fill="#BFE3FF"/>
+              <circle cx="280" cy="250" r="44" fill="#FF8A3D" stroke="#16193A" stroke-width="5"/><path d="M262 250h36M280 232v36" stroke="#16193A" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="280" cy="446" r="7" fill="#4E5584"/>
+            </svg>
+            <button class="hot" id="hot0" style="left:140px;top:40px;width:280px;height:420px;border-radius:40px" aria-label="Зазирнути всередину"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="40" y="60" width="480" height="400" rx="28" fill="#2BAA6B" stroke="#16193A" stroke-width="5"/>
+              <path d="M70 120h90l30 30h60M70 400h120l40-40h80M500 200h-70l-30 30M360 90v50l30 30h80" fill="none" stroke="#9BE3BE" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+              <g class="part" data-part="battery"><rect x="70" y="290" width="190" height="110" rx="16" fill="#FFD7B5" stroke="#16193A" stroke-width="5"/><rect x="262" y="325" width="16" height="40" rx="4" fill="#16193A"/><path d="M150 306l-22 32h30l-18 36 52-48h-32l20-20z" fill="#FFC93C" stroke="#16193A" stroke-width="3" stroke-linejoin="round"/><text x="165" y="424" text-anchor="middle" class="plabel">батарея</text></g>
+              <g class="part" data-part="ram"><rect x="320" y="270" width="74" height="74" rx="10" fill="#4E5584" stroke="#16193A" stroke-width="5"/><rect x="412" y="270" width="74" height="74" rx="10" fill="#4E5584" stroke="#16193A" stroke-width="5"/><text x="403" y="366" text-anchor="middle" class="plabel">пам’ять</text></g>
+              <g class="part" data-part="wifi"><rect x="320" y="390" width="60" height="44" rx="8" fill="#12B5A4" stroke="#16193A" stroke-width="4"/><text x="350" y="450" text-anchor="middle" class="plabel">Wi-Fi</text></g>
+              <rect id="cpuPart" x="180" y="100" width="130" height="130" rx="16" fill="#7A5CFA" stroke="#16193A" stroke-width="5"/>
+              <rect x="205" y="125" width="80" height="80" rx="10" fill="#B7A6FF" stroke="#16193A" stroke-width="3"/>
+              <path d="M200 100v-14M225 100v-14M250 100v-14M275 100v-14M200 230v14M225 230v14M250 230v14M275 230v14M180 125h-14M180 150h-14M180 175h-14M180 200h-14M310 125h14M310 150h14M310 175h14M310 200h14" stroke="#16193A" stroke-width="5" stroke-linecap="round"/>
+              <text x="245" y="171" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="18" fill="#16193A">CPU</text>
+              <text x="245" y="266" text-anchor="middle" class="plabel">процесор</text>
+            </svg>
+            <button class="hot" id="hot1" style="left:164px;top:84px;width:162px;height:162px;border-radius:24px" aria-label="Приблизити процесор"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="90" y="50" width="380" height="380" rx="24" fill="#4E5584" stroke="#16193A" stroke-width="5"/>
+              <path d="M130 50v-24M180 50v-24M230 50v-24M280 50v-24M330 50v-24M380 50v-24M430 50v-24M130 430v24M180 430v24M230 430v24M280 430v24M330 430v24M380 430v24M430 430v24M90 100h-24M90 160h-24M90 220h-24M90 280h-24M90 340h-24M90 400h-24M470 100h24M470 160h24M470 220h24M470 280h24M470 340h24M470 400h24" stroke="#16193A" stroke-width="6" stroke-linecap="round"/>
+              <rect x="120" y="80" width="320" height="320" rx="12" fill="#B7A6FF" stroke="#16193A" stroke-width="4"/>
+              <rect x="135" y="95" width="130" height="130" rx="10" fill="#7A5CFA" stroke="#16193A" stroke-width="3"/><rect x="295" y="95" width="130" height="130" rx="10" fill="#7A5CFA" stroke="#16193A" stroke-width="3"/>
+              <rect x="135" y="255" width="130" height="130" rx="10" fill="#7A5CFA" stroke="#16193A" stroke-width="3"/><rect x="295" y="255" width="130" height="130" rx="10" fill="#7A5CFA" stroke="#16193A" stroke-width="3"/>
+              <g font-family="Unbounded,sans-serif" font-weight="800" font-size="15" fill="#fff" text-anchor="middle"><text x="200" y="165">ядро</text><text x="360" y="165">ядро</text><text x="200" y="325">ядро</text><text x="360" y="325">ядро</text></g>
+              <text x="280" y="248" text-anchor="middle" class="plabel">чип зблизька</text>
+            </svg>
+            <button class="hot" id="hot2" style="left:125px;top:85px;width:150px;height:150px;border-radius:16px" aria-label="Приблизити ядро"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" id="trSvg" aria-hidden="true"></svg>
+          </div>
+        </div>
+        <template class="theory"><h2>Що ховається в iPad?</h2>
+<p>Відкрий iPad, і ти побачиш <b>плату</b> з кількома чипами: <b>процесор</b>, <b>пам’ять</b>, чип Wi-Fi, а ще батарею майже на весь корпус.</p>
+<h3>Система на чипі</h3>
+<p>У сучасних планшетів і телефонів процесор, графіка та інші «мізки» зібрані в одному чипі. Його так і називають: <b>система на чипі</b>.</p>
+<h3>Транзистор</h3>
+<p>Це крихітний перемикач без рук: пропускає струм (1) або не пропускає (0). Як вимикач світла, тільки в мільярд разів менший. Процесор складається з мільярдів таких перемикачів і складає з нулів та одиниць усе: літери, фото, ігри.</p>
+<div class="fun"><b>Цікаво знати</b>Транзистор у процесорі менший за вірус. Якби ти збільшив його до розміру горошини, чип став би завбільшки з велике місто.</div></template>
+      </section>
+
+      <!-- cpu -->
+      <section class="slide circuit" data-key="cpu" data-title="Процесор працює" data-ico="chip" style="--c:var(--cpu)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="chip"></span>Як працює процесор</span>
+          <h2>Взяти, зрозуміти, виконати</h2>
+          <p class="lead">Для кожної команди процесор робить три кроки. Тисни «Крок» і дивись, як Біт виконує програму.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="cpuBubble">Натисни «Крок»: процесор візьме першу команду.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Для кожної команди процесор робить три кроки: взяти → зрозуміти → виконати.</b></div>
+        </div>
+        <div class="scene cpu-scene" id="cpuScene" data-noswipe>
+          <div class="cp-mem"><div class="cp-h">ПАМ’ЯТЬ <small>програма Біта</small></div><div class="cp-rows" id="cpuRows"></div></div>
+          <div class="cp-cpu">
+            <div class="cp-h">ПРОЦЕСОР</div>
+            <div class="lamps"><div class="lamp" data-p="0"><b>1</b>Взяти</div><span>›</span><div class="lamp" data-p="1"><b>2</b>Зрозуміти</div><span>›</span><div class="lamp" data-p="2"><b>3</b>Виконати</div></div>
+            <div class="reg"><small>Поточна команда</small><div id="cpuReg">—</div></div>
+          </div>
+          <div class="cp-track" id="cpuTrack"><div class="cp-bit" id="cpuBit" data-bit></div></div>
+          <div class="cp-actions"><button class="btn" id="cpuStep">⏭ Крок</button><button class="btn ghost" id="cpuReset" aria-label="Спочатку">⟲</button></div>
+        </div>
+        <template class="theory"><h2>Що робить процесор?</h2>
+<p>Програма лежить у <b>пам’яті</b>. Процесор бере з неї одну команду, розуміє, що вона означає, і виконує. Потім бере наступну. І так мільярди разів за секунду.</p>
+<h3>Номер команди</h3>
+<p>Процесор пам’ятає номер команди, яку треба взяти наступною. У нашій грі цей номер показує <b>підсвічений рядок</b> коду.</p>
+<h3>Оперативна пам’ять</h3>
+<p>Програма, поки працює, лежить в оперативній пам’яті. Вона швидка, але «забуває» все, коли вимкнути живлення. Назавжди програми зберігаються на диску. Про це поговоримо пізніше.</p>
+<div class="fun"><b>Цікаво знати</b>Ці три кроки називають «цикл команди». Так працює процесор і в iPad, і в ігровій приставці, і в роботі-пилососі.</div></template>
+      </section>
+
+      <!-- race -->
+      <section class="slide circuit" data-key="race" data-title="Хто швидший?" data-ico="timer" style="--c:var(--race)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="timer"></span>Змагання</span>
+          <h2>Хто швидший: ти чи процесор?</h2>
+          <p class="lead">Натисни «Старт» і 5 секунд тапай по кнопці якнайшвидше. Потім порівняємо з процесором.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="raceBubble">Готовий? Я за тебе вболіваю!</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Процесор не розумний, він просто ДУЖЕ швидкий і робить рівно те, що написано в програмі.</b></div>
+        </div>
+        <div class="scene race-scene" data-noswipe>
+          <div class="race-clock" id="raceClock">5.0</div>
+          <button class="race-tap" id="raceTap" disabled>Тап!</button>
+          <div class="race-res" id="raceRes" hidden></div>
+          <button class="btn big" id="raceStart">Старт</button>
+        </div>
+        <template class="theory"><h2>Скільки це — «дуже швидко»?</h2>
+<p>Сучасний процесор працює з частотою близько <b>3 ГГц</b>. Це три мільярди «тактів» за секунду. За один такт він встигає зробити кілька крихітних дій.</p>
+<h3>Ядра</h3>
+<p>У процесора кілька <b>ядер</b> (ти бачив їх на чипі). Кожне ядро виконує свою програму, тож усі разом вони працюють ще швидше.</p>
+<div class="fun"><b>Для порівняння</b>За той час, поки ти встигнеш кліпнути оком (десята частка секунди), процесор виконає близько трьохсот мільйонів тактів.</div></template>
       </section>
 
       <!-- recap -->
@@ -489,6 +658,181 @@ H.algorithm = (function(){
       $("#algReset").addEventListener("click", () => { if (busy) return; Sound.click(); slots = [null, null, null, null]; clearState(); render(); D.say(el, "Торкайся кроків по черзі. Потім натисни «Перевірити»."); });
       render();
     }
+  };
+})();
+
+/* deep: iPad → board → chip → transistors */
+H.deep = (function(){
+  const NAMES = ["iPad", "плата", "чип", "транзистори"];
+  const MSG = ["Що ж там усередині? Торкнись iPad.", "Це плата. Знайди процесор: найголовніший чип!", "Це процесор зблизька. Торкнись ядра.", "Це транзистори, перемикачі. Торкайся, щоб вмикати!"];
+  const PART_MSG = { battery: "Це батарея: вона дає енергію всім деталям.", ram: "Це пам’ять: тут лежить програма, поки вона працює.", wifi: "Це чип Wi-Fi: через нього iPad «розмовляє» з роутером." };
+  let el, lv = 0;
+  const lit = new Set();
+  function setLevel(n){
+    lv = n;
+    $$(".lv", el).forEach((d, i) => { d.dataset.pos = i < n ? "before" : i > n ? "after" : "on"; });
+    $$(".crumb", el).forEach((b, i) => { b.disabled = i > n; b.classList.toggle("on", i === n); });
+    D.say(el, MSG[n]);
+  }
+  return {
+    init(s){
+      el = s;
+      const cr = $("#deepCrumbs");
+      NAMES.forEach((nm, i) => {
+        const b = document.createElement("button"); b.className = "crumb"; b.textContent = (i ? "› " : "") + nm;
+        b.addEventListener("click", () => { if (i < lv){ Sound.whoosh(); setLevel(i); } });
+        cr.appendChild(b);
+      });
+      ["hot0", "hot1", "hot2"].forEach((id, i) => $("#" + id).addEventListener("click", () => { Sound.pop(); setLevel(i + 1); }));
+      $$(".part", el).forEach(p => p.addEventListener("click", () => { Sound.click(); D.say(el, PART_MSG[p.dataset.part]); }));
+      /* transistor grid */
+      const svg = $("#trSvg");
+      let h = "";
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 8; c++){
+        const k = r * 8 + c;
+        h += '<g class="tr" data-k="' + k + '" transform="translate(' + (24 + c * 66) + " " + (30 + r * 80) + ')"><rect class="body" width="50" height="64" rx="12"/><text x="25" y="42">0</text></g>';
+      }
+      h += '<text x="280" y="480" text-anchor="middle" class="plabel">Кожен перемикач — 0 або 1</text>';
+      svg.innerHTML = h;
+      $$(".tr", svg).forEach(g => g.addEventListener("click", () => {
+        const k = g.dataset.k, on = !lit.has(k);
+        if (on) lit.add(k); else lit.delete(k);
+        g.classList.toggle("on", on); g.querySelector("text").textContent = on ? "1" : "0";
+        on ? Sound.ding() : Sound.dark();
+        if (lit.size >= 3){ D.say(el, "Бачиш? Увімкнені перемикачі — це одиниці. З них складається все в комп’ютері."); stamp("deep"); }
+      }));
+      setLevel(0);
+    },
+    leave(){ setLevel(0); }
+  };
+})();
+
+/* cpu: fetch → decode → execute, one step per tap */
+H.cpu = (function(){
+  const PROG = [
+    { c: "вперед()", m: "іти вперед" }, { c: "вперед()", m: "іти вперед" }, { c: "вперед()", m: "іти вперед" },
+    { c: "увімкнути()", m: "увімкнути транзистор" }
+  ];
+  const TXT = ["Беру команду з пам’яті.", "Розумію, що вона означає.", "Виконую!"];
+  let el, scene, pc = 0, phase = 0, finished = false, busy = false, pos = 0, tz;
+
+  function offsetIn(node){
+    let x = 0, y = 0;
+    for (let n = node; n && n !== scene; n = n.offsetParent){ x += n.offsetLeft; y += n.offsetTop; }
+    return { x, y };
+  }
+  function paint(){
+    $$(".cp-row", el).forEach((r, i) => { r.classList.toggle("now", i === pc && !finished); r.classList.toggle("done", i < pc); });
+    $$(".lamp", el).forEach((l, i) => l.classList.toggle("on", !finished && busyPhase === i));
+    $("#cpuBit").style.left = (pos * 148 + 32) + "px";
+    tz.classList.toggle("on", pos === 3 && pc >= PROG.length);
+    tz.textContent = tz.classList.contains("on") ? "1" : "0";
+    $("#cpuStep").disabled = finished || busy;
+  }
+  let busyPhase = -1;
+  function reset(){
+    pc = 0; phase = 0; finished = false; busy = false; pos = 0; busyPhase = -1;
+    $("#cpuReg").textContent = "—";
+    D.say(el, "Натисни «Крок»: процесор візьме першу команду.");
+    paint();
+  }
+  function fly(text, from, to){
+    return new Promise(res => {
+      const f = document.createElement("div"); f.className = "fly"; f.textContent = text;
+      f.style.left = from.x + "px"; f.style.top = from.y + "px"; scene.appendChild(f);
+      const a = f.animate([{ transform: "translate(0,0)" }, { transform: "translate(" + (to.x - from.x) + "px," + (to.y - from.y) + "px)" }], { duration: 600, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" });
+      a.onfinish = () => { f.remove(); res(); };
+    });
+  }
+  async function step(){
+    if (finished || busy) return;
+    busy = true; busyPhase = phase;
+    const cmd = PROG[pc];
+    D.say(el, TXT[phase] + " (команда " + (pc + 1) + ")");
+    if (phase === 0){
+      paint();
+      const row = $$(".cp-row", el)[pc], reg = $("#cpuReg");
+      const a = offsetIn(row), b = offsetIn(reg);
+      Sound.whoosh();
+      await fly(cmd.c, { x: a.x + 40, y: a.y }, { x: b.x, y: b.y - 6 });
+      reg.textContent = cmd.c;
+    } else if (phase === 1){
+      paint(); Sound.pop();
+      $("#cpuReg").textContent = cmd.c + " = " + cmd.m;
+      await Deck.wait(700);
+    } else {
+      paint();
+      if (cmd.c === "вперед()"){ pos++; Sound.click(); } else { pc; }
+      await Deck.wait(650);
+      if (cmd.c === "увімкнути()") Sound.ding();
+      pc++;
+    }
+    phase = (phase + 1) % 3;
+    if (pc >= PROG.length){
+      finished = true; busyPhase = -1;
+      D.say(el, "Усю програму виконано, команда за командою. Так працює кожен процесор!");
+      happy(el); stamp("cpu");
+    }
+    busy = false; if (phase === 0) busyPhase = -1;
+    paint();
+  }
+  return {
+    init(s){
+      el = s; scene = $("#cpuScene");
+      $("#cpuRows").innerHTML = PROG.map((p, i) => '<div class="cp-row"><i>' + (i + 1) + "</i>" + p.c + "</div>").join("");
+      const track = $("#cpuTrack");
+      for (let i = 0; i < 4; i++){
+        const t = document.createElement("div"); t.className = "t4"; t.style.left = (i * 148) + "px";
+        if (i === 3){ t.innerHTML = '<div class="tz">0</div>'; }
+        track.appendChild(t);
+      }
+      tz = $(".tz", track);
+      $("#cpuStep").addEventListener("click", step);
+      $("#cpuReset").addEventListener("click", () => { Sound.click(); reset(); });
+      reset();
+    }
+  };
+})();
+
+/* race: five seconds of tapping against the processor */
+H.race = (function(){
+  let el, state = "idle", taps = 0, t0 = 0, timer = 0, token = 0;
+  const fmt = n => n.toLocaleString("uk-UA").replace(/ /g, " ");
+  function finish(){
+    clearInterval(timer); state = "done";
+    $("#raceTap").disabled = true; $("#raceClock").textContent = "0.0";
+    const ns = Math.max(1, Math.round(taps / 3));
+    const res = $("#raceRes"); res.hidden = false;
+    res.innerHTML = '<div><small>Ти за 5 секунд</small><b>' + fmt(taps) + ' тапів</b></div><div class="cpu"><small>Процесор за 5 секунд</small><b>' + fmt(15000000000) + ' дій</b></div>';
+    D.say(el, "Стільки дій, скільки ти зробив за 5 секунд, процесор робить приблизно за " + ns + " " + (ns === 1 ? "наносекунду" : "наносекунд") + ". Це мільярдні частки секунди!");
+    $("#raceStart").textContent = "Ще раз"; $("#raceStart").disabled = false;
+    Sound.win(); happy(el); stamp("race");
+  }
+  function go(){
+    state = "run"; taps = 0; t0 = Date.now();
+    $("#raceTap").disabled = false; $("#raceTap").textContent = "Тап!";
+    D.say(el, "Тапай!");
+    timer = setInterval(() => {
+      const left = Math.max(0, 5 - (Date.now() - t0) / 1000);
+      $("#raceClock").textContent = left.toFixed(1);
+      if (left <= 0) finish();
+    }, 50);
+  }
+  async function start(){
+    if (state === "run" || state === "count") return;
+    state = "count"; $("#raceStart").disabled = true; $("#raceRes").hidden = true; $("#raceTap").disabled = true;
+    $("#raceClock").textContent = "5.0";
+    const mine = ++token;
+    for (const n of ["3", "2", "1"]){ $("#raceTap").textContent = n; Sound.click(); await Deck.wait(650); if (mine !== token) return; }
+    go();
+  }
+  return {
+    init(s){
+      el = s;
+      $("#raceStart").addEventListener("click", start);
+      $("#raceTap").addEventListener("pointerdown", e => { if (state !== "run") return; e.preventDefault(); taps++; Sound.click(); });
+    },
+    leave(){ token++; clearInterval(timer); if (state === "run" || state === "count"){ state = "idle"; $("#raceStart").disabled = false; $("#raceTap").disabled = true; $("#raceTap").textContent = "Тап!"; $("#raceClock").textContent = "5.0"; } }
   };
 })();
 
