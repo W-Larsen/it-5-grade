@@ -33,29 +33,40 @@
 .circuit > *{position:relative}
 
 /* ---------- teacher (program the teacher) ---------- */
-.tprog{display:grid;grid-template-columns:350px 1fr 250px;gap:18px;height:420px}
+.tprog{display:grid;grid-template-columns:336px 1fr 300px;gap:16px;height:430px}
 .tp-col{display:flex;flex-direction:column;gap:10px;min-height:0}
 .tp-h{display:flex;justify-content:space-between;align-items:baseline;font:800 15px/1 var(--f-display);letter-spacing:-.01em}
 .tp-h small{font:700 13px/1 var(--f-body);color:var(--ink-soft)}
-.tp-pal{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
-.cmd-chip{min-height:66px;border:3px solid var(--ink);border-radius:16px;background:var(--paper);box-shadow:0 4px 0 var(--ink);font:800 16px/1.2 var(--f-body);padding:8px 10px;cursor:pointer;text-align:center}
+.tp-pal{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start}
+.cmd-chip{min-height:54px;border:3px solid var(--ink);border-radius:14px;background:var(--paper);box-shadow:0 4px 0 var(--ink);font:800 14.5px/1.2 var(--f-body);padding:6px 8px;cursor:pointer;text-align:center}
 .cmd-chip:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 .cmd-chip:disabled{opacity:.45;cursor:default}
-.tp-rows{display:flex;flex-direction:column;gap:6px;background:#1B2040;border:3px solid var(--ink);border-radius:18px;padding:10px;flex:1;min-height:0}
-.tp-row{display:flex;align-items:center;gap:10px;border:0;border-radius:10px;background:rgba(255,255,255,.07);color:#EAF0FF;padding:5px 10px;font:700 15px/1.2 var(--f-body);cursor:pointer;text-align:left}
-.tp-row i{font:700 13px/1 var(--f-mono);font-style:normal;color:#6F7DB8;width:1.2em}
+.tp-rows{display:flex;flex-direction:column;gap:5px;background:#1B2040;border:3px solid var(--ink);border-radius:18px;padding:9px;flex:1;min-height:0}
+.tp-row{display:flex;align-items:center;gap:8px;border:0;border-radius:10px;background:rgba(255,255,255,.07);color:#EAF0FF;padding:4px 9px;font:700 14px/1.15 var(--f-body);cursor:pointer;text-align:left}
+.tp-row i{font:700 12px/1 var(--f-mono);font-style:normal;color:#6F7DB8;width:1.3em;flex:none}
 .tp-row .tx{flex:1}
-.tp-row code{font:700 15px/1 var(--f-mono);color:#FFC93C}
+.tp-row code{font:700 13px/1 var(--f-mono);color:#FFC93C;flex:none}
 .tp-row.now{background:#FFC93C;color:var(--ink)}
 .tp-row.now code{color:var(--ink)}
 .tp-row.done{opacity:.55}
 .tp-empty{margin:auto;font:700 15px/1.4 var(--f-body);color:#6F7DB8;text-align:center}
-.tp-board{background:#1F4D3A;border:6px solid #A9794B;border-radius:12px;height:150px;display:grid;place-items:center;box-shadow:0 5px 0 var(--ink)}
-.chalk{font:800 64px/1 var(--f-display);color:#F6F6EE;letter-spacing:.06em;min-height:1em}
-.tprog .memo{margin-top:auto}
+.tp-board{background:#1F4D3A;border:6px solid #A9794B;border-radius:12px;height:104px;display:grid;place-items:center;box-shadow:0 5px 0 var(--ink)}
+.chalk{font:800 52px/1 var(--f-display);color:#F6F6EE;letter-spacing:.06em;min-height:1em}
+.tp-stage{position:relative;height:132px;background:#fff;border:3px solid var(--ink);border-radius:14px;overflow:hidden}
+.stg-floor{position:absolute;left:0;right:0;bottom:30px;height:5px;background:#C9D5EC}
+.stg-wall{position:absolute;right:10px;bottom:30px;width:12px;height:70px;background:#1F4D3A;border:3px solid #A9794B;border-radius:3px}
+.stg-table{position:absolute;left:6px;bottom:30px;width:46px;height:30px;background:#E3C79A;border:3px solid var(--ink);border-radius:6px 6px 0 0;font-size:16px;line-height:20px;text-align:center}
+.stg-t{position:absolute;bottom:34px;width:46px;height:62px;transition:left .5s cubic-bezier(.3,1.2,.5,1)}
+.stg-body{position:absolute;left:0;bottom:0;font-size:40px;line-height:1;transition:transform .3s}
+.stg-t[data-face="away"] .stg-body{transform:scaleX(-1)}
+.stg-hand{position:absolute;left:14px;top:-14px;font-style:normal;font-size:22px}
+.stg-mk{position:absolute;right:-8px;bottom:6px;font-style:normal;font-size:18px}
+.stg-cap{position:absolute;left:0;right:0;bottom:4px;text-align:center;font:700 12.5px/1.2 var(--f-body);color:var(--ink-soft)}
+.tprog .memo{margin-top:auto;padding:8px 12px 10px}
+.tprog .memo > b{font-size:14.5px}
 .tp-bottom{display:flex;align-items:center;gap:16px}
 .tp-bottom .say{margin:0}
-.tp-bottom .bubble{max-width:560px}
+.tp-bottom .bubble{max-width:600px}
 .tp-bottom .row{margin-left:auto}
 
 /* ---------- algorithm (start a game on the iPad) ---------- */
@@ -212,16 +223,23 @@
             <div class="tp-pal" id="tpPal"></div>
           </div>
           <div class="tp-col">
-            <div class="tp-h">Програма <small id="tpCount">0 / 9</small></div>
+            <div class="tp-h">Програма <small id="tpCount">0 / 10</small></div>
             <div class="tp-rows" id="tpRows"></div>
           </div>
           <div class="tp-col">
             <div class="tp-board"><span class="chalk" id="tpChalk"></span></div>
+            <div class="tp-stage" id="tpStage" aria-hidden="true">
+              <div class="stg-floor"></div>
+              <div class="stg-table"><span id="stgTable">🖍️</span></div>
+              <div class="stg-wall"></div>
+              <div class="stg-t" id="stgT" data-face="away"><i class="stg-hand" id="stgHand" hidden>✋</i><span class="stg-body">🧑‍🏫</span><i class="stg-mk" id="stgMk" hidden>🖍️</i></div>
+              <div class="stg-cap" id="stgCap"></div>
+            </div>
             <div class="memo"><small>Запам’ятай</small><b>Комп’ютер виконує команди буквально: що написано, те й робить. Нічого не додумує.</b></div>
           </div>
         </div>
         <div class="tp-bottom">
-          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="tpBubble">Склади програму з команд. Вчитель виконуватиме її буквально!</div></div>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="tpBubble">Вчитель стоїть спиною до дошки, за 3 кроки від неї. Маркер лежить на столі. Склади програму!</div></div>
           <div class="row" data-noswipe>
             <button class="btn" id="tpStep" disabled>⏭ Наступна команда</button>
             <button class="btn ghost" id="tpReset" aria-label="Спочатку">⟲</button>
@@ -580,34 +598,69 @@ function dive(slide){
   }, 1100);
 }
 
-/* teacher: build a program from cards; the teacher then performs it literally, one command per tap */
+/* teacher: build a program from cards; the teacher then performs it literally, one command per tap.
+   World: the teacher starts with his back to the board, 3 steps from it, marker lying on the table next to him. */
 H.teacher = (function(){
   const CMD = {
-    walk:  { l: "Підійди до дошки",  c: 'підійти("дошка")' },
-    take:  { l: "Візьми маркер",     c: 'взяти("маркер")' },
-    open:  { l: "Зніми ковпачок",    c: 'зняти("ковпачок")' },
-    wB:    { l: "Напиши «Б»",        c: 'написати("Б")', ch: "Б" },
-    wI:    { l: "Напиши «І»",        c: 'написати("І")', ch: "І" },
-    wT:    { l: "Напиши «Т»",        c: 'написати("Т")', ch: "Т" },
-    close: { l: "Надінь ковпачок",   c: 'надіти("ковпачок")' }
+    turn:  { l: "Розвернись",              c: "розвернутись()" },
+    step1: { l: "Зроби 1 крок вперед",     c: "крок(1)", n: 1 },
+    step3: { l: "Зроби 3 кроки вперед",    c: "крок(3)", n: 3 },
+    up:    { l: "Підніми руку",            c: "підняти_руку()" },
+    down:  { l: "Опусти руку",             c: "опустити_руку()" },
+    take:  { l: "Візьми маркер зі столу",  c: 'взяти("маркер")' },
+    open:  { l: "Зніми ковпачок",          c: 'зняти("ковпачок")' },
+    close: { l: "Надінь ковпачок",         c: 'надіти("ковпачок")' },
+    wB:    { l: "Напиши «Б»",              c: 'написати("Б")', ch: "Б" },
+    wI:    { l: "Напиши «І»",              c: 'написати("І")', ch: "І" },
+    wT:    { l: "Напиши «Т»",              c: 'написати("Т")', ch: "Т" }
   };
-  const ORDER = ["wI", "take", "close", "walk", "wT", "open", "wB"];
-  const MAX = 9;
+  const ORDER = ["wI", "step3", "take", "close", "turn", "wT", "up", "open", "step1", "wB", "down"];
+  const MAX = 10, DIST = 3;
+  const STG_LEFT = [16, 36, 56, 72];   // % of the little stage, by steps taken towards the board
   let el, prog = [], done = 0, st;
 
-  const fresh = () => ({ at: false, has: false, capOff: false, board: "" });
+  const fresh = () => ({ pos: 0, toBoard: false, handUp: false, has: false, capOff: false, board: "", err: "" });
+  const steps = n => n + (n === 1 ? " крок" : n >= 2 && n <= 4 ? " кроки" : " кроків");
   function perform(key){
     const c = CMD[key], bad = m => { st.err = st.err || m; return m; };
-    if (key === "walk"){ st.at = true; return "Іду до дошки."; }
-    if (key === "take"){ st.has = true; return "Беру маркер."; }
-    if (key === "open"){ if (!st.has) return bad("Нічого знімати: маркера в мене немає!"); st.capOff = true; return "Знімаю ковпачок."; }
-    if (key === "close"){ st.capOff = false; return "Надіваю ковпачок."; }
-    if (!st.at) return bad("Я пишу в повітрі: дошка далеко!");
+    switch (key){
+      case "turn": st.toBoard = !st.toBoard; return st.toBoard ? "Розвертаюсь обличчям до дошки." : "Розвертаюсь спиною до дошки.";
+      case "step1": case "step3": {
+        const n = c.n;
+        if (st.toBoard){
+          if (st.pos + n > DIST){ st.pos = DIST; return bad("Ой, я вперся в дошку!"); }
+          st.pos += n; return "Іду до дошки: " + steps(n) + ".";
+        }
+        if (st.pos - n < 0){ st.pos = 0; return bad("Позаду стіна кімнати, далі йти нікуди!"); }
+        st.pos -= n; return "Іду від дошки: " + steps(n) + ".";
+      }
+      case "up": st.handUp = true; return "Піднімаю руку.";
+      case "down": st.handUp = false; return "Опускаю руку.";
+      case "take":
+        if (st.pos !== 0) return bad("Маркер лишився на столі, а я вже відійшов від нього!");
+        st.has = true; return "Беру маркер зі столу.";
+      case "open":
+        if (!st.has) return bad("Нічого знімати: маркера в мене немає!");
+        st.capOff = true; return "Знімаю ковпачок.";
+      case "close": st.capOff = false; return "Надіваю ковпачок.";
+    }
+    if (!st.toBoard) return bad("Я стою спиною до дошки, пишу в повітря!");
+    if (st.pos < DIST) return bad("Дошка занадто далеко: не дістаю маркером!");
+    if (!st.handUp) return bad("Рука опущена, на дошці нічого не написати!");
     if (!st.has) return bad("Чим писати? Маркера в мене немає!");
     if (!st.capOff) return bad("Маркер закритий, на дошці нічого не з’явилося!");
     st.board += c.ch; return "Пишу «" + c.ch + "».";
   }
-  function reset(){ done = 0; st = fresh(); render(); D.say(el, "Склади програму з команд. Вчитель виконуватиме її буквально!"); }
+  function reset(){ done = 0; st = fresh(); render(); D.say(el, "Вчитель стоїть спиною до дошки, за 3 кроки від неї. Маркер лежить на столі. Склади програму!"); }
+  function renderStage(){
+    $("#stgT").style.left = STG_LEFT[st.pos] + "%";
+    $("#stgT").dataset.face = st.toBoard ? "board" : "away";
+    $("#stgHand").hidden = !st.handUp;
+    $("#stgMk").hidden = !st.has;
+    $("#stgTable").hidden = st.has;
+    const left = DIST - st.pos;
+    $("#stgCap").textContent = (st.toBoard ? "лицем до дошки" : "спиною до дошки") + " · до неї " + (left ? steps(left) : "0 кроків");
+  }
   function render(){
     const rows = $("#tpRows");
     rows.innerHTML = prog.length ? "" : '<div class="tp-empty">Торкайся команд зліва.<br>Торкнись рядка, щоб прибрати його.</div>';
@@ -621,6 +674,7 @@ H.teacher = (function(){
     $("#tpCount").textContent = prog.length + " / " + MAX;
     $("#tpChalk").textContent = st.board;
     $("#tpStep").disabled = !prog.length || done >= prog.length;
+    renderStage();
   }
   function step(){
     if (done >= prog.length) return;
@@ -628,8 +682,7 @@ H.teacher = (function(){
     done++; render();
     if (done < prog.length){ D.say(el, msg); return; }
     if (st.board === "БІТ"){ D.say(el, "Вийшло «БІТ»! Програма працює, бо ти не пропустив жодного кроку."); happy(el); stamp("teacher"); }
-    else D.say(el, (st.err ? st.err + " " : "") + "Вийшло: «" + (st.board || "…") + "». Знайди, чого не вистачає, і спробуй ще!");
-    if (st.board !== "БІТ") Sound.buzz();
+    else { D.say(el, (st.err ? st.err + " " : "") + "Вийшло: «" + (st.board || "…") + "». Знайди, чого не вистачає, і спробуй ще!"); Sound.buzz(); }
   }
   return {
     init(s){

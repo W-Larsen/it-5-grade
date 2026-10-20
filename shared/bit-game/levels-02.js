@@ -128,6 +128,5 @@ BitGame.level("2-b3", {
         "1t 1 2 3"],
   start: { x: 0, y: 0, dir: "E" },
   commands: ["forward", "left", "right", "jump", "light"],
-  slots: 12, best: 12,
-  say: "Найскладніший! Тільки для найсміливіших."
+  slots: 12, best: 12
 });
