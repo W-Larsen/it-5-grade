@@ -17,21 +17,21 @@
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body)}
 a:focus-visible,button:focus-visible{outline:3px solid #2F80ED;outline-offset:3px}
-.page{padding:10px 16px 12px}
-.bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
-.back{flex:none;font:800 14px/1 var(--f-body);color:var(--ink);text-decoration:none;white-space:nowrap;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:8px 13px;box-shadow:0 3px 0 var(--ink)}
+.page{padding:16px 20px 12px}
+.bar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.back{flex:none;font:800 16px/1 var(--f-body);color:var(--ink);text-decoration:none;white-space:nowrap;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:11px 16px;box-shadow:0 4px 0 var(--ink)}
 .back:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
 .brand{flex:none;display:flex;align-items:center;gap:10px}
-.hero-bit{width:42px}
+.hero-bit{width:48px}
 .hero-bit svg{width:100%;display:block}
-h1{margin:0;font:800 clamp(18px,2.4vw,26px)/1.1 var(--f-display);letter-spacing:-.02em;white-space:nowrap}
-.sets{list-style:none;margin:0 0 0 auto;padding:0;display:flex;gap:10px;flex-wrap:wrap}
-.set{display:flex;flex-direction:column;gap:3px;text-align:left;background:var(--paper);border:3px solid var(--ink);border-radius:16px;padding:6px 12px 7px;box-shadow:0 4px 0 var(--ink);cursor:pointer;font-family:inherit;color:inherit;transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+h1{margin:0;font:800 clamp(20px,2.4vw,28px)/1.1 var(--f-display);letter-spacing:-.02em;white-space:nowrap}
+.sets{list-style:none;margin:0 0 0 auto;padding:0;display:flex;gap:7px;flex-wrap:wrap}
+.set{display:flex;flex-direction:column;gap:4px;text-align:left;background:var(--paper);border:3px solid var(--ink);border-radius:16px;padding:7px 11px 8px;box-shadow:0 5px 0 var(--ink);cursor:pointer;font-family:inherit;color:inherit;transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .set:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 .set[aria-pressed="true"]{background:var(--sun)}
 .set b{font:800 14px/1.15 var(--f-display);white-space:nowrap}
-.set .st{display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 12px/1 var(--f-mono)}
-.set .stars{color:#E0A100;font-size:14px;letter-spacing:1px;text-shadow:0 1px 0 var(--ink)}
+.set .st{display:flex;align-items:center;justify-content:space-between;gap:10px;font:800 13px/1 var(--f-mono)}
+.set .stars{color:#E0A100;font-size:17px;letter-spacing:1px;text-shadow:0 1px 0 var(--ink)}
 /* The game is drawn on a fixed 1128×708 stage and scaled to the free space, like on the lesson slides. */
 .stage-box{position:relative;margin:0 auto}
 .stage{position:absolute;left:0;top:0;width:1128px;height:708px;transform-origin:0 0}
