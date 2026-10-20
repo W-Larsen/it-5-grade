@@ -162,13 +162,13 @@
 /* ---------- command belt ---------- */
 .belt-scene{padding:16px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(#EEF6FF,#E4EEF8)}
 .bl-top{display:flex;gap:10px;align-items:stretch}
-.bl-cpu{flex:none;width:136px;border:3px solid var(--ink);border-radius:16px;background:#fff;box-shadow:0 4px 0 var(--ink);padding:8px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
-.bl-cpu b{font:800 14px/1 var(--f-display)}
-.bl-gear{width:38px;height:38px;color:var(--cpu)}
+.bl-cpu{flex:none;width:152px;border:3px solid var(--ink);border-radius:16px;background:#fff;box-shadow:0 4px 0 var(--ink);padding:8px;display:grid;grid-template-columns:34px 1fr;align-items:center;gap:8px;text-align:left}
+.bl-cpu b{font:800 12.5px/1 var(--f-display);letter-spacing:-.02em}
+.bl-gear{width:34px;height:34px;color:var(--cpu)}
 .bl-gear svg{width:100%;height:100%}
 .bl-gear.spin svg{animation:spin 1.2s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.bl-now{min-height:62px;width:100%;border:2px dashed #B9C6E0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 12px/1.2 var(--f-mono);color:var(--ink-soft)}
+.bl-now{grid-column:1/-1;min-height:84px;width:100%;padding:6px 4px;border:2px dashed #B9C6E0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:700 12px/1.2 var(--f-mono);color:var(--ink-soft)}
 .bl-now.busy{border-style:solid;border-color:var(--ink);background:#FFE680;color:var(--ink)}
 .bl-now .bt-ico{width:26px;height:26px;border-radius:7px}
 .bl-now .bt-ico svg{width:17px;height:17px}
@@ -176,7 +176,7 @@
 .bl-track{position:absolute;left:0;right:0;top:50%;height:96px;margin-top:-48px;background:repeating-linear-gradient(90deg,#4E5C88 0 14px,#445180 14px 28px)}
 .bl-belt.moving .bl-track{animation:belt .5s linear infinite}
 @keyframes belt{to{background-position:-28px 0}}
-.bl-card{position:absolute;top:50%;margin-top:-42px;width:72px;height:84px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 11.5px/1 var(--f-mono);transition:left .5s cubic-bezier(.3,1.1,.5,1),opacity .4s,transform .4s}
+.bl-card{position:absolute;top:50%;margin-top:-42px;width:70px;height:84px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 11.5px/1 var(--f-mono);transition:left .5s cubic-bezier(.3,1.1,.5,1),opacity .4s,transform .4s}
 .bl-card .bt-ico{width:32px;height:32px;border-radius:9px}
 .bl-card .bt-ico svg{width:20px;height:20px}
 .bl-card small{font:700 10.5px/1 var(--f-mono);color:var(--ink-soft)}
@@ -1143,7 +1143,7 @@ H.bits = (function(){
 /* pipe: commands wait on a belt, the processor takes them one by one, Bit obeys on a little map.
    The world is driven by the real game engine (level 2-02), so the result matches the game. */
 H.pipe = (function(){
-  const CELL = 104, GAP = 8, SLOT = 72 + 8;
+  const CELL = 104, GAP = 8, SLOT = 70 + 6;
   const DEG = { N: 0, E: 90, S: 180, W: 270 };
   const MSG = { move: "Біт іде вперед.", jump: "Біт стрибає.", turn: "Біт повертається.", on: "Транзистор світиться!", off: "Транзистор згас.",
     "bump-edge": "Далі нічого немає.", "bump-step": "Там сходинка.", "bump-flat": "Тут рівно.", "bump-high": "Занадто високо.", "no-target": "Тут немає транзистора." };
@@ -1162,7 +1162,7 @@ H.pipe = (function(){
     prog.forEach((k, i) => {
       const c = document.createElement("div"); c.className = "bl-card" + (i === 0 ? " first" : ""); c.dataset.i = i;
       c.innerHTML = cmdIco(k) + GAME_NAME[k].replace("()", "") + "<small>" + code3(CMD_CODE[k]) + "</small>";
-      c.style.left = (6 + i * SLOT) + "px"; track.appendChild(c);
+      c.style.left = (5 + i * SLOT) + "px"; track.appendChild(c);
     });
   }
   function reset(msg){
@@ -1179,7 +1179,7 @@ H.pipe = (function(){
     /* 1. the first card is taken by the processor, the rest of the queue moves up */
     belt.classList.add("moving"); Sound.whoosh();
     cards[i].classList.add("eaten");
-    cards.forEach((c, j) => { if (j > i){ c.style.left = (6 + (j - i - 1) * SLOT) + "px"; c.classList.toggle("first", j === i + 1); } });
+    cards.forEach((c, j) => { if (j > i){ c.style.left = (5 + (j - i - 1) * SLOT) + "px"; c.classList.toggle("first", j === i + 1); } });
     $("#blNow").className = "bl-now busy"; $("#blNow").innerHTML = cmdIco(k) + GAME_NAME[k] + "<small>" + code3(CMD_CODE[k]) + "</small>";
     $("#blGear").classList.add("spin");
     D.say(el, "Процесор взяв команду «" + GAME_NAME[k] + "».");
