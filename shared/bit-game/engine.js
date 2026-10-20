@@ -155,7 +155,43 @@ function remainingText(n) {
   return "Залишилось ще " + n + " транзисторів";
 }
 
+/* Stars per level, stored as JSON {"2-01": 3, …} under bitgame:v1. Falls back to memory if storage is unusable. */
+var STORAGE_KEY = "bitgame:v1";
+
+function createProgress(storage) {
+  var data = {};
+  try {
+    var parsed = JSON.parse(storage.getItem(STORAGE_KEY));
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) data = parsed;
+  } catch (e) { /* no storage, or corrupted: start empty */ }
+
+  function save() {
+    try { storage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* memory only */ }
+  }
+  function get(id) { return data[id] || 0; }
+  return {
+    get: get,
+    record: function (id, n) {
+      if (n > get(id)) { data[id] = n; save(); }
+      return get(id);
+    },
+    total: function (ids) {
+      return ids.reduce(function (sum, id) { return sum + get(id); }, 0);
+    },
+    clear: function (ids) {
+      ids.forEach(function (id) { delete data[id]; });
+      save();
+    }
+  };
+}
+
+function browserStorage() {
+  try { return root.localStorage || null; } catch (e) { return null; }
+}
+
 var BitGame = root.BitGame || {};
+BitGame.createProgress = createProgress;
+BitGame.progress = createProgress(browserStorage());
 BitGame.COMMANDS = COMMANDS;
 BitGame.CODE = CODE;
 BitGame.level = level;

@@ -134,3 +134,68 @@ test("remainingText declines the noun correctly", () => {
   assert.equal(BitGame.remainingText(21), "Залишився ще 21 транзистор");
   assert.equal(BitGame.remainingText(22), "Залишилось ще 22 транзистори");
 });
+
+/* ---------- progress ---------- */
+const memStorage = () => {
+  const m = new Map();
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null),
+    setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); }
+  };
+};
+const throwingStorage = () => {
+  const boom = () => { throw new Error("denied"); };
+  return { getItem: boom, setItem: boom, removeItem: boom };
+};
+
+test("progress keeps the best star count only", () => {
+  const p = BitGame.createProgress(memStorage());
+  assert.equal(p.get("2-01"), 0);
+  assert.equal(p.record("2-01", 2), 2);
+  assert.equal(p.record("2-01", 1), 2);
+  assert.equal(p.record("2-01", 3), 3);
+  assert.equal(p.get("2-01"), 3);
+});
+
+test("progress total sums stars over the given ids", () => {
+  const p = BitGame.createProgress(memStorage());
+  p.record("2-01", 3);
+  p.record("2-02", 2);
+  assert.equal(p.total(["2-01", "2-02", "2-03"]), 5);
+});
+
+test("progress clear removes only the given ids", () => {
+  const p = BitGame.createProgress(memStorage());
+  p.record("2-01", 3);
+  p.record("2-02", 2);
+  p.clear(["2-01"]);
+  assert.equal(p.get("2-01"), 0);
+  assert.equal(p.get("2-02"), 2);
+});
+
+test("progress persists across instances on the same storage", () => {
+  const s = memStorage();
+  BitGame.createProgress(s).record("2-01", 3);
+  assert.equal(BitGame.createProgress(s).get("2-01"), 3);
+  assert.ok(JSON.parse(s.getItem("bitgame:v1"))["2-01"] === 3);
+});
+
+test("progress works in memory when storage throws or is missing", () => {
+  [throwingStorage(), null].forEach((s) => {
+    const p = BitGame.createProgress(s);
+    assert.equal(p.get("2-01"), 0);
+    assert.equal(p.record("2-01", 2), 2);
+    assert.equal(p.get("2-01"), 2);
+    p.clear(["2-01"]);
+    assert.equal(p.get("2-01"), 0);
+  });
+});
+
+test("progress ignores corrupted stored data", () => {
+  const s = memStorage();
+  s.setItem("bitgame:v1", "{not json");
+  assert.equal(BitGame.createProgress(s).get("2-01"), 0);
+  s.setItem("bitgame:v1", "[1,2]");
+  assert.equal(BitGame.createProgress(s).get("2-01"), 0);
+});
