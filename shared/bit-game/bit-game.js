@@ -25,6 +25,40 @@ function el(tag, attrs, parent) {
   return n;
 }
 
+var STEP_MS = 450;
+var store = {
+  get: function (k) { try { return localStorage.getItem("bitgame:" + k); } catch (e) { return null; } },
+  set: function (k, v) { try { localStorage.setItem("bitgame:" + k, v); } catch (e) { /* in-memory only */ } }
+};
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+/* ---------- sound (synthesised; page can mute with BitGame.muted = true) ---------- */
+var Sound = (function () {
+  var ctx = null;
+  function ac() {
+    if (!ctx) { var C = window.AudioContext || window.webkitAudioContext; if (!C) return null; try { ctx = new C(); } catch (e) { return null; } }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  }
+  function tone(f, d, type, v, f2, delay) {
+    if (B.muted) return; var c = ac(); if (!c) return;
+    var t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v || .15, t + .012); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + d + .05);
+  }
+  return {
+    unlock: ac,
+    click: function () { tone(1300, .04, "square", .03); },
+    pop: function () { tone(560, .12, "sine", .18, 280); },
+    ding: function () { tone(880, .5, "sine", .13); tone(1320, .6, "sine", .07, null, .06); },
+    dark: function () { tone(220, .1, "triangle", .06); },
+    buzz: function () { tone(150, .2, "square", .05, 110); },
+    win: function () { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, .25, "triangle", .1, null, i * .1); }); }
+  };
+})();
+
 /* ---------- command icons (24×24, stroke) ---------- */
 var ICONS = {
   forward: '<path d="M12 20V5M5 11l7-7 7 7"/>',
@@ -66,10 +100,11 @@ var PUPIL_SHIFT = { N: [0, -4], E: [5, 1], S: [0, 4], W: [-5, 1] };
 var CSS = [
 ":host{display:block;position:relative;width:100%;height:100%;min-height:540px;color:var(--ink,#16193A);font-family:var(--f-body,'Nunito','Segoe UI',system-ui,sans-serif);-webkit-tap-highlight-color:transparent;touch-action:manipulation;outline:none}",
 "*{box-sizing:border-box}",
+"[hidden]{display:none !important}",
 "button{font-family:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}",
 "button:focus-visible{outline:3px solid #2F80ED;outline-offset:3px}",
 ".root{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr) auto;gap:10px 14px}",
-".tabs{grid-column:1/-1;display:flex;align-items:center;gap:10px;min-height:48px}",
+".tabs{grid-column:1/-1;display:flex;align-items:center;gap:10px;min-height:48px;padding-bottom:10px}",
 ".tab{position:relative;width:48px;height:48px;border-radius:50%;border:3px solid var(--ink,#16193A);background:var(--paper,#fff);font:800 20px/1 var(--f-display,'Unbounded',sans-serif);box-shadow:0 4px 0 var(--ink,#16193A);display:grid;place-items:center;padding:0}",
 ".tab.on{background:var(--sun,#FFC93C)}",
 ".tab:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink,#16193A)}",
@@ -121,6 +156,18 @@ var CSS = [
 ".btn.small{font-size:14px;padding:0 14px;min-height:40px;box-shadow:0 3px 0 var(--ink,#16193A)}",
 ".btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink,#16193A)}",
 ".btn:disabled{opacity:.45;cursor:default;transform:none}",
+".cmd:disabled,.slot:disabled,.tab:disabled{opacity:.55;cursor:default;transform:none}",
+".count.shake{animation:shake .4s}",
+"@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}",
+".hint-chip{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;background:var(--ink,#16193A);color:#fff;border-radius:8px;padding:2px 8px;margin:0 2px;font:800 13px/1.4 var(--f-mono,monospace)}",
+".win{position:absolute;inset:0;display:grid;place-items:center;z-index:5;background:rgba(10,39,64,.55);animation:fade .3s}",
+"@keyframes fade{from{opacity:0}}",
+".win-card{background:var(--paper,#fff);border:3px solid var(--ink,#16193A);border-radius:26px;box-shadow:6px 6px 0 var(--ink,#16193A);padding:22px 30px;text-align:center;max-width:90%;animation:pop .5s cubic-bezier(.3,1.6,.5,1)}",
+".win-card h3{margin:0 0 6px;font:800 clamp(20px,3vw,28px)/1.2 var(--f-display,sans-serif)}",
+".win-stars{font-size:46px;letter-spacing:6px;color:#FFB400;text-shadow:0 3px 0 var(--ink,#16193A);margin:4px 0}",
+".win-stars .off{color:#D5DCEE;text-shadow:none}",
+".win-card p{margin:0 0 14px;font:800 16px/1.4 var(--f-body,sans-serif);color:var(--ink-soft,#4E5584)}",
+".win-card .btn{margin:0 4px}",
 ".missing{position:absolute;inset:0;display:grid;place-items:center}",
 ".missing div{background:var(--paper,#fff);border:3px solid var(--ink,#16193A);border-radius:24px;padding:24px 32px;font:800 20px/1.4 var(--f-body,sans-serif);box-shadow:5px 5px 0 var(--ink,#16193A);text-align:center}",
 "@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}}"
@@ -136,6 +183,7 @@ P.connectedCallback = function () {
   if (!this.shadowRoot) this.attachShadow({ mode: "open" });
   this.setAttribute("data-noswipe", "");
   if (!this.hasAttribute("tabindex")) this.setAttribute("tabindex", "0");
+  if (!this._keyBound) { this._keyBound = true; this.addEventListener("keydown", this.onKey.bind(this)); }
   this._ready = true;
   this.setup();
 };
@@ -144,7 +192,8 @@ P.attributeChangedCallback = function () { if (this._ready) this.setup(); };
 P.setup = function () {
   var ids = (this.getAttribute("levels") || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
   this.ids = ids;
-  this.codeLang = this.getAttribute("lang") === "en" ? "en" : "uk";
+  var attrLang = this.getAttribute("lang");
+  this.codeLang = attrLang === "en" || attrLang === "uk" ? attrLang : (store.get("lang") === "en" ? "en" : "uk");
   var idx = this.index != null && this.index < ids.length ? this.index : 0;
   this.shadowRoot.innerHTML = "<style>" + CSS + "</style>";
   var known = ids.length && ids.every(function (id) { return B.getLevel(id); });
@@ -172,11 +221,13 @@ P.build = function () {
     '<div class="deck"><div class="cmds"></div><div class="ctl">' +
       '<button class="btn" data-act="run" type="button">▶ Запуск</button>' +
       '<button class="btn ghost" data-act="step" type="button">⏭ Крок</button>' +
+      '<button class="btn ghost" data-act="hint" type="button" hidden>💡 Підказка</button>' +
       '<button class="btn ghost" data-act="reset" type="button" aria-label="Спочатку">⟲</button>' +
     '</div></div>';
   this.shadowRoot.appendChild(root);
   this.q = function (sel) { return root.querySelector(sel); };
   this.board = this.q(".board");
+  this.wire();
 };
 
 P.renderTabs = function () {
@@ -201,20 +252,29 @@ P.renderTabs = function () {
 };
 
 P.loadLevel = function (i) {
+  this.runId = (this.runId || 0) + 1;
   this.index = i;
   this.level = B.getLevel(this.ids[i]);
-  this.state = B.initialState(this.level);
   this.program = [];
+  this.fails = 0;
+  this.hintCache = null;
+  this.running = this.busy = this.won = false;
+  this.stepIdx = -1;
+  this.state = B.initialState(this.level);
+  this.removeWin();
   this.renderTabs();
   this.buildBoard();
   this.renderSide();
   this.renderDeck();
+  this.q('[data-act="hint"]').hidden = true;
   this.say(this.level.say);
+  this.syncUI();
 };
 
-P.say = function (text) {
+/* `html` = true lets the bubble carry markup built by this file (never page or user text). */
+P.say = function (text, html) {
   var b = this.q(".bubble");
-  b.textContent = text || "";
+  if (html) b.innerHTML = text; else b.textContent = text || "";
   b.style.display = text ? "" : "none";
   b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
 };
@@ -291,10 +351,14 @@ P.renderLit = function () {
 };
 
 /* Bit stands at the centre of the top face. `at` = {x, y, lift} in screen coordinates. */
-P.placeBit = function (st, at) {
+P.bitTransform = function (x, y) {
+  this.bitG.setAttribute("transform", "translate(" + x + " " + (y + 6) + ") scale(.62) translate(-60 -124)");
+};
+
+P.placeBit = function (st) {
   var c = this.level.cells[st.y][st.x], p = iso(st.x, st.y, c.h);
-  var px = at ? at.x : p.x, py = (at ? at.y : p.y) + 6;
-  this.bitG.setAttribute("transform", "translate(" + px + " " + py + ") scale(.62) translate(-60 -124)");
+  this.bitTransform(p.x, p.y);
+  this.arrow.setAttribute("opacity", ".85");
   var pup = PUPIL_SHIFT[st.dir];
   this.bitG.querySelector(".bit-pupils").setAttribute("transform", "translate(" + pup[0] + " " + pup[1] + ")");
   var v = DIR_VEC[st.dir], len = Math.sqrt(v[0] * v[0] + v[1] * v[1]), ux = v[0] / len, uy = v[1] / len, qx = -uy, qy = ux;
@@ -314,23 +378,41 @@ P.zPlace = function (sum) {
   layer.insertBefore(this.bitG, ref);
 };
 
-/* ----- side panel and deck (static for now) ----- */
+/* ----- side panel, code and deck ----- */
 P.renderSide = function () {
   var lv = this.level, slots = this.q(".slots");
   slots.innerHTML = "";
   for (var i = 0; i < lv.slots; i++) {
     var d = document.createElement("button");
-    d.className = "slot"; d.type = "button"; d.setAttribute("aria-label", "Клітинка " + (i + 1));
+    d.className = "slot"; d.type = "button"; d.dataset.i = i;
     slots.appendChild(d);
   }
-  this.q(".count").textContent = "0/" + lv.slots;
   this.q(".lang").textContent = this.codeLang === "uk" ? "EN" : "УКР";
-  this.renderCode();
+  this.renderProgram();
 };
 
-P.renderCode = function () {
-  var body = this.q(".code-body");
-  body.innerHTML = '<div class="ln empty">' + (this.codeLang === "uk" ? "# натискай команди внизу" : "# tap commands below") + "</div>";
+/* Redraws slots, counter and code from this.program; `now` = index of the command being executed. */
+P.renderProgram = function (now) {
+  var lv = this.level, prog = this.program, slots = this.q(".slots").children;
+  for (var i = 0; i < slots.length; i++) {
+    var d = slots[i], c = prog[i];
+    d.className = "slot" + (c ? " full" : "") + (i === now ? " now" : "");
+    d.style.background = c ? CMD_COLORS[c] : "";
+    d.style.color = c === "light" ? "#16193A" : "#fff";
+    d.innerHTML = c ? icon(c, 26) + '<span class="n">' + (i + 1) + "</span>" : "";
+    d.setAttribute("aria-label", c ? "Команда " + (i + 1) + ": " + LABELS[c] + " (прибрати)" : "Порожня клітинка " + (i + 1));
+  }
+  this.q(".count").textContent = prog.length + "/" + lv.slots;
+  var code = B.CODE[this.codeLang], body = this.q(".code-body");
+  if (!prog.length) {
+    body.innerHTML = '<div class="ln empty">' + (this.codeLang === "uk" ? "# натискай команди внизу" : "# tap commands below") + "</div>";
+  } else {
+    body.innerHTML = prog.map(function (c, k) {
+      return '<div class="ln' + (k === now ? " now" : "") + '"><i>' + (k + 1) + "</i><span>" + esc(code[c]) + "</span></div>";
+    }).join("");
+    var cur = body.querySelector(".now");
+    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: "nearest" });
+  }
 };
 
 P.renderDeck = function () {
@@ -344,6 +426,233 @@ P.renderDeck = function () {
     b.innerHTML = icon(c, 28) + "<span>" + LABELS[c] + "</span>";
     box.appendChild(b);
   });
+};
+
+P.locked = function () { return this.running || this.busy || !!this.won; };
+
+/* Buttons are inert while the program runs; ⟲ always works. */
+P.syncUI = function () {
+  var locked = this.locked();
+  [].forEach.call(this.root.querySelectorAll(".cmd,.slot,.tab"), function (b) { b.disabled = locked; });
+  this.q('[data-act="run"]').disabled = locked || !this.program.length;
+  this.q('[data-act="step"]').disabled = locked || !this.program.length;
+};
+
+/* ----- editing: any change to the program behaves like ⟲ ----- */
+P.edited = function () {
+  this.resetRun(true);
+};
+
+P.addCmd = function (c) {
+  if (this.locked()) return;
+  if (this.program.length >= this.level.slots) {
+    var cnt = this.q(".count");
+    cnt.classList.remove("shake"); void cnt.offsetWidth; cnt.classList.add("shake");
+    Sound.buzz();
+    return;
+  }
+  Sound.click();
+  this.program.push(c);
+  this.edited();
+};
+
+P.removeCmd = function (i) {
+  if (this.locked() || i >= this.program.length) return;
+  Sound.click();
+  this.program.splice(i, 1);
+  this.edited();
+};
+
+/* ----- running ----- */
+/* Puts Bit back on the start tile and clears the lit transistors; the program stays. */
+P.resetRun = function (keepBubble) {
+  this.runId++;
+  this.running = this.busy = false;
+  this.won = false;
+  this.stepIdx = -1;
+  this.state = B.initialState(this.level);
+  this.removeWin();
+  this.board.classList.remove("powered");
+  this.placeBit(this.state);
+  this.renderLit();
+  if (!keepBubble) this.say(this.level.say);
+  this.renderProgram();
+  this.syncUI();
+};
+
+var BUMP_TEXT = {
+  "bump-edge": "Далі нічого немає!",
+  "bump-step": "Там сходинка — треба стрибнути!",
+  "bump-high": "Так високо я не дістану!",
+  "no-target": "Тут немає транзистора."
+};
+
+/* Executes one command with animation; resolves false if the run was cancelled meanwhile. */
+P.execOne = async function (i) {
+  var id = this.runId, lv = this.level, cmd = this.program[i];
+  var r = B.step(lv, this.state, cmd), from = this.state, to = r.state, ev = r.event;
+  this.renderProgram(i);
+  if (ev === "move" || ev === "jump") {
+    await this.tween(from, to, ev === "jump" ? STEP_MS + 80 : STEP_MS, ev === "jump" ? 34 : 0);
+  } else if (ev === "turn") {
+    this.state = to; this.placeBit(to);
+    await sleep(STEP_MS * 0.7);
+  } else if (ev === "on" || ev === "off") {
+    this.state = to; this.renderLit();
+    if (ev === "on") Sound.ding(); else Sound.dark();
+    await sleep(STEP_MS * 0.85);
+  } else {
+    Sound.buzz();
+    this.say(BUMP_TEXT[ev]);
+    await this.shakeBit(from);
+  }
+  if (id !== this.runId) return false;
+  this.state = to;
+  this.placeBit(to);
+  return true;
+};
+
+/* Slides (or arcs) Bit between two tiles. Timer-based so it also runs in a hidden tab. */
+P.tween = function (from, to, ms, arc) {
+  var self = this, lv = this.level;
+  var a = iso(from.x, from.y, lv.cells[from.y][from.x].h), b = iso(to.x, to.y, lv.cells[to.y][to.x].h);
+  this.zPlace(Math.max(from.x + from.y, to.x + to.y));
+  this.arrow.setAttribute("opacity", "0");
+  var t0 = Date.now();
+  return new Promise(function (resolve) {
+    (function frame() {
+      var k = Math.min(1, (Date.now() - t0) / ms), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      self.bitTransform(a.x + (b.x - a.x) * e, a.y + (b.y - a.y) * e - Math.sin(Math.PI * k) * arc);
+      if (k < 1) setTimeout(frame, 16); else resolve();
+    })();
+  });
+};
+
+P.shakeBit = function (st) {
+  var self = this, p = iso(st.x, st.y, this.level.cells[st.y][st.x].h), t0 = Date.now(), ms = STEP_MS * 0.9;
+  return new Promise(function (resolve) {
+    (function frame() {
+      var k = Math.min(1, (Date.now() - t0) / ms);
+      self.bitTransform(p.x + Math.sin(k * Math.PI * 6) * 7 * (1 - k), p.y);
+      if (k < 1) setTimeout(frame, 16); else { self.bitTransform(p.x, p.y); resolve(); }
+    })();
+  });
+};
+
+P.run = async function () {
+  if (this.locked() || !this.program.length) return;
+  Sound.unlock();
+  this.resetRun(false);
+  var id = this.runId;
+  this.running = true;
+  this.syncUI();
+  for (var i = 0; i < this.program.length; i++) {
+    if (!(await this.execOne(i)) || id !== this.runId) return;
+    if (B.isWon(this.level, this.state)) { this.running = false; return this.win(); }
+    await sleep(80);
+    if (id !== this.runId) return;
+  }
+  this.running = false;
+  this.lose();
+};
+
+P.stepOnce = async function () {
+  if (this.locked() || !this.program.length) return;
+  Sound.unlock();
+  if (this.stepIdx < 0 || this.stepIdx >= this.program.length) { this.resetRun(false); this.stepIdx = 0; }
+  var id = this.runId, i = this.stepIdx;
+  this.busy = true;
+  this.syncUI();
+  var ok = await this.execOne(i);
+  if (!ok || id !== this.runId) return;
+  this.busy = false;
+  this.stepIdx = i + 1;
+  this.syncUI();
+  if (B.isWon(this.level, this.state)) return this.win();
+  if (this.stepIdx >= this.program.length) { this.stepIdx = -1; this.lose(); }
+};
+
+P.lose = function () {
+  this.fails++;
+  this.renderProgram();
+  var left = this.level.targets.length - this.state.lit.length;
+  this.say(left > 0 ? B.remainingText(left) : "Усі транзистори вже горять!");
+  if (this.fails >= 2) this.q('[data-act="hint"]').hidden = false;
+  this.syncUI();
+};
+
+P.win = function () {
+  var self = this, lv = this.level, n = this.program.length;
+  this.running = this.busy = false;
+  this.won = true;
+  this.renderProgram();
+  var stars = B.stars(lv, n, true), best = B.progress.record(lv.id, stars);
+  Sound.win();
+  this.board.classList.add("powered");
+  this.say("Чип ожив!");
+  this.syncUI();
+  var next = this.index + 1 < this.ids.length;
+  var card = document.createElement("div");
+  card.className = "win";
+  card.innerHTML = '<div class="win-card"><h3>Чип ожив! 🎉</h3><div class="win-stars">' +
+    [1, 2, 3].map(function (k) { return k <= stars ? "★" : '<span class="off">★</span>'; }).join("") + "</div><p>" +
+    "Команд: " + n + (n > lv.best ? ". Можна коротше: " + lv.best + "." : ". Найкоротший шлях!") + "</p>" +
+    '<button class="btn ghost" data-act="again" type="button">↺ Ще раз</button>' +
+    (next ? '<button class="btn" data-act="next" type="button">Наступний рівень →</button>' : "") + "</div>";
+  var id = this.runId;
+  setTimeout(function () { if (self.won && self.runId === id) self.q(".field").appendChild(card); }, 900);
+  this.renderTabs();
+  this.syncUI();
+  this.dispatchEvent(new CustomEvent("bitgame:win", { bubbles: true, composed: true, detail: { id: lv.id, stars: stars, best: best } }));
+  if (this.ids.every(function (x) { return B.progress.get(x) >= 1; })) {
+    this.dispatchEvent(new CustomEvent("bitgame:solved-set", { bubbles: true, composed: true, detail: { ids: this.ids.slice() } }));
+  }
+};
+
+P.removeWin = function () {
+  var w = this.root && this.q(".win");
+  if (w) w.remove();
+};
+
+P.showHint = function () {
+  var sol = this.hintCache || (this.hintCache = B.solve(this.level) || []), code = B.CODE[this.codeLang];
+  var first = sol.slice(0, 2).map(function (c) {
+    return '<span class="hint-chip">' + icon(c, 14) + " " + esc(code[c]) + "</span>";
+  }).join(" ");
+  this.say("Почни так: " + first + " …а далі сам!", true);
+};
+
+/* ----- wiring ----- */
+P.wire = function () {
+  var self = this;
+  this.root.addEventListener("click", function (e) {
+    var t = e.target.closest("button");
+    if (!t || !self.root.contains(t) || t.disabled) return;
+    Sound.unlock();
+    if (t.dataset.cmd) return self.addCmd(t.dataset.cmd);
+    if (t.classList.contains("slot")) return self.removeCmd(+t.dataset.i);
+    if (t.classList.contains("tab")) { Sound.pop(); return self.loadLevel(+t.dataset.i); }
+    if (t.classList.contains("lang")) {
+      self.codeLang = self.codeLang === "uk" ? "en" : "uk";
+      store.set("lang", self.codeLang);
+      t.textContent = self.codeLang === "uk" ? "EN" : "УКР";
+      return self.renderProgram(self.stepIdx > 0 ? self.stepIdx - 1 : undefined);
+    }
+    switch (t.dataset.act) {
+      case "run": return self.run();
+      case "step": return self.stepOnce();
+      case "reset": case "again": return self.resetRun(false);
+      case "hint": return self.showHint();
+      case "next": Sound.pop(); return self.loadLevel(self.index + 1);
+    }
+  });
+};
+
+P.onKey = function (e) {
+  if (e.key === "Backspace" && this.program && !this.locked() && this.program.length) {
+    e.preventDefault();
+    this.removeCmd(this.program.length - 1);
+  }
 };
 
 customElements.define("bit-game", BitGameElement);
