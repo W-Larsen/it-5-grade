@@ -1,0 +1,136 @@
+"use strict";
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const BitGame = require("../shared/bit-game/engine.js");
+
+const ALL = ["forward", "left", "right", "jump", "light"];
+const def = (over) => Object.assign({
+  title: "T", map: ["1 1 2t", ". 1 3"], start: { x: 0, y: 0, dir: "E" },
+  commands: ALL, slots: 8, best: 3
+}, over);
+const L = BitGame.parseLevel("t", def());
+const at = (x, y, dir, lit) => ({ x, y, dir, lit: lit || [] });
+
+test("parseLevel reads size, heights, transistors and targets", () => {
+  assert.equal(L.w, 3);
+  assert.equal(L.h, 2);
+  assert.deepEqual(L.cells[0][2], { h: 2, t: true });
+  assert.equal(L.cells[1][0], null);
+  assert.deepEqual(L.targets, [{ x: 2, y: 0 }]);
+});
+
+test("parseLevel rejects invalid definitions", () => {
+  const bad = (over) => assert.throws(() => BitGame.parseLevel("b", def(over)));
+  bad({ map: ["1 1", "1"] });
+  bad({ map: ["1 x 2t"] });
+  bad({ map: [". 1 2t"] });
+  bad({ map: ["1 1 2"] });
+  bad({ slots: 13 });
+  bad({ slots: 2, best: 3 });
+  bad({ commands: ["fly"] });
+  bad({ start: { x: 0, y: 0, dir: "Q" } });
+});
+
+test("step forward moves onto a tile of the same height", () => {
+  const before = at(0, 0, "E");
+  const r = BitGame.step(L, before, "forward");
+  assert.equal(r.event, "move");
+  assert.equal(r.state.x, 1);
+  assert.equal(before.x, 0, "input state is not mutated");
+});
+
+test("step forward bumps into a step, then jump climbs it", () => {
+  assert.equal(BitGame.step(L, at(1, 0, "E"), "forward").event, "bump-step");
+  assert.equal(BitGame.step(L, at(1, 0, "E"), "forward").state.x, 1);
+  const j = BitGame.step(L, at(1, 0, "E"), "jump");
+  assert.equal(j.event, "jump");
+  assert.equal(j.state.x, 2);
+});
+
+test("step jump bumps when the tile is more than one higher", () => {
+  assert.equal(BitGame.step(L, at(1, 1, "E"), "jump").event, "bump-high");
+});
+
+test("step bumps at the map edge and at empty cells", () => {
+  assert.equal(BitGame.step(L, at(0, 0, "N"), "forward").event, "bump-edge");
+  assert.equal(BitGame.step(L, at(0, 0, "S"), "forward").event, "bump-edge");
+});
+
+test("step forward moves south along y", () => {
+  const r = BitGame.step(L, at(1, 0, "S"), "forward");
+  assert.equal(r.event, "move");
+  assert.equal(r.state.y, 1);
+});
+
+test("step jump down any height works", () => {
+  const lv = BitGame.parseLevel("d", def({ map: ["3 1t"], best: 2 }));
+  const r = BitGame.step(lv, at(0, 0, "E"), "jump");
+  assert.equal(r.event, "jump");
+  assert.equal(r.state.x, 1);
+});
+
+test("turning rotates counter-clockwise for left and clockwise for right", () => {
+  assert.equal(BitGame.step(L, at(0, 0, "N"), "left").state.dir, "W");
+  assert.equal(BitGame.step(L, at(0, 0, "W"), "right").state.dir, "N");
+  assert.equal(BitGame.step(L, at(0, 0, "N"), "right").state.dir, "E");
+});
+
+test("light toggles a transistor and reports no-target elsewhere", () => {
+  const on = BitGame.step(L, at(2, 0, "E"), "light");
+  assert.equal(on.event, "on");
+  assert.deepEqual(on.state.lit, ["2,0"]);
+  const off = BitGame.step(L, on.state, "light");
+  assert.equal(off.event, "off");
+  assert.deepEqual(off.state.lit, []);
+  assert.equal(BitGame.step(L, at(0, 0, "E"), "light").event, "no-target");
+});
+
+test("run stops right after the winning step", () => {
+  const r = BitGame.run(L, ["forward", "jump", "light", "forward"]);
+  assert.equal(r.won, true);
+  assert.equal(r.trace.length, 3);
+});
+
+test("run reports a loss when transistors stay dark", () => {
+  assert.equal(BitGame.run(L, ["forward"]).won, false);
+});
+
+test("stars grade program length against best", () => {
+  assert.equal(BitGame.stars(L, 3, true), 3);
+  assert.equal(BitGame.stars(L, 5, true), 2);
+  assert.equal(BitGame.stars(L, 6, true), 1);
+  assert.equal(BitGame.stars(L, 3, false), 0);
+});
+
+test("solve finds the shortest program, or null when unreachable", () => {
+  assert.deepEqual(BitGame.solve(L), ["forward", "jump", "light"]);
+  const u = BitGame.parseLevel("u", def({ map: ["1 3t"], slots: 4, best: 1 }));
+  assert.equal(BitGame.solve(u), null);
+});
+
+test("level registry stores levels in registration order", () => {
+  BitGame.level("reg-1", def());
+  BitGame.level("reg-2", def());
+  assert.equal(BitGame.getLevel("reg-1").id, "reg-1");
+  assert.equal(BitGame.getLevel("nope"), null);
+  const ids = BitGame.levelIds();
+  assert.ok(ids.indexOf("reg-1") < ids.indexOf("reg-2"));
+});
+
+test("CODE has ukrainian and english names for every command", () => {
+  assert.equal(BitGame.CODE.uk.light, "увімкнути()");
+  assert.equal(BitGame.CODE.en.left, "turn_left()");
+  ALL.forEach((c) => {
+    assert.ok(BitGame.CODE.uk[c]);
+    assert.ok(BitGame.CODE.en[c]);
+  });
+});
+
+test("remainingText declines the noun correctly", () => {
+  assert.equal(BitGame.remainingText(1), "Залишився ще 1 транзистор");
+  assert.equal(BitGame.remainingText(2), "Залишилось ще 2 транзистори");
+  assert.equal(BitGame.remainingText(5), "Залишилось ще 5 транзисторів");
+  assert.equal(BitGame.remainingText(11), "Залишилось ще 11 транзисторів");
+  assert.equal(BitGame.remainingText(21), "Залишився ще 21 транзистор");
+  assert.equal(BitGame.remainingText(22), "Залишилось ще 22 транзистори");
+});
