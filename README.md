@@ -9,7 +9,7 @@
 | # | Урок | Сторінка | Для вчителя |
 |---|---|---|---|
 | 1 | Подорож Біта: як працює інтернет | [`lesson-01-internet/`](lesson-01-internet/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-01-internet/) | [конспект](lesson-01-internet/teacher-notes.md) · теорія `.docx` |
-| 2 | Біт у процесорі *(чекає перевірки на iPad)* | [`lesson-02-processor/`](lesson-02-processor/index.html) | [конспект](lesson-02-processor/teacher-notes.md) |
+| 2 | Біт у процесорі | [`lesson-02-processor/`](lesson-02-processor/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-02-processor/) | [конспект](lesson-02-processor/teacher-notes.md) · теорія `.docx` |
 | — | Біт-програміст · Всі рівні | [`game/`](game/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/game/) | — |
 
 ## Структура
