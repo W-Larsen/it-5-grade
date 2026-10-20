@@ -33,7 +33,7 @@
 .circuit > *{position:relative}
 
 /* ---------- teacher (program the teacher) ---------- */
-.tprog{display:grid;grid-template-columns:336px 1fr 300px;gap:16px;height:430px}
+.tprog{display:grid;grid-template-columns:292px 1fr 430px;gap:16px;height:430px}
 .tp-col{display:flex;flex-direction:column;gap:10px;min-height:0}
 .tp-h{display:flex;justify-content:space-between;align-items:baseline;font:800 15px/1 var(--f-display);letter-spacing:-.01em}
 .tp-h small{font:700 13px/1 var(--f-body);color:var(--ink-soft)}
@@ -42,26 +42,19 @@
 .cmd-chip:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 .cmd-chip:disabled{opacity:.45;cursor:default}
 .tp-rows{display:flex;flex-direction:column;gap:5px;background:#1B2040;border:3px solid var(--ink);border-radius:18px;padding:9px;flex:1;min-height:0}
-.tp-row{display:flex;align-items:center;gap:8px;border:0;border-radius:10px;background:rgba(255,255,255,.07);color:#EAF0FF;padding:4px 9px;font:700 14px/1.15 var(--f-body);cursor:pointer;text-align:left}
+.tp-row{display:flex;align-items:center;gap:7px;border:0;border-radius:10px;background:rgba(255,255,255,.07);color:#EAF0FF;padding:4px 8px;font:700 13px/1.15 var(--f-body);cursor:pointer;text-align:left}
 .tp-row i{font:700 12px/1 var(--f-mono);font-style:normal;color:#6F7DB8;width:1.3em;flex:none}
 .tp-row .tx{flex:1}
-.tp-row code{font:700 13px/1 var(--f-mono);color:#FFC93C;flex:none}
+.tp-row code{font:700 12px/1 var(--f-mono);color:#FFC93C;flex:none}
 .tp-row.now{background:#FFC93C;color:var(--ink)}
 .tp-row.now code{color:var(--ink)}
 .tp-row.done{opacity:.55}
 .tp-empty{margin:auto;font:700 15px/1.4 var(--f-body);color:#6F7DB8;text-align:center}
-.tp-board{background:#1F4D3A;border:6px solid #A9794B;border-radius:12px;height:104px;display:grid;place-items:center;box-shadow:0 5px 0 var(--ink)}
-.chalk{font:800 52px/1 var(--f-display);color:#F6F6EE;letter-spacing:.06em;min-height:1em}
-.tp-stage{position:relative;height:132px;background:#fff;border:3px solid var(--ink);border-radius:14px;overflow:hidden}
-.stg-floor{position:absolute;left:0;right:0;bottom:30px;height:5px;background:#C9D5EC}
-.stg-wall{position:absolute;right:10px;bottom:30px;width:12px;height:70px;background:#1F4D3A;border:3px solid #A9794B;border-radius:3px}
-.stg-table{position:absolute;left:6px;bottom:30px;width:46px;height:30px;background:#E3C79A;border:3px solid var(--ink);border-radius:6px 6px 0 0;font-size:16px;line-height:20px;text-align:center}
-.stg-t{position:absolute;bottom:34px;width:46px;height:62px;transition:left .5s cubic-bezier(.3,1.2,.5,1)}
-.stg-body{position:absolute;left:0;bottom:0;font-size:40px;line-height:1;transition:transform .3s}
-.stg-t[data-face="away"] .stg-body{transform:scaleX(-1)}
-.stg-hand{position:absolute;left:14px;top:-14px;font-style:normal;font-size:22px}
-.stg-mk{position:absolute;right:-8px;bottom:6px;font-style:normal;font-size:18px}
-.stg-cap{position:absolute;left:0;right:0;bottom:4px;text-align:center;font:700 12.5px/1.2 var(--f-body);color:var(--ink-soft)}
+.tp-scene{position:relative;background:#EAF0FF;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);overflow:hidden}
+.tp-scene svg{display:block;width:100%;height:auto}
+.sc-t{transition:transform .55s cubic-bezier(.3,1.15,.5,1)}
+.sc-chalk{font:800 38px "Unbounded",sans-serif;fill:#F6F6EE;letter-spacing:2px}
+.tp-cap{text-align:center;font:800 14px/1.2 var(--f-body);color:var(--ink-soft);margin-top:-2px}
 .tprog .memo{margin-top:auto;padding:8px 12px 10px}
 .tprog .memo > b{font-size:14.5px}
 .tp-bottom{display:flex;align-items:center;gap:16px}
@@ -227,14 +220,49 @@
             <div class="tp-rows" id="tpRows"></div>
           </div>
           <div class="tp-col">
-            <div class="tp-board"><span class="chalk" id="tpChalk"></span></div>
-            <div class="tp-stage" id="tpStage" aria-hidden="true">
-              <div class="stg-floor"></div>
-              <div class="stg-table"><span id="stgTable">🖍️</span></div>
-              <div class="stg-wall"></div>
-              <div class="stg-t" id="stgT" data-face="away"><i class="stg-hand" id="stgHand" hidden>✋</i><span class="stg-body">🧑‍🏫</span><i class="stg-mk" id="stgMk" hidden>🖍️</i></div>
-              <div class="stg-cap" id="stgCap"></div>
+            <div class="tp-scene">
+              <svg viewBox="0 0 430 280" role="img" aria-label="Вчитель, стіл із маркером і дошка на стіні">
+                <rect width="430" height="232" fill="#EAF0FF"/>
+                <rect y="232" width="430" height="48" fill="#E3C79A"/>
+                <rect y="232" width="430" height="4" fill="#C49A62"/>
+                <g fill="#C9D5EC"><circle cx="150" cy="60" r="4"/><circle cx="190" cy="60" r="4"/><circle cx="230" cy="60" r="4"/></g>
+                <!-- chalkboard on the wall -->
+                <rect x="290" y="16" width="124" height="136" rx="6" fill="#A9794B" stroke="#16193A" stroke-width="4"/>
+                <rect x="298" y="24" width="108" height="120" fill="#1F4D3A"/>
+                <rect x="294" y="150" width="116" height="8" rx="3" fill="#A9794B" stroke="#16193A" stroke-width="2.5"/>
+                <text id="scChalk" class="sc-chalk" x="352" y="98" text-anchor="middle"></text>
+                <!-- table with the marker -->
+                <rect x="22" y="204" width="8" height="28" fill="#8A5A2B" stroke="#16193A" stroke-width="2.5"/>
+                <rect x="82" y="204" width="8" height="28" fill="#8A5A2B" stroke="#16193A" stroke-width="2.5"/>
+                <rect x="14" y="190" width="84" height="14" rx="3" fill="#C98F4E" stroke="#16193A" stroke-width="3"/>
+                <g id="scMkT"><rect x="36" y="181" width="34" height="9" rx="3" fill="#E5487B" stroke="#16193A" stroke-width="2"/><rect x="62" y="181" width="8" height="9" rx="3" fill="#16193A"/></g>
+                <!-- steps on the floor -->
+                <g id="scTicks" font-family="Nunito,sans-serif" font-weight="800" font-size="12" text-anchor="middle" fill="#16193A"></g>
+                <!-- the teacher: feet at (0,0); drawn facing the board (right); mirrored when turned away -->
+                <g id="scT" class="sc-t" style="transform:translate(116px,232px)">
+                  <ellipse cx="0" cy="2" rx="28" ry="5" fill="rgba(22,25,58,.2)"/>
+                  <g id="scFace" transform="scale(-1 1)">
+                    <rect x="-13" y="-64" width="12" height="62" rx="5" fill="#2B3566" stroke="#16193A" stroke-width="2.5"/>
+                    <rect x="2" y="-64" width="12" height="62" rx="5" fill="#2B3566" stroke="#16193A" stroke-width="2.5"/>
+                    <rect x="-9" y="-9" width="24" height="10" rx="5" fill="#16193A"/>
+                    <rect x="-24" y="-112" width="46" height="58" rx="15" fill="#2F80ED" stroke="#16193A" stroke-width="3"/>
+                    <path d="M4 -108l10 0-5 26z" fill="#FFC93C" stroke="#16193A" stroke-width="2" stroke-linejoin="round"/>
+                    <circle cx="0" cy="-134" r="23" fill="#FFD7B5" stroke="#16193A" stroke-width="3"/>
+                    <path d="M-21 -138A23 23 0 0 1 23 -138Q6 -153 -21 -138Z" fill="#5A3A22" stroke="#16193A" stroke-width="2.5" stroke-linejoin="round"/>
+                    <circle cx="11" cy="-135" r="7.5" fill="#fff" stroke="#16193A" stroke-width="2.5"/><circle cx="13" cy="-135" r="2.8" fill="#16193A"/>
+                    <path d="M3 -136L-10 -140" stroke="#16193A" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M23 -132q6 3 0 7" fill="none" stroke="#16193A" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M9 -122q6 5 12 0" fill="none" stroke="#16193A" stroke-width="2.5" stroke-linecap="round"/>
+                    <g id="scArmD"><path d="M2 -102L10 -66" stroke="#2F80ED" stroke-width="15" stroke-linecap="round"/><path d="M2 -102L10 -66" stroke="#16193A" stroke-width="3" stroke-linecap="round" opacity=".25"/><circle cx="11" cy="-58" r="8" fill="#FFD7B5" stroke="#16193A" stroke-width="2.5"/></g>
+                    <g id="scArmU" hidden><path d="M2 -102L50 -138" stroke="#2F80ED" stroke-width="15" stroke-linecap="round"/><circle cx="57" cy="-144" r="8" fill="#FFD7B5" stroke="#16193A" stroke-width="2.5"/></g>
+                    <g id="scMkD" hidden transform="translate(11 -58) rotate(-15)"><rect x="-4" y="-5" width="34" height="10" rx="3" fill="#E5487B" stroke="#16193A" stroke-width="2"/><rect id="scCapD" x="24" y="-5" width="9" height="10" rx="3" fill="#16193A"/></g>
+                    <g id="scMkU" hidden transform="translate(57 -144) rotate(-30)"><rect x="-4" y="-5" width="34" height="10" rx="3" fill="#E5487B" stroke="#16193A" stroke-width="2"/><rect id="scCapU" x="24" y="-5" width="9" height="10" rx="3" fill="#16193A"/></g>
+                  </g>
+                  <g id="scQ" hidden transform="translate(0 -182)"><circle r="15" fill="#FF5E7E" stroke="#16193A" stroke-width="3"/><text y="7" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="19" fill="#fff">?</text></g>
+                </g>
+              </svg>
             </div>
+            <div class="tp-cap" id="stgCap"></div>
             <div class="memo"><small>Запам’ятай</small><b>Комп’ютер виконує команди буквально: що написано, те й робить. Нічого не додумує.</b></div>
           </div>
         </div>
@@ -607,7 +635,7 @@ H.teacher = (function(){
     step3: { l: "Зроби 3 кроки вперед",    c: "крок(3)", n: 3 },
     up:    { l: "Підніми руку",            c: "підняти_руку()" },
     down:  { l: "Опусти руку",             c: "опустити_руку()" },
-    take:  { l: "Візьми маркер зі столу",  c: 'взяти("маркер")' },
+    take:  { l: "Візьми маркер",           c: 'взяти("маркер")' },
     open:  { l: "Зніми ковпачок",          c: 'зняти("ковпачок")' },
     close: { l: "Надінь ковпачок",         c: 'надіти("ковпачок")' },
     wB:    { l: "Напиши «Б»",              c: 'написати("Б")', ch: "Б" },
@@ -616,13 +644,13 @@ H.teacher = (function(){
   };
   const ORDER = ["wI", "step3", "take", "close", "turn", "wT", "up", "open", "step1", "wB", "down"];
   const MAX = 10, DIST = 3;
-  const STG_LEFT = [16, 36, 56, 72];   // % of the little stage, by steps taken towards the board
+  const FOOT_X = [116, 168, 220, 270];   // teacher x in the scene (px), by steps taken towards the board
   let el, prog = [], done = 0, st;
 
-  const fresh = () => ({ pos: 0, toBoard: false, handUp: false, has: false, capOff: false, board: "", err: "" });
+  const fresh = () => ({ pos: 0, toBoard: false, handUp: false, has: false, capOff: false, board: "", err: "", bad: false });
   const steps = n => n + (n === 1 ? " крок" : n >= 2 && n <= 4 ? " кроки" : " кроків");
   function perform(key){
-    const c = CMD[key], bad = m => { st.err = st.err || m; return m; };
+    const c = CMD[key], bad = m => { st.err = st.err || m; st.bad = true; return m; };
     switch (key){
       case "turn": st.toBoard = !st.toBoard; return st.toBoard ? "Розвертаюсь обличчям до дошки." : "Розвертаюсь спиною до дошки.";
       case "step1": case "step3": {
@@ -652,14 +680,18 @@ H.teacher = (function(){
     st.board += c.ch; return "Пишу «" + c.ch + "».";
   }
   function reset(){ done = 0; st = fresh(); render(); D.say(el, "Вчитель стоїть спиною до дошки, за 3 кроки від неї. Маркер лежить на столі. Склади програму!"); }
+  const show = (id, on) => { const n = $("#" + id); if (on) n.removeAttribute("hidden"); else n.setAttribute("hidden", ""); };
   function renderStage(){
-    $("#stgT").style.left = STG_LEFT[st.pos] + "%";
-    $("#stgT").dataset.face = st.toBoard ? "board" : "away";
-    $("#stgHand").hidden = !st.handUp;
-    $("#stgMk").hidden = !st.has;
-    $("#stgTable").hidden = st.has;
+    $("#scT").style.transform = "translate(" + FOOT_X[st.pos] + "px,232px)";
+    $("#scFace").setAttribute("transform", st.toBoard ? "scale(1 1)" : "scale(-1 1)");
+    show("scArmD", !st.handUp); show("scArmU", st.handUp);
+    show("scMkD", st.has && !st.handUp); show("scMkU", st.has && st.handUp);
+    show("scMkT", !st.has);
+    $("#scCapD").style.display = $("#scCapU").style.display = st.capOff ? "none" : "";
+    show("scQ", st.bad);
+    $("#scChalk").textContent = st.board;
     const left = DIST - st.pos;
-    $("#stgCap").textContent = (st.toBoard ? "лицем до дошки" : "спиною до дошки") + " · до неї " + (left ? steps(left) : "0 кроків");
+    $("#stgCap").textContent = (st.toBoard ? "Вчитель лицем до дошки" : "Вчитель спиною до дошки") + " · до дошки " + (left ? steps(left) : "0 кроків");
   }
   function render(){
     const rows = $("#tpRows");
@@ -672,12 +704,12 @@ H.teacher = (function(){
       rows.appendChild(b);
     });
     $("#tpCount").textContent = prog.length + " / " + MAX;
-    $("#tpChalk").textContent = st.board;
     $("#tpStep").disabled = !prog.length || done >= prog.length;
     renderStage();
   }
   function step(){
     if (done >= prog.length) return;
+    st.bad = false;
     const msg = perform(prog[done]);
     done++; render();
     if (done < prog.length){ D.say(el, msg); return; }
@@ -687,6 +719,7 @@ H.teacher = (function(){
   return {
     init(s){
       el = s; st = fresh();
+      $("#scTicks").innerHTML = FOOT_X.map((x, i) => '<circle cx="' + x + '" cy="256" r="10" fill="#fff" stroke="#16193A" stroke-width="2.5"/><text x="' + x + '" y="260.5">' + i + "</text>").join("");
       const pal = $("#tpPal");
       ORDER.forEach(k => {
         const b = document.createElement("button");
