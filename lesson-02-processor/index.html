@@ -140,6 +140,12 @@
 .race-res b{font:800 24px/1.1 var(--f-display)}
 .race-res .cpu b{color:var(--cpu);font-size:19px}
 
+/* ---------- game slides ---------- */
+.game-head{position:absolute;left:36px;right:36px;top:16px;height:54px;display:flex;align-items:center;gap:18px}
+.game-head .kick-row{flex:none}
+.game-tip{font:700 17px/1.35 var(--f-body);color:var(--ink-soft);min-width:0}
+.game-wrap{position:absolute;left:36px;right:36px;top:78px;bottom:14px}
+
 /* ---------- recap ---------- */
 .rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .rule{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
@@ -382,6 +388,48 @@
 <h3>Ядра</h3>
 <p>У процесора кілька <b>ядер</b> (ти бачив їх на чипі). Кожне ядро виконує свою програму, тож усі разом вони працюють ще швидше.</p>
 <div class="fun"><b>Для порівняння</b>За той час, поки ти встигнеш кліпнути оком (десята частка секунди), процесор виконає близько трьохсот мільйонів тактів.</div></template>
+      </section>
+
+      <!-- game 1 -->
+      <section class="slide full circuit" data-key="game1" data-title="Тренування" data-ico="game" style="--c:var(--play)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="game"></span>Гра · Тренування</span>
+          <span class="game-tip">Склади програму з іконок і натисни ▶. Світіння всіх транзисторів = перемога.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="2-01,2-02,2-03"></bit-game></div>
+        <template class="theory"><h2>Що означає підсвічений рядок?</h2>
+<p>Праворуч ти бачиш програму Біта як <b>код</b>. Коли програма виконується, рядок, який зараз працює, підсвічується жовтим.</p>
+<p>Так само працює процесор: він пам’ятає <b>номер команди</b>, яку виконує зараз, і бере наступну. Кнопка «Крок» дозволяє зупинити цей процес і розглянути кожен крок.</p>
+<h3>Українська чи англійська?</h3>
+<p>Кнопка <b>EN</b> перемикає код на англійську: <code>forward()</code>, <code>turn_left()</code>, <code>jump()</code>. Так виглядають справжні програми. Більшість мов програмування використовує англійські слова.</p>
+<div class="fun"><b>Спробуй</b>Знайди найкоротшу програму. Якщо команд рівно стільки, скільки треба, отримаєш три зірки.</div></template>
+      </section>
+
+      <!-- game 2 -->
+      <section class="slide full circuit" data-key="game2" data-title="Стрибки" data-ico="bolt" style="--c:var(--exam)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="bolt"></span>Гра · Стрибки</span>
+          <span class="game-tip">Нова команда: стрибок! Біт піднімається на одну сходинку вгору або стрибає вниз.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="2-04,2-05,2-06"></bit-game></div>
+      </section>
+
+      <!-- game 3 -->
+      <section class="slide full circuit" data-key="game3" data-title="Іспит" data-ico="shield" style="--c:#C2410C">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="shield"></span>Гра · Іспит диспетчерської</span>
+          <span class="game-tip">Команд мало, тож спершу придумай план, а потім складай програму.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="2-07,2-08,2-09"></bit-game></div>
+      </section>
+
+      <!-- bonus -->
+      <section class="slide full circuit" data-key="bonus" data-title="Бонус" data-ico="star" style="--c:var(--sun-deep)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="star"></span>Бонус · для сміливих</span>
+          <span class="game-tip">Тут команд рівно стільки, скільки треба. Можна пропустити.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="2-b1,2-b2,2-b3"></bit-game></div>
       </section>
 
       <!-- recap -->
@@ -835,6 +883,11 @@ H.race = (function(){
     leave(){ token++; clearInterval(timer); if (state === "run" || state === "count"){ state = "idle"; $("#raceStart").disabled = false; $("#raceTap").disabled = true; $("#raceTap").textContent = "Тап!"; $("#raceClock").textContent = "5.0"; } }
   };
 })();
+
+/* game slides: a stamp once every level of the set has at least one star */
+["game1", "game2", "game3"].forEach(key => {
+  H[key] = { init(el){ el.addEventListener("bitgame:solved-set", () => { happy(el); stamp(key); }); } };
+});
 
 /* badge: stamps, game stars, name, reset */
 H.badge = (function(){
