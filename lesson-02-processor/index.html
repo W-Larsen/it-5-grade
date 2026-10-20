@@ -25,6 +25,62 @@
 .dive-bit{position:absolute;left:50%;top:50%;width:150px;margin:-95px 0 0 -75px}
 .dive-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
 
+/* ---------- circuit-board backdrop for the "computer inside" slides ---------- */
+.circuit::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180' fill='none' stroke='%23C9D5EC' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M0 44h54l22 22h70M90 0v54l34 34h56M0 134h44l22-22h46l22 22h46'/><circle cx='54' cy='44' r='5' fill='%23C9D5EC'/><circle cx='146' cy='66' r='5' fill='%23C9D5EC'/><circle cx='124' cy='88' r='5' fill='%23C9D5EC'/><circle cx='44' cy='134' r='5' fill='%23C9D5EC'/></svg>")}
+.circuit > *{position:relative}
+
+/* ---------- teacher (program the teacher) ---------- */
+.tprog{display:grid;grid-template-columns:350px 1fr 250px;gap:18px;height:420px}
+.tp-col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.tp-h{display:flex;justify-content:space-between;align-items:baseline;font:800 15px/1 var(--f-display);letter-spacing:-.01em}
+.tp-h small{font:700 13px/1 var(--f-body);color:var(--ink-soft)}
+.tp-pal{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+.cmd-chip{min-height:66px;border:3px solid var(--ink);border-radius:16px;background:var(--paper);box-shadow:0 4px 0 var(--ink);font:800 16px/1.2 var(--f-body);padding:8px 10px;cursor:pointer;text-align:center}
+.cmd-chip:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.cmd-chip:disabled{opacity:.45;cursor:default}
+.tp-rows{display:flex;flex-direction:column;gap:6px;background:#1B2040;border:3px solid var(--ink);border-radius:18px;padding:10px;flex:1;min-height:0}
+.tp-row{display:flex;align-items:center;gap:10px;border:0;border-radius:10px;background:rgba(255,255,255,.07);color:#EAF0FF;padding:5px 10px;font:700 15px/1.2 var(--f-body);cursor:pointer;text-align:left}
+.tp-row i{font:700 13px/1 var(--f-mono);font-style:normal;color:#6F7DB8;width:1.2em}
+.tp-row .tx{flex:1}
+.tp-row code{font:700 15px/1 var(--f-mono);color:#FFC93C}
+.tp-row.now{background:#FFC93C;color:var(--ink)}
+.tp-row.now code{color:var(--ink)}
+.tp-row.done{opacity:.55}
+.tp-empty{margin:auto;font:700 15px/1.4 var(--f-body);color:#6F7DB8;text-align:center}
+.tp-board{background:#1F4D3A;border:6px solid #A9794B;border-radius:12px;height:150px;display:grid;place-items:center;box-shadow:0 5px 0 var(--ink)}
+.chalk{font:800 64px/1 var(--f-display);color:#F6F6EE;letter-spacing:.06em;min-height:1em}
+.tprog .memo{margin-top:auto}
+.tp-bottom{display:flex;align-items:center;gap:16px}
+.tp-bottom .say{margin:0}
+.tp-bottom .bubble{max-width:560px}
+.tp-bottom .row{margin-left:auto}
+
+/* ---------- algorithm (start a game on the iPad) ---------- */
+.alg-scene{padding:18px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(#F3F8FF,#E4F1F0)}
+.alg-top{display:flex;gap:16px;align-items:center}
+.ipad{flex:none;width:190px}
+.ipad svg{display:block;width:100%;overflow:visible}
+.ipad [data-l]{opacity:0;transition:opacity .35s}
+.ipad[data-s="off"] [data-l="off"],.ipad[data-s="lock"] [data-l="lock"],.ipad[data-s="home"] [data-l="home"],.ipad[data-s="found"] [data-l="home"],.ipad[data-s="game"] [data-l="game"]{opacity:1}
+.ipad .app-target{opacity:0}
+.ipad[data-s="found"] .app-target{opacity:1;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.ipad .qmark{opacity:0;transition:opacity .2s}
+.ipad.err .qmark{opacity:1;animation:shake .45s}
+.alg-slots{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;gap:8px}
+.alg-slot{display:flex;align-items:center;gap:10px;min-height:54px;width:100%;border:3px dashed #B9C6E0;border-radius:14px;background:rgba(255,255,255,.7);padding:6px 10px;font:800 15px/1.2 var(--f-body);text-align:left;cursor:pointer}
+.alg-slot b{flex:none;width:30px;height:30px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);display:grid;place-items:center;font:800 14px/1 var(--f-display)}
+.alg-slot.full{border:3px solid var(--ink);background:var(--paper);box-shadow:0 3px 0 var(--ink)}
+.alg-slot.now{background:var(--sun)}
+.alg-slot.bad{background:#FFD9D9;animation:shake .45s}
+.alg-slot.ok{background:#C8F2D9}
+.alg-pool{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.step-chip{min-height:58px;border:3px solid var(--ink);border-radius:14px;background:#FFE9A8;box-shadow:0 4px 0 var(--ink);font:800 15px/1.2 var(--f-body);padding:6px 10px;cursor:pointer}
+.step-chip:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.step-chip.used{visibility:hidden}
+.alg-actions{display:flex;gap:10px;justify-content:center;margin-top:auto}
+
 /* ---------- recap ---------- */
 .rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .rule{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
@@ -75,6 +131,88 @@
           </div></button>
         </div>
         <div class="back-bottom"><span class="bit-slot" data-bit></span><span>Минулого разу ми мандрували інтернетом. Сьогодні я потрапив усередину самого iPad. Допоможеш мені там?</span><button class="btn big" id="diveBtn" data-noswipe>Зайти всередину →</button></div>
+      </section>
+
+      <!-- teacher -->
+      <section class="slide stack circuit" data-key="teacher" data-title="Запрограмуй вчителя" data-ico="pencil" style="--c:var(--prog)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="pencil"></span>Розминка</span>
+          <h2>Запрограмуй вчителя: напиши «БІТ» на дошці</h2>
+        </div>
+        <div class="tprog" data-noswipe>
+          <div class="tp-col">
+            <div class="tp-h">Команди <small>торкнись, щоб додати</small></div>
+            <div class="tp-pal" id="tpPal"></div>
+          </div>
+          <div class="tp-col">
+            <div class="tp-h">Програма <small id="tpCount">0 / 9</small></div>
+            <div class="tp-rows" id="tpRows"></div>
+          </div>
+          <div class="tp-col">
+            <div class="tp-board"><span class="chalk" id="tpChalk"></span></div>
+            <div class="memo"><small>Запам’ятай</small><b>Комп’ютер виконує команди буквально: що написано, те й робить. Нічого не додумує.</b></div>
+          </div>
+        </div>
+        <div class="tp-bottom">
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="tpBubble">Склади програму з команд. Вчитель виконуватиме її буквально!</div></div>
+          <div class="row" data-noswipe>
+            <button class="btn" id="tpStep" disabled>⏭ Наступна команда</button>
+            <button class="btn ghost" id="tpReset" aria-label="Спочатку">⟲</button>
+          </div>
+        </div>
+        <template class="theory"><h2>Чому комп’ютер такий буквальний?</h2>
+<p>Людина вміє здогадуватися. Якщо сказати «напиши слово на дошці», вона сама згадає зняти ковпачок із маркера. Комп’ютер так не вміє: він робить <b>тільки те, що написано</b>, і саме в такому порядку.</p>
+<h3>Команда і код</h3>
+<p>Один крок програми називають <b>командою</b>. Текст із команд, який бачить комп’ютер, називають <b>кодом</b>. Справа від кожного кроку ти бачиш його «код»: <code>взяти("маркер")</code>.</p>
+<h3>Хто пише команди?</h3>
+<p>Людей, які складають такі команди для комп’ютерів, називають <b>програмістами</b>. Саме ними ми сьогодні й станемо.</p>
+<div class="fun"><b>Цікаво знати</b>Багато програмістів кажуть, що найважча частина їхньої роботи — це не писати команди, а нічого не пропустити.</div></template>
+      </section>
+
+      <!-- algorithm -->
+      <section class="slide circuit" data-key="algorithm" data-title="Алгоритм" data-ico="list" style="--c:var(--algo)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="list"></span>Що таке алгоритм</span>
+          <h2>Алгоритм: кроки по порядку</h2>
+          <p class="lead">Алгоритм — це <b>точні кроки</b>, виконані <b>по порядку</b>. Розстав кроки так, щоб запустити гру на iPad.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="algBubble">Торкайся кроків по черзі. Потім натисни «Перевірити».</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Переставиш кроки, і нічого не вийде. Порядок важливий!</b></div>
+        </div>
+        <div class="scene alg-scene" data-noswipe>
+          <div class="alg-top">
+            <div class="ipad" id="algPad" data-s="off">
+              <svg viewBox="0 0 200 270" aria-hidden="true">
+                <rect x="3" y="3" width="194" height="264" rx="26" fill="#16193A"/>
+                <g data-l="off"><rect x="14" y="16" width="172" height="238" rx="12" fill="#0B0E22"/></g>
+                <g data-l="lock"><rect x="14" y="16" width="172" height="238" rx="12" fill="#2B4A9A"/>
+                  <text x="100" y="86" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="34" fill="#fff">9:41</text>
+                  <rect x="82" y="148" width="36" height="30" rx="6" fill="#fff"/><path d="M88 148v-9a12 12 0 0 1 24 0v9" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/></g>
+                <g data-l="home"><rect x="14" y="16" width="172" height="238" rx="12" fill="#7FC4FF"/>
+                  <g id="algApps"></g>
+                  <rect class="app-target" x="77" y="139" width="48" height="48" rx="14" fill="none" stroke="#16193A" stroke-width="4" stroke-dasharray="6 5"/></g>
+                <g data-l="game"><rect x="14" y="16" width="172" height="238" rx="12" fill="#16193A"/>
+                  <path d="M100 60l10 22 24 3-18 16 5 24-21-12-21 12 5-24-18-16 24-3z" fill="#FFC93C"/>
+                  <rect x="64" y="160" width="72" height="62" rx="18" fill="#FF8A3D" stroke="#fff" stroke-width="3"/><circle cx="86" cy="188" r="6" fill="#fff"/><circle cx="114" cy="188" r="6" fill="#fff"/><circle cx="87" cy="189" r="3" fill="#16193A"/><circle cx="113" cy="189" r="3" fill="#16193A"/></g>
+                <g class="qmark"><circle cx="172" cy="28" r="18" fill="#FF5E7E" stroke="#16193A" stroke-width="3"/><text x="172" y="36" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="22" fill="#fff">?</text></g>
+              </svg>
+            </div>
+            <ol class="alg-slots" id="algSlots"></ol>
+          </div>
+          <div class="alg-pool" id="algPool"></div>
+          <div class="alg-actions"><button class="btn" id="algGo" disabled>Перевірити</button><button class="btn ghost" id="algReset">Спочатку</button></div>
+        </div>
+        <template class="theory"><h2>Звідки слово «алгоритм»?</h2>
+<p>Воно походить від імені середньовічного вченого <b>аль-Хорезмі</b>, який жив понад тисячу років тому й описував у книжках, як крок за кроком розв’язувати математичні задачі.</p>
+<h3>Алгоритми навколо нас</h3>
+<ul>
+<li>Рецепт борщу: що, коли і скільки класти.</li>
+<li>Інструкція до LEGO: кроки зі збирання моделі.</li>
+<li>Маршрут у навігаторі: де повернути, де їхати прямо.</li>
+<li>Як чистити зуби вранці.</li>
+</ul>
+<h3>Алгоритм і програма</h3>
+<p>Алгоритм можна розповісти будь-як. <b>Програма</b> — це алгоритм, записаний так, щоб його зрозумів комп’ютер.</p>
+<div class="fun"><b>Спробуй</b>Що буде, якщо спочатку одягти взуття, а потім шкарпетки? Теж порушили порядок кроків.</div></template>
       </section>
 
       <!-- recap -->
@@ -219,6 +357,140 @@ function dive(slide){
     flash.animate([{ opacity: 0 }, { opacity: .95 }, { opacity: 0 }], { duration: 450 }).onfinish = () => { fx.remove(); D.next(); };
   };
 }
+
+/* teacher: build a program from cards; the teacher then performs it literally, one command per tap */
+H.teacher = (function(){
+  const CMD = {
+    walk:  { l: "Підійди до дошки",  c: 'підійти("дошка")' },
+    take:  { l: "Візьми маркер",     c: 'взяти("маркер")' },
+    open:  { l: "Зніми ковпачок",    c: 'зняти("ковпачок")' },
+    wB:    { l: "Напиши «Б»",        c: 'написати("Б")', ch: "Б" },
+    wI:    { l: "Напиши «І»",        c: 'написати("І")', ch: "І" },
+    wT:    { l: "Напиши «Т»",        c: 'написати("Т")', ch: "Т" },
+    close: { l: "Надінь ковпачок",   c: 'надіти("ковпачок")' }
+  };
+  const ORDER = ["wI", "take", "close", "walk", "wT", "open", "wB"];
+  const MAX = 9;
+  let el, prog = [], done = 0, st;
+
+  const fresh = () => ({ at: false, has: false, capOff: false, board: "" });
+  function perform(key){
+    const c = CMD[key], bad = m => { st.err = st.err || m; return m; };
+    if (key === "walk"){ st.at = true; return "Іду до дошки."; }
+    if (key === "take"){ st.has = true; return "Беру маркер."; }
+    if (key === "open"){ if (!st.has) return bad("Нічого знімати: маркера в мене немає!"); st.capOff = true; return "Знімаю ковпачок."; }
+    if (key === "close"){ st.capOff = false; return "Надіваю ковпачок."; }
+    if (!st.at) return bad("Я пишу в повітрі: дошка далеко!");
+    if (!st.has) return bad("Чим писати? Маркера в мене немає!");
+    if (!st.capOff) return bad("Маркер закритий, на дошці нічого не з’явилося!");
+    st.board += c.ch; return "Пишу «" + c.ch + "».";
+  }
+  function reset(){ done = 0; st = fresh(); render(); D.say(el, "Склади програму з команд. Вчитель виконуватиме її буквально!"); }
+  function render(){
+    const rows = $("#tpRows");
+    rows.innerHTML = prog.length ? "" : '<div class="tp-empty">Торкайся команд зліва.<br>Торкнись рядка, щоб прибрати його.</div>';
+    prog.forEach((k, i) => {
+      const b = document.createElement("button");
+      b.className = "tp-row" + (i === done - 1 ? " now" : i < done ? " done" : "");
+      b.innerHTML = "<i>" + (i + 1) + '</i><span class="tx">' + CMD[k].l + "</span><code>" + CMD[k].c + "</code>";
+      b.addEventListener("click", () => { Sound.click(); prog.splice(i, 1); reset(); });
+      rows.appendChild(b);
+    });
+    $("#tpCount").textContent = prog.length + " / " + MAX;
+    $("#tpChalk").textContent = st.board;
+    $("#tpStep").disabled = !prog.length || done >= prog.length;
+  }
+  function step(){
+    if (done >= prog.length) return;
+    const msg = perform(prog[done]);
+    done++; render();
+    if (done < prog.length){ D.say(el, msg); return; }
+    if (st.board === "БІТ"){ D.say(el, "Вийшло «БІТ»! Програма працює, бо ти не пропустив жодного кроку."); happy(el); stamp("teacher"); }
+    else D.say(el, (st.err ? st.err + " " : "") + "Вийшло: «" + (st.board || "…") + "». Знайди, чого не вистачає, і спробуй ще!");
+    if (st.board !== "БІТ") Sound.buzz();
+  }
+  return {
+    init(s){
+      el = s; st = fresh();
+      const pal = $("#tpPal");
+      ORDER.forEach(k => {
+        const b = document.createElement("button");
+        b.className = "cmd-chip"; b.textContent = CMD[k].l;
+        b.addEventListener("click", () => {
+          if (prog.length >= MAX){ Sound.buzz(); return; }
+          Sound.click(); prog.push(k); done = 0; st = fresh(); render();
+        });
+        pal.appendChild(b);
+      });
+      $("#tpStep").addEventListener("click", () => { Sound.pop(); step(); });
+      $("#tpReset").addEventListener("click", () => { Sound.click(); reset(); });
+      render();
+    }
+  };
+})();
+
+/* algorithm: put four steps in order; the drawn iPad plays them and reacts to a wrong order */
+H.algorithm = (function(){
+  const STEPS = { power: "Натисни кнопку живлення", unlock: "Розблокуй екран", find: "Знайди іконку гри", tap: "Торкнися іконки" };
+  const SHUFFLED = ["find", "power", "tap", "unlock"];
+  const COLORS = ["#FF8A3D", "#2BAA6B", "#E5487B", "#FFC93C", "#7A5CFA", "#12B5A4", "#FF5E7E", "#2F80ED", "#FFD7B5", "#C8F2D9", "#BFE3FF", "#E3DBFF"];
+  let el, slots = [null, null, null, null], busy = false, pad;
+
+  function render(){
+    const full = slots.every(Boolean);
+    $("#algPool").innerHTML = "";
+    SHUFFLED.forEach(k => {
+      const b = document.createElement("button");
+      b.className = "step-chip" + (slots.includes(k) ? " used" : ""); b.textContent = STEPS[k];
+      b.addEventListener("click", () => {
+        if (busy || slots.includes(k)) return;
+        const i = slots.indexOf(null); if (i < 0) return;
+        Sound.click(); clearState(); slots[i] = k; render();
+      });
+      $("#algPool").appendChild(b);
+    });
+    $("#algSlots").innerHTML = "";
+    slots.forEach((k, i) => {
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.className = "alg-slot" + (k ? " full" : ""); b.innerHTML = "<b>" + (i + 1) + "</b><span>" + (k ? STEPS[k] : "…") + "</span>";
+      b.addEventListener("click", () => { if (busy || !k) return; Sound.click(); clearState(); slots[i] = null; render(); });
+      li.appendChild(b); $("#algSlots").appendChild(li);
+    });
+    $("#algGo").disabled = !full || busy;
+  }
+  function clearState(){ pad.dataset.s = "off"; pad.classList.remove("err"); }
+  async function check(){
+    busy = true; clearState(); render();
+    const btns = $$(".alg-slot", el);
+    let s = "off", failMsg = "";
+    for (let i = 0; i < 4; i++){
+      btns[i].classList.add("now"); await Deck.wait(750);
+      const k = slots[i];
+      if (k === "power"){ if (s === "off") s = "lock"; }
+      else if (k === "unlock"){ if (s === "lock") s = "home"; else failMsg = s === "off" ? "Екран вимкнений: нема чого розблоковувати!" : "Екран уже розблоковано."; }
+      else if (k === "find"){ if (s === "home") s = "found"; else failMsg = s === "off" ? "Екран вимкнений, я нічого не бачу!" : "Екран заблокований: іконок не видно!"; }
+      else if (k === "tap"){ if (s === "found") s = "game"; else failMsg = s === "home" ? "Я не знаю, яку іконку торкатися. Спершу її треба знайти!" : "Не можу торкнутися: екран не готовий!"; }
+      btns[i].classList.remove("now");
+      if (failMsg){ btns[i].classList.add("bad"); pad.classList.add("err"); Sound.buzz(); D.say(el, failMsg + " Спробуй інший порядок."); busy = false; render(); return; }
+      pad.dataset.s = s; Sound.click();
+    }
+    btns.forEach(b => b.classList.add("ok"));
+    Sound.ding(); D.say(el, "Працює! Алгоритм — це кроки по порядку. Переставиш, і нічого не вийде."); happy(el); stamp("algorithm");
+    busy = false; $("#algGo").disabled = false;
+  }
+  return {
+    init(s){
+      el = s; pad = $("#algPad");
+      $("#algApps").innerHTML = COLORS.map((c, n) => {
+        const x = 30 + (n % 3) * 52, y = 36 + Math.floor(n / 3) * 54;
+        return '<rect x="' + x + '" y="' + y + '" width="38" height="38" rx="10" fill="' + (n === 7 ? "#FF8A3D" : c) + '" stroke="#16193A" stroke-width="2.5"/>';
+      }).join("");
+      $("#algGo").addEventListener("click", () => { if (!busy) check(); });
+      $("#algReset").addEventListener("click", () => { if (busy) return; Sound.click(); slots = [null, null, null, null]; clearState(); render(); D.say(el, "Торкайся кроків по черзі. Потім натисни «Перевірити»."); });
+      render();
+    }
+  };
+})();
 
 /* badge: stamps, game stars, name, reset */
 H.badge = (function(){
