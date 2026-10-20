@@ -9,7 +9,6 @@ var NS = "http://www.w3.org/2000/svg";
 /* ---------- isometric geometry ---------- */
 var HW = B.ISO.HW, HH = B.ISO.HH, HZ = B.ISO.HZ;   // half tile width, half tile height, pixels per height unit
 var TOP_COLORS = ["#6FE3B8", "#52CFD0", "#4AA8E8", "#8A82FF"];   // by height 1..4
-var DIR_VEC = { N: [HW, -HH], E: [HW, HH], S: [-HW, HH], W: [-HW, -HH] };   // screen step for one cell
 
 function shade(hex, k) {
   var n = parseInt(hex.slice(1), 16);
@@ -59,6 +58,17 @@ var Sound = (function () {
   };
 })();
 
+/* The «where am I looking» arrow lies on the floor in front of Bit: a flat arrow in tile-plane units (forward, sideways). */
+var GRID_DIR = { N: [0, -1], E: [1, 0], S: [0, 1], W: [-1, 0] };
+var ARROW = [[.95, 0], [.62, .27], [.62, .1], [.38, .1], [.38, -.1], [.62, -.1], [.62, -.27]];
+function arrowPath(p, face) {
+  var d = GRID_DIR[face], q = [-d[1], d[0]];
+  return "M" + ARROW.map(function (a) {
+    var gx = d[0] * a[0] + q[0] * a[1], gy = d[1] * a[0] + q[1] * a[1];
+    return (p.x + (gx - gy) * HW).toFixed(1) + " " + (p.y + 3 + (gx + gy) * HH).toFixed(1);
+  }).join("L") + "Z";
+}
+
 /* ---------- command icons (24×24, stroke) ---------- */
 var ICONS = {
   forward: '<path d="M12 20V5M5 11l7-7 7 7"/>',
@@ -76,25 +86,32 @@ function icon(cmd, size) {
 /* ---------- Біт (same drawing as lesson 1) ---------- */
 function bitInner() {
   return '<ellipse cx="60" cy="124" rx="32" ry="5" fill="rgba(22,25,58,.25)"/>' +
-    '<g class="bit-body">' +
+    '<g class="bit-flip"><g class="bit-body">' +
       '<line x1="60" y1="31" x2="60" y2="14" stroke="#16193A" stroke-width="4" stroke-linecap="round"/>' +
       '<circle cx="60" cy="11" r="7" fill="#FFC93C" stroke="#16193A" stroke-width="3"/>' +
       '<rect x="40" y="104" width="13" height="16" rx="5" fill="#16193A"/><rect x="67" y="104" width="13" height="16" rx="5" fill="#16193A"/>' +
       '<rect x="15" y="30" width="90" height="80" rx="20" fill="#FF8A3D" stroke="#16193A" stroke-width="4"/>' +
       '<path d="M53 32h14v18l-7-4-7 4z" fill="#FFD7B5" stroke="#16193A" stroke-width="2.5" stroke-linejoin="round"/>' +
-      '<g class="bit-eyes">' +
-        '<ellipse cx="44" cy="70" rx="11.5" ry="13.5" fill="#fff" stroke="#16193A" stroke-width="3"/>' +
-        '<ellipse cx="76" cy="70" rx="11.5" ry="13.5" fill="#fff" stroke="#16193A" stroke-width="3"/>' +
-        '<g class="bit-pupils">' +
-          '<circle cx="46.5" cy="72" r="6.5" fill="#16193A"/><circle cx="73.5" cy="72" r="6.5" fill="#16193A"/>' +
-          '<circle cx="49" cy="69" r="2.2" fill="#fff"/><circle cx="76" cy="69" r="2.2" fill="#fff"/>' +
+      /* face: shown when Bit looks towards the camera */
+      '<g class="bit-front">' +
+        '<g class="bit-eyes">' +
+          '<ellipse cx="44" cy="70" rx="11.5" ry="13.5" fill="#fff" stroke="#16193A" stroke-width="3"/>' +
+          '<ellipse cx="76" cy="70" rx="11.5" ry="13.5" fill="#fff" stroke="#16193A" stroke-width="3"/>' +
+          '<g class="bit-pupils">' +
+            '<circle cx="46.5" cy="72" r="6.5" fill="#16193A"/><circle cx="73.5" cy="72" r="6.5" fill="#16193A"/>' +
+            '<circle cx="49" cy="69" r="2.2" fill="#fff"/><circle cx="76" cy="69" r="2.2" fill="#fff"/>' +
+          '</g>' +
         '</g>' +
+        '<ellipse cx="29" cy="88" rx="7" ry="4" fill="#FF5E7E" opacity=".5"/><ellipse cx="91" cy="88" rx="7" ry="4" fill="#FF5E7E" opacity=".5"/>' +
+        '<path d="M51 90 Q60 99 69 90" fill="none" stroke="#16193A" stroke-width="4" stroke-linecap="round"/>' +
       '</g>' +
-      '<ellipse cx="29" cy="88" rx="7" ry="4" fill="#FF5E7E" opacity=".5"/><ellipse cx="91" cy="88" rx="7" ry="4" fill="#FF5E7E" opacity=".5"/>' +
-      '<path d="M51 90 Q60 99 69 90" fill="none" stroke="#16193A" stroke-width="4" stroke-linecap="round"/>' +
-    '</g>';
+      /* back: shown when Bit walks away from the camera (a vent panel instead of the face) */
+      '<g class="bit-back" display="none">' +
+        '<rect x="56" y="54" width="34" height="40" rx="9" fill="#E2632A" stroke="#16193A" stroke-width="3"/>' +
+        '<path d="M64 66h18M64 75h18M64 84h10" stroke="#16193A" stroke-width="3.5" stroke-linecap="round"/>' +
+      '</g>' +
+    '</g></g>';
 }
-var PUPIL_SHIFT = { N: [0, -4], E: [5, 1], S: [0, 4], W: [-5, 1] };
 
 /* ---------- styles ---------- */
 var CSS = [
@@ -127,7 +144,11 @@ var CSS = [
 "@keyframes glow{50%{opacity:.78}}",
 ".bit-body{transform-box:fill-box;transform-origin:50% 100%;animation:idle 2.4s ease-in-out infinite}",
 "@keyframes idle{50%{transform:scaleY(.97) translateY(1px)}}",
-".bit-pupils{transition:transform .2s}",
+".bit-pupils{transform:translate(5px,1px)}",
+".arrow{animation:arrowPulse 1.3s ease-in-out infinite;pointer-events:none}",
+"@keyframes arrowPulse{50%{opacity:.65}}",
+".hop .bit-body{animation:hop .4s cubic-bezier(.3,1.6,.5,1)}",
+"@keyframes hop{40%{transform:translateY(-10px) scale(1.04)}}",
 ".bubble{position:absolute;left:14px;top:14px;max-width:min(360px,70%);background:var(--paper,#fff);border:3px solid var(--ink,#16193A);border-radius:20px;padding:10px 14px;font:800 16px/1.35 var(--f-body,sans-serif);box-shadow:4px 4px 0 var(--ink,#16193A);z-index:2}",
 ".bubble.pop{animation:pop .4s cubic-bezier(.3,1.6,.5,1)}",
 "@keyframes pop{0%{transform:scale(.85)}100%{transform:scale(1)}}",
@@ -311,7 +332,7 @@ P.buildBoard = function () {
 
   this.bitG = el("g", { "class": "bit" }, svg);
   this.bitG.innerHTML = bitInner();
-  this.arrow = el("path", { "class": "arrow", fill: "#16193A", opacity: ".85" }, svg);
+  this.arrow = el("path", { "class": "arrow", fill: "#FFC93C", stroke: "#16193A", "stroke-width": "3.5", "stroke-linejoin": "round" }, svg);   // above all tiles
   this.placeBit(this.state);
   this.renderLit();
 };
@@ -366,14 +387,15 @@ P.bitTransform = function (x, y) {
 };
 
 P.placeBit = function (st) {
-  var p = this.isoAt(st.x, st.y), face = B.viewDir(this.rot, st.dir);
+  var p = this.isoAt(st.x, st.y), face = B.viewDir(this.rot, st.dir), g = this.bitG;
   this.bitTransform(p.x, p.y);
-  this.arrow.setAttribute("opacity", ".85");
-  var pup = PUPIL_SHIFT[face];
-  this.bitG.querySelector(".bit-pupils").setAttribute("transform", "translate(" + pup[0] + " " + pup[1] + ")");
-  var v = DIR_VEC[face], len = Math.sqrt(v[0] * v[0] + v[1] * v[1]), ux = v[0] / len, uy = v[1] / len, qx = -uy, qy = ux;
-  var cx = p.x + ux * 20, cy = p.y + uy * 10 + 2;
-  this.arrow.setAttribute("d", "M" + (cx + ux * 22) + " " + (cy + uy * 11) + "L" + (cx + qx * 10) + " " + (cy + qy * 5) + "L" + (cx - qx * 10) + " " + (cy - qy * 5) + "Z");
+  /* East/south look at the camera (face), north/west walk away (back); south/west are drawn mirrored. */
+  var front = face === "E" || face === "S", mirror = face === "S" || face === "W";
+  g.querySelector(".bit-front").setAttribute("display", front ? "inline" : "none");
+  g.querySelector(".bit-back").setAttribute("display", front ? "none" : "inline");
+  g.querySelector(".bit-flip").setAttribute("transform", mirror ? "translate(120 0) scale(-1 1)" : "");
+  this.arrow.setAttribute("d", arrowPath(p, face));
+  this.arrow.setAttribute("visibility", "visible");
   this.zPlace(this.vsum(st.x, st.y));
 };
 
@@ -384,7 +406,6 @@ P.zPlace = function (sum) {
     if (+n.getAttribute("data-sum") <= sum) last = n;
   }
   var ref = last ? last.nextSibling : layer.firstChild;
-  layer.insertBefore(this.arrow, ref);
   layer.insertBefore(this.bitG, ref);
 };
 
@@ -507,6 +528,7 @@ P.execOne = async function (i) {
     await this.tween(from, to, ev === "jump" ? STEP_MS + 80 : STEP_MS, ev === "jump" ? 34 : 0);
   } else if (ev === "turn") {
     this.state = to; this.placeBit(to);
+    this.bitG.classList.remove("hop"); void this.bitG.getBoundingClientRect(); this.bitG.classList.add("hop");
     await sleep(STEP_MS * 0.7);
   } else if (ev === "on" || ev === "off") {
     this.state = to; this.renderLit();
@@ -528,7 +550,7 @@ P.tween = function (from, to, ms, arc) {
   var self = this, lv = this.level;
   var a = this.isoAt(from.x, from.y), b = this.isoAt(to.x, to.y);
   this.zPlace(Math.max(this.vsum(from.x, from.y), this.vsum(to.x, to.y)));
-  this.arrow.setAttribute("opacity", "0");
+  this.arrow.setAttribute("visibility", "hidden");
   var t0 = Date.now(), id = this.runId;
   return new Promise(function (resolve) {
     (function frame() {
