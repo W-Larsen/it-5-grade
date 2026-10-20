@@ -7,7 +7,7 @@ var B = window.BitGame;
 var NS = "http://www.w3.org/2000/svg";
 
 /* ---------- isometric geometry ---------- */
-var HW = 48, HH = 24, HZ = 22;                 // half tile width, half tile height, pixels per height unit
+var HW = B.ISO.HW, HH = B.ISO.HH, HZ = B.ISO.HZ;   // half tile width, half tile height, pixels per height unit
 var TOP_COLORS = ["#6FE3B8", "#52CFD0", "#4AA8E8", "#8A82FF"];   // by height 1..4
 var DIR_VEC = { N: [HW, -HH], E: [HW, HH], S: [-HW, HH], W: [-HW, -HH] };   // screen step for one cell
 
@@ -114,6 +114,8 @@ var CSS = [
 ".lang{margin-left:auto}",
 ".field{grid-column:1;grid-row:2;position:relative;overflow:hidden;border:3px solid var(--ink,#16193A);border-radius:24px;box-shadow:5px 5px 0 var(--ink,#16193A);background:radial-gradient(circle at 30% 20%,#1E5A7A 0%,#0F3550 60%,#0A2740 100%)}",
 ".field::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 2px,transparent 2.5px);background-size:28px 28px;pointer-events:none}",
+".rot-btn{position:absolute;right:12px;top:12px;z-index:3;width:54px;height:54px;border-radius:50%;border:3px solid var(--ink,#16193A);background:var(--paper,#fff);box-shadow:0 4px 0 var(--ink,#16193A);font:800 28px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center}",
+".rot-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink,#16193A)}",
 ".board{position:absolute;inset:0;width:100%;height:100%;display:block}",
 ".trace{stroke:rgba(255,255,255,.5);stroke-width:3;stroke-linecap:round;fill:none;transition:stroke .3s}",
 ".pad{fill:rgba(255,255,255,.55)}",
@@ -213,7 +215,7 @@ P.build = function () {
   root.className = "root";
   root.innerHTML =
     '<div class="tabs"></div>' +
-    '<div class="field"><svg class="board" aria-hidden="true"></svg><div class="bubble"></div></div>' +
+    '<div class="field"><svg class="board" aria-hidden="true"></svg><div class="bubble"></div><button class="rot-btn" type="button" data-act="rotate" aria-label="Повернути поле" title="Повернути поле">⟳</button></div>' +
     '<aside class="side">' +
       '<div class="panel"><div class="prog-head"><span>ПРОГРАМА</span><span class="count"></span></div><div class="slots"></div></div>' +
       '<div class="panel code"><div class="code-head"><span>КОД</span><button class="btn small ghost lang" type="button"></button></div><div class="code-body"></div></div>' +
@@ -262,6 +264,7 @@ P.loadLevel = function (i) {
   this.stepIdx = -1;
   this.state = B.initialState(this.level);
   this.removeWin();
+  this.rot = B.bestRotation(this.level);   // start from the side that hides the fewest tiles
   this.renderTabs();
   this.buildBoard();
   this.renderSide();
@@ -287,19 +290,19 @@ P.buildBoard = function () {
   for (var y = 0; y < lv.h; y++) for (var x = 0; x < lv.w; x++) {
     var c = lv.cells[y][x];
     if (!c) continue;
-    var p = iso(x, y, c.h);
+    var v = this.vpos(x, y), p = iso(v.x, v.y, c.h);
     minX = Math.min(minX, p.x - HW); maxX = Math.max(maxX, p.x + HW);
     minY = Math.min(minY, p.y - HH - 95); maxY = Math.max(maxY, p.y + HH + c.h * HZ);
-    order.push({ x: x, y: y, c: c, p: p });
+    order.push({ x: x, y: y, c: c, p: p, s: v.x + v.y });
   }
   var pad = 36;
   svg.setAttribute("viewBox", [minX - pad, minY - pad, maxX - minX + pad * 2, maxY - minY + pad * 2].join(" "));
-  order.sort(function (a, b) { return (a.x + a.y) - (b.x + b.y) || a.c.h - b.c.h; });
+  order.sort(function (a, b) { return a.s - b.s || a.c.h - b.c.h; });
 
   var layer = this.tileLayer = el("g", { "class": "tiles" }, svg);
   this.tileEls = {};
   order.forEach(function (o) {
-    var g = el("g", { transform: "translate(" + o.p.x + " " + o.p.y + ")", "class": "tile", "data-sum": o.x + o.y }, layer);
+    var g = el("g", { transform: "translate(" + o.p.x + " " + o.p.y + ")", "class": "tile", "data-sum": o.s }, layer);
     g.innerHTML = tileMarkup(o.x, o.y, o.c);
     this.tileEls[B.keyOf(o.x, o.y)] = g;
   }, this);
@@ -351,20 +354,25 @@ P.renderLit = function () {
 };
 
 /* Bit stands at the centre of the top face. `at` = {x, y, lift} in screen coordinates. */
+/* The board can be viewed from any of four sides; logical (x, y) → screen position for the current view. */
+P.vpos = function (x, y) { return B.viewPos(this.level, this.rot || 0, x, y); };
+P.vsum = function (x, y) { var v = this.vpos(x, y); return v.x + v.y; };
+P.isoAt = function (x, y) { var v = this.vpos(x, y); return iso(v.x, v.y, this.level.cells[y][x].h); };
+
 P.bitTransform = function (x, y) {
   this.bitG.setAttribute("transform", "translate(" + x + " " + (y + 6) + ") scale(.62) translate(-60 -124)");
 };
 
 P.placeBit = function (st) {
-  var c = this.level.cells[st.y][st.x], p = iso(st.x, st.y, c.h);
+  var p = this.isoAt(st.x, st.y), face = B.viewDir(this.rot, st.dir);
   this.bitTransform(p.x, p.y);
   this.arrow.setAttribute("opacity", ".85");
-  var pup = PUPIL_SHIFT[st.dir];
+  var pup = PUPIL_SHIFT[face];
   this.bitG.querySelector(".bit-pupils").setAttribute("transform", "translate(" + pup[0] + " " + pup[1] + ")");
-  var v = DIR_VEC[st.dir], len = Math.sqrt(v[0] * v[0] + v[1] * v[1]), ux = v[0] / len, uy = v[1] / len, qx = -uy, qy = ux;
+  var v = DIR_VEC[face], len = Math.sqrt(v[0] * v[0] + v[1] * v[1]), ux = v[0] / len, uy = v[1] / len, qx = -uy, qy = ux;
   var cx = p.x + ux * 20, cy = p.y + uy * 10 + 2;
   this.arrow.setAttribute("d", "M" + (cx + ux * 22) + " " + (cy + uy * 11) + "L" + (cx + qx * 10) + " " + (cy + qy * 5) + "L" + (cx - qx * 10) + " " + (cy - qy * 5) + "Z");
-  this.zPlace(st.x + st.y);
+  this.zPlace(this.vsum(st.x, st.y));
 };
 
 /* Draw Bit after every tile that is behind or level with him. */
@@ -516,8 +524,8 @@ P.execOne = async function (i) {
 /* Slides (or arcs) Bit between two tiles. Timer-based so it also runs in a hidden tab. */
 P.tween = function (from, to, ms, arc) {
   var self = this, lv = this.level;
-  var a = iso(from.x, from.y, lv.cells[from.y][from.x].h), b = iso(to.x, to.y, lv.cells[to.y][to.x].h);
-  this.zPlace(Math.max(from.x + from.y, to.x + to.y));
+  var a = this.isoAt(from.x, from.y), b = this.isoAt(to.x, to.y);
+  this.zPlace(Math.max(this.vsum(from.x, from.y), this.vsum(to.x, to.y)));
   this.arrow.setAttribute("opacity", "0");
   var t0 = Date.now(), id = this.runId;
   return new Promise(function (resolve) {
@@ -531,7 +539,7 @@ P.tween = function (from, to, ms, arc) {
 };
 
 P.shakeBit = function (st) {
-  var self = this, p = iso(st.x, st.y, this.level.cells[st.y][st.x].h), t0 = Date.now(), ms = STEP_MS * 0.9, id = this.runId;
+  var self = this, p = this.isoAt(st.x, st.y), t0 = Date.now(), ms = STEP_MS * 0.9, id = this.runId;
   return new Promise(function (resolve) {
     (function frame() {
       if (id !== self.runId) return resolve();
@@ -612,6 +620,14 @@ P.win = function () {
   }
 };
 
+/* Turns the board a quarter turn so tall blocks stop hiding what is behind them. */
+P.rotate = function () {
+  if (this.running || this.busy) return;
+  Sound.pop();
+  this.rot = ((this.rot || 0) + 1) % 4;
+  this.buildBoard();
+};
+
 /* Cancels a running program (used when the host page leaves the slide mid-run). */
 P.stop = function () {
   if (this.level && (this.running || this.busy)) this.resetRun(true);
@@ -651,6 +667,7 @@ P.wire = function () {
       case "step": return self.stepOnce();
       case "reset": case "again": return self.resetRun(false);
       case "hint": return self.showHint();
+      case "rotate": return self.rotate();
       case "next": Sound.pop(); return self.loadLevel(self.index + 1);
     }
   });

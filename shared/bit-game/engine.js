@@ -189,7 +189,76 @@ function browserStorage() {
   try { return root.localStorage || null; } catch (e) { return null; }
 }
 
+/* ---------- camera: the board is drawn isometrically and can be turned in quarter turns ---------- */
+var ISO = { HW: 48, HH: 24, HZ: 18 };   // half tile width, half tile height, pixels per height unit
+
+/* Where logical cell (x, y) lands when the board is turned `rot` quarter turns clockwise. */
+function viewPos(lv, rot, x, y) {
+  if (rot === 1) return { x: lv.h - 1 - y, y: x };
+  if (rot === 2) return { x: lv.w - 1 - x, y: lv.h - 1 - y };
+  if (rot === 3) return { x: y, y: lv.w - 1 - x };
+  return { x: x, y: y };
+}
+function viewSize(lv, rot) { return rot % 2 ? { w: lv.h, h: lv.w } : { w: lv.w, h: lv.h }; }
+function viewDir(rot, dir) { return DIRS[(DIRS.indexOf(dir) + rot) % 4]; }
+
+/* Is screen point (px, py) inside the silhouette (top face + two sides) of tile `d`? */
+function inSilhouette(d, px, py) {
+  var dx = Math.abs(px - d.sx);
+  if (dx > ISO.HW) return false;
+  var top = d.sy - ISO.HH + dx / ISO.HW * ISO.HH, bottom = d.sy + ISO.HH + d.h * ISO.HZ - dx / ISO.HW * ISO.HH;
+  return py >= top && py <= bottom;
+}
+
+/* Tiles as seen after `rot` turns, with the screen position of each top face. */
+function seenTiles(lv, rot) {
+  var tiles = [];
+  for (var y = 0; y < lv.h; y++) for (var x = 0; x < lv.w; x++) {
+    var cell = lv.cells[y][x];
+    if (!cell) continue;
+    var v = viewPos(lv, rot, x, y);
+    tiles.push({
+      sum: v.x + v.y, h: cell.h, t: cell.t, start: x === lv.start.x && y === lv.start.y,
+      sx: (v.x - v.y) * ISO.HW, sy: (v.x + v.y) * ISO.HH - cell.h * ISO.HZ
+    });
+  }
+  return tiles;
+}
+
+/* Five sample points on a tile's top face: how many of them are covered by a tile nearer the camera. */
+var SAMPLES = [[0, 0], [-ISO.HW / 2, 0], [ISO.HW / 2, 0], [0, -ISO.HH / 2], [0, ISO.HH / 2]];
+function hiddenSamples(tiles, c) {
+  return SAMPLES.filter(function (o) {
+    return tiles.some(function (d) { return d.sum > c.sum && inSilhouette(d, c.sx + o[0], c.sy + o[1]); });
+  }).length;
+}
+
+/* Weighted amount of important tiles (transistors, start) and ordinary tiles that taller tiles hide. */
+function occlusionBy(lv, rot, weigh) {
+  var tiles = seenTiles(lv, rot);
+  return tiles.reduce(function (sum, c) { return sum + weigh(c) * hiddenSamples(tiles, c); }, 0);
+}
+function occlusion(lv, rot) { return occlusionBy(lv, rot, function (c) { return c.t ? 10 : c.start ? 5 : 1; }); }
+function hiddenTargets(lv, rot) { return occlusionBy(lv, rot, function (c) { return c.t ? 1 : 0; }); }
+
+/* The turn (0–3) that hides the least; keeps 0 when it is already as good as any. */
+function bestRotation(lv) {
+  var best = 0, bestScore = occlusion(lv, 0);
+  for (var r = 1; r < 4; r++) {
+    var s = occlusion(lv, r);
+    if (s < bestScore) { best = r; bestScore = s; }
+  }
+  return best;
+}
+
 var BitGame = root.BitGame || {};
+BitGame.ISO = ISO;
+BitGame.viewPos = viewPos;
+BitGame.viewSize = viewSize;
+BitGame.viewDir = viewDir;
+BitGame.occlusion = occlusion;
+BitGame.hiddenTargets = hiddenTargets;
+BitGame.bestRotation = bestRotation;
 BitGame.keyOf = key;
 BitGame.createProgress = createProgress;
 BitGame.progress = createProgress(browserStorage());

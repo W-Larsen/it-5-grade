@@ -210,3 +210,47 @@ test("jump onto a tile of the same height is bump-flat, not bump-step", () => {
   assert.equal(r.state.x, 0);
   assert.equal(BitGame.step(L, at(1, 0, "E"), "forward").event, "bump-step");
 });
+
+/* ---------- camera: rotating the isometric view ---------- */
+test("viewPos rotates grid cells in quarter turns and viewSize swaps w and h", () => {
+  // L is 3 wide, 2 high; the transistor is at (2,0)
+  assert.deepEqual(BitGame.viewPos(L, 0, 2, 0), { x: 2, y: 0 });
+  assert.deepEqual(BitGame.viewPos(L, 1, 2, 0), { x: 1, y: 2 });
+  assert.deepEqual(BitGame.viewPos(L, 2, 2, 0), { x: 0, y: 1 });
+  assert.deepEqual(BitGame.viewPos(L, 3, 2, 0), { x: 0, y: 0 });
+  assert.deepEqual(BitGame.viewSize(L, 1), { w: 2, h: 3 });
+  assert.deepEqual(BitGame.viewSize(L, 2), { w: 3, h: 2 });
+});
+
+test("viewDir turns the facing together with the view", () => {
+  assert.equal(BitGame.viewDir(1, "E"), "S");
+  assert.equal(BitGame.viewDir(1, "N"), "E");
+  assert.equal(BitGame.viewDir(2, "E"), "W");
+  assert.equal(BitGame.viewDir(3, "E"), "N");
+  assert.equal(BitGame.viewDir(0, "W"), "W");
+});
+
+test("a tall block in front hides the transistor behind it; bestRotation avoids that", () => {
+  const hid = BitGame.parseLevel("hid", def({ map: ["1t .", ". 4"], best: 1, slots: 4 }));
+  assert.ok(BitGame.occlusion(hid, 0) > 0, "rotation 0 hides the transistor");
+  assert.equal(BitGame.occlusion(hid, 2), 0, "seen from the other side nothing is hidden");
+  const r = BitGame.bestRotation(hid);
+  assert.notEqual(r, 0);
+  assert.equal(BitGame.occlusion(hid, r), 0);
+});
+
+test("bestRotation keeps rotation 0 when nothing is hidden", () => {
+  const flat = BitGame.parseLevel("flat", def({ map: ["1 1 1t", "1 1 1"], best: 3, slots: 5 }));
+  assert.equal(BitGame.occlusion(flat, 0), 0);
+  assert.equal(BitGame.bestRotation(flat), 0);
+});
+
+test("every shipped level has a view in which transistors stay in sight", () => {
+  // a transistor chip stands up out of its tile, so up to 2 of 5 hidden sample points still leave it visible
+  globalThis.BitGame = BitGame;
+  require("../shared/bit-game/levels-02.js");
+  BitGame.levelIds().filter((id) => /^2-/.test(id)).forEach((id) => {
+    const lv = BitGame.getLevel(id);
+    assert.ok(BitGame.hiddenTargets(lv, BitGame.bestRotation(lv)) <= 2, id + " hides a transistor");
+  });
+});
