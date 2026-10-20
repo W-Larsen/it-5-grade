@@ -159,31 +159,40 @@
 .bt-mem .bits3:last-child{border-right:0;padding-right:0}
 .bt-actions{display:flex;gap:10px;justify-content:center;margin-top:auto}
 
-/* ---------- pipeline ---------- */
-.pipe-scene{padding:16px 16px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(#EEF6FF,#E4EEF8)}
-.pl-modes{display:flex;gap:8px;justify-content:center}
-.chip-mode{border:3px solid var(--ink);border-radius:999px;background:var(--paper);box-shadow:0 3px 0 var(--ink);font:800 15px/1 var(--f-body);padding:10px 16px;cursor:pointer}
-.chip-mode[aria-pressed="true"]{background:var(--sun)}
-.pl-legend{display:flex;gap:8px;justify-content:center;font:800 13px/1 var(--f-body)}
-.pl-legend span{border:2px solid var(--ink);border-radius:8px;padding:5px 9px;color:#fff}
-.pl-legend .s1,.pl-cell.s1.on{background:#E39B00}
-.pl-legend .s2,.pl-cell.s2.on{background:#7A5CFA}
-.pl-legend .s3,.pl-cell.s3.on{background:#2BAA6B}
-.pl-grid{display:grid;grid-template-columns:110px repeat(var(--n,12),minmax(0,1fr));gap:4px;margin-top:4px;align-items:stretch}
-.pl-head{font:700 11px/1 var(--f-mono);color:var(--ink-soft);text-align:center;padding:3px 0}
-.pl-head.now{color:var(--ink);font-weight:800;background:#FFE680;border-radius:5px}
-.pl-lab{display:flex;align-items:center;gap:5px;font:700 13px/1 var(--f-mono);border:2px solid var(--ink);border-radius:9px;background:var(--paper);padding:3px 6px;height:56px}
-.pl-lab .bt-ico{width:24px;height:24px;border-radius:6px}
-.pl-lab .bt-ico svg{width:16px;height:16px}
-.pl-cell{height:56px;border-radius:7px;border:2px dashed transparent;display:grid;place-items:center;font:800 15px/1 var(--f-display);color:transparent;transition:background .25s}
-.pl-cell.used{border-color:#B9C6E0;color:#B9C6E0;background:rgba(255,255,255,.6)}
-.pl-cell.on{border:2px solid var(--ink);color:#fff}
-.pl-cell.now{box-shadow:0 0 0 3px #FFC93C}
-.pl-info{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px}
-.pl-tick{font:800 17px/1 var(--f-body)}
-.pl-tick b{font:800 26px/1 var(--f-display)}
-.pl-res{font:800 15px/1.3 var(--f-body);color:var(--ink);text-align:right}
-.pl-actions{display:flex;gap:10px;justify-content:center;margin-top:auto}
+/* ---------- command belt ---------- */
+.belt-scene{padding:16px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(#EEF6FF,#E4EEF8)}
+.bl-top{display:flex;gap:10px;align-items:stretch}
+.bl-cpu{flex:none;width:136px;border:3px solid var(--ink);border-radius:16px;background:#fff;box-shadow:0 4px 0 var(--ink);padding:8px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.bl-cpu b{font:800 14px/1 var(--f-display)}
+.bl-gear{width:38px;height:38px;color:var(--cpu)}
+.bl-gear svg{width:100%;height:100%}
+.bl-gear.spin svg{animation:spin 1.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bl-now{min-height:62px;width:100%;border:2px dashed #B9C6E0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 12px/1.2 var(--f-mono);color:var(--ink-soft)}
+.bl-now.busy{border-style:solid;border-color:var(--ink);background:#FFE680;color:var(--ink)}
+.bl-now .bt-ico{width:26px;height:26px;border-radius:7px}
+.bl-now .bt-ico svg{width:17px;height:17px}
+.bl-belt{position:relative;flex:1;min-width:0;height:128px;border:3px solid var(--ink);border-radius:16px;background:#3C4A6B;overflow:hidden;box-shadow:0 4px 0 var(--ink)}
+.bl-track{position:absolute;left:0;right:0;top:50%;height:96px;margin-top:-48px;background:repeating-linear-gradient(90deg,#4E5C88 0 14px,#445180 14px 28px)}
+.bl-belt.moving .bl-track{animation:belt .5s linear infinite}
+@keyframes belt{to{background-position:-28px 0}}
+.bl-card{position:absolute;top:50%;margin-top:-42px;width:72px;height:84px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 11.5px/1 var(--f-mono);transition:left .5s cubic-bezier(.3,1.1,.5,1),opacity .4s,transform .4s}
+.bl-card .bt-ico{width:32px;height:32px;border-radius:9px}
+.bl-card .bt-ico svg{width:20px;height:20px}
+.bl-card small{font:700 10.5px/1 var(--f-mono);color:var(--ink-soft)}
+.bl-card.first{background:#FFF3C4}
+.bl-card.eaten{opacity:0;transform:scale(.4)}
+.bl-world{flex:1;display:grid;place-items:center;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);min-height:0}
+.bl-map{position:relative}
+.bl-cell{position:absolute;width:104px;height:104px;border:3px solid var(--ink);border-radius:14px;background:#6FE3B8;box-shadow:inset 0 -6px 0 rgba(22,25,58,.18)}
+.bl-chip{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border:3px solid var(--ink);border-radius:10px;background:#39467A;color:#8794D6;display:grid;place-items:center;font:800 24px/1 var(--f-mono);transition:background .3s,color .3s,box-shadow .3s}
+.bl-chip.on{background:#FFD84D;color:var(--ink);box-shadow:0 0 18px #FFC93C}
+.bl-bit{position:absolute;width:104px;height:104px;transition:left .5s cubic-bezier(.3,1.2,.5,1),top .5s cubic-bezier(.3,1.2,.5,1);pointer-events:none}
+.bl-bit .bl-sprite{position:absolute;left:50%;top:50%;width:62px;margin:-36px 0 0 -31px}
+.bl-bit .bl-sprite svg{display:block;width:100%}
+.bl-face{position:absolute;inset:0;transition:transform .35s cubic-bezier(.3,1.4,.5,1)}
+.bl-face i{position:absolute;left:50%;top:2px;margin-left:-13px;width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:20px solid #FFC93C;filter:drop-shadow(0 2px 0 var(--ink))}
+.bl-actions{display:flex;gap:10px;justify-content:center}
 
 /* ---------- race ---------- */
 .race-scene{background:linear-gradient(#FFF1F5,#FFE3EA);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
@@ -497,34 +506,34 @@
 <div class="fun"><b>Цікаво знати</b>Коли програмісти пишуть код словами, спеціальна програма, <b>компілятор</b>, перекладає його в такі самі нулі й одиниці. Про це ми ще поговоримо.</div></template>
       </section>
 
-      <!-- pipeline -->
+      <!-- command belt -->
       <section class="slide circuit" data-key="pipe" data-title="Конвеєр" data-ico="pipe" style="--c:var(--zoom)">
         <div class="copy">
-          <span class="kicker"><span class="k-ico" data-ri="pipe"></span>Як процесор поспішає</span>
+          <span class="kicker"><span class="k-ico" data-ri="pipe"></span>Черга команд</span>
           <h2>Конвеєр команд</h2>
-          <p class="lead">Процесор не чекає, поки закінчиться одна команда, щоб узятися за наступну. Це як у пранні: поки перша сорочка сушиться, наступна вже пере.</p>
-          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="pipeBubble">Тисни «Такт» і дивись. Потім перемкни на конвеєр.</div></div>
-          <div class="memo"><small>Запам’ятай</small><b>Конвеєр виконує кілька команд одночасно, кожну на своєму кроці. Так процесор встигає більше за той самий час.</b></div>
+          <p class="lead">Програма — це черга команд на стрічці. Процесор бере їх по одній, з початку черги, і виконує. Дивись, як Біт слухається.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="pipeBubble">Тисни «Пуск»: процесор візьме команди зі стрічки.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Програма — це черга команд. Процесор бере їх по одній і виконує в тому порядку, як вони стоять.</b></div>
         </div>
-        <div class="scene pipe-scene" data-noswipe>
-          <div class="pl-modes">
-            <button class="chip-mode" id="plSeq" aria-pressed="true">Без конвеєра</button>
-            <button class="chip-mode" id="plPipe" aria-pressed="false">З конвеєром</button>
+        <div class="scene belt-scene" data-noswipe>
+          <div class="bl-top">
+            <div class="bl-cpu" id="blCpu">
+              <div class="bl-gear" id="blGear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg></div>
+              <b>Процесор</b>
+              <div class="bl-now" id="blNow">чекає</div>
+            </div>
+            <div class="bl-belt" id="blBelt"><div class="bl-track" id="blTrack"></div></div>
           </div>
-          <div class="pl-legend"><span class="s1">1 Взяти</span><span class="s2">2 Зрозуміти</span><span class="s3">3 Виконати</span></div>
-          <div class="pl-grid" id="plGrid"></div>
-          <div class="pl-info"><div class="pl-tick">Такт <b id="plTick">0</b> з <span id="plTotal">12</span></div><div class="pl-res" id="plRes"></div></div>
-          <div class="pl-actions"><button class="btn" id="plStep">⏭ Такт</button><button class="btn ghost" id="plReset" aria-label="Спочатку">⟲</button></div>
+          <div class="bl-world"><div class="bl-map" id="blMap"></div></div>
+          <div class="bl-actions"><button class="btn" id="blRun">▶ Пуск</button><button class="btn ghost" id="blStep">⏭ Крок</button><button class="btn ghost" id="blReset" aria-label="Спочатку">⟲</button></div>
         </div>
-        <template class="theory"><h2>Конвеєр у справжньому процесорі</h2>
-<p>Кожна команда проходить кілька етапів. Ми показуємо три: <b>взяти</b>, <b>зрозуміти</b>, <b>виконати</b>. У справжніх процесорах їх 5, 10 або навіть 20, і кожен етап виконує окрема частина чипа.</p>
-<h3>Чому конвеєр прискорює</h3>
-<p>Одна команда від цього не стає швидшою: їй однаково потрібні всі три етапи. Але в кожен момент працюють усі частини чипа одразу, тому за секунду виходить більше команд. Так працює і автомийка: одна машина миється так само довго, а за годину їх проходить більше.</p>
-<h3>Скільки тактів?</h3>
-<p>Для 4 команд і 3 етапів: без конвеєра 4 × 3 = <b>12</b> тактів. З конвеєром 3 + (4 − 1) = <b>6</b> тактів. Чим довша програма, тим більший виграш.</p>
-<h3>Коли конвеєр спотикається</h3>
-<p>Іноді наступна команда залежить від попередньої. Тоді процесор мусить почекати, і конвеєр «пробуксовує». Розумні процесори вгадують, що буде далі, щоб не простоювати.</p>
-<div class="fun"><b>Звідки ідея?</b>Конвеєр придумали не для комп’ютерів, а для заводів: Генрі Форд так збирав автомобілі понад 100 років тому.</div></template>
+        <template class="theory"><h2>Черга команд</h2>
+<p>Коли ти складаєш програму для Біта, команди стають у чергу. Процесор бере першу команду, виконує її, потім бере наступну. Коли черга закінчилась, програма завершена.</p>
+<h3>Бере по одній</h3>
+<p>Процесор ніколи не виконує дві команди зразу. Він робить усе по порядку, зате дуже швидко. Тому в програмі так важливо, у якому порядку стоять команди.</p>
+<h3>А справжній процесор?</h3>
+<p>Справжній процесор ще хитріший: поки він виконує одну команду, то вже готує наступну. Таку «стрічку з заготовками» теж називають конвеєром. Для нас головне: команди йдуть у черзі й виконуються по порядку.</p>
+<div class="fun"><b>Для тих, хто любить ігри</b>Є відома гра про програмування «Human Resource Machine»: там працівник береже коробки на стрічці й виконує команди. Дуже схоже на наш конвеєр.</div></template>
       </section>
 
       <!-- race -->
@@ -1114,56 +1123,88 @@ H.bits = (function(){
   };
 })();
 
-/* pipe: the same 4 commands, 3 stages each — one after another or overlapped on a conveyor */
+/* pipe: commands wait on a belt, the processor takes them one by one, Bit obeys on a little map.
+   The world is driven by the real game engine (level 2-02), so the result matches the game. */
 H.pipe = (function(){
-  const STAGES = 3, N = SAMPLE.length;
-  let el, mode = "seq", tick = 0;
-  const done = {};
-  const total = () => mode === "pipe" ? N + STAGES - 1 : N * STAGES;
-  const startOf = i => mode === "pipe" ? i : i * STAGES;
-  function build(){
-    const T = total(), g = $("#plGrid");
-    g.style.setProperty("--n", T);
-    let h = '<div></div>';
-    for (let t = 0; t < T; t++) h += '<div class="pl-head" data-t="' + t + '">' + (t + 1) + "</div>";
-    SAMPLE.forEach((k, i) => {
-      h += '<div class="pl-lab">' + cmdIco(k) + GAME_NAME[k].replace("()", "") + "</div>";
-      for (let t = 0; t < T; t++){
-        const st = t - startOf(i), inside = st >= 0 && st < STAGES;
-        h += '<div class="pl-cell' + (inside ? " used s" + (st + 1) : "") + '" data-t="' + t + '">' + (inside ? st + 1 : "") + "</div>";
-      }
-    });
-    g.innerHTML = h; $("#plTotal").textContent = T;
+  const CELL = 104, GAP = 8, SLOT = 72 + 8;
+  const DEG = { N: 0, E: 90, S: 180, W: 270 };
+  const MSG = { move: "Біт іде вперед.", jump: "Біт стрибає.", turn: "Біт повертається.", on: "Транзистор світиться!", off: "Транзистор згас.",
+    "bump-edge": "Далі нічого немає.", "bump-step": "Там сходинка.", "bump-flat": "Тут рівно.", "bump-high": "Занадто високо.", "no-target": "Тут немає транзистора." };
+  let el, lv, prog, trace, idx = 0, busy = false, auto = false, token = 0;
+
+  function world(st){
+    const bit = $("#blBit"), pos = (x, y) => ({ left: x * (CELL + GAP), top: y * (CELL + GAP) });
+    const p = pos(st.x, st.y);
+    bit.style.left = p.left + "px"; bit.style.top = p.top + "px";
+    $(".bl-face", bit).style.transform = "rotate(" + DEG[st.dir] + "deg)";
+    lv.targets.forEach(t => { const on = st.lit.indexOf(BitGame.keyOf(t.x, t.y)) >= 0, c = $("#blChip"); c.classList.toggle("on", on); c.textContent = on ? "1" : "0"; });
   }
-  function paint(){
-    $$(".pl-cell.used", el).forEach(c => { const t = +c.dataset.t; c.classList.toggle("on", t < tick); c.classList.toggle("now", t === tick - 1); });
-    $$(".pl-head", el).forEach(c => c.classList.toggle("now", +c.dataset.t === tick - 1));
-    $("#plTick").textContent = tick;
-    $("#plStep").disabled = tick >= total();
-    $("#plSeq").setAttribute("aria-pressed", mode === "seq"); $("#plPipe").setAttribute("aria-pressed", mode === "pipe");
+  function buildBelt(){
+    const track = $("#blTrack").parentElement;
+    $$(".bl-card", track).forEach(c => c.remove());
+    prog.forEach((k, i) => {
+      const c = document.createElement("div"); c.className = "bl-card" + (i === 0 ? " first" : ""); c.dataset.i = i;
+      c.innerHTML = cmdIco(k) + GAME_NAME[k].replace("()", "") + "<small>" + code3(CMD_CODE[k]) + "</small>";
+      c.style.left = (6 + i * SLOT) + "px"; track.appendChild(c);
+    });
   }
   function reset(msg){
-    tick = 0; $("#plRes").textContent = ""; build(); paint();
-    D.say(el, msg || (mode === "pipe" ? "Конвеєр: усі етапи працюють одночасно. Тисни «Такт»!" : "Поки що без конвеєра: кожна команда чекає, доки закінчиться попередня."));
+    token++; busy = auto = false; idx = 0;
+    buildBelt(); world(BitGame.initialState(lv));
+    $("#blNow").className = "bl-now"; $("#blNow").textContent = "чекає"; $("#blGear").classList.remove("spin"); $("#blTrack").parentElement.classList.remove("moving");
+    $("#blRun").textContent = "▶ Пуск"; $("#blRun").disabled = $("#blStep").disabled = false;
+    D.say(el, msg || "Тисни «Пуск»: процесор візьме команди зі стрічки.");
   }
-  function finish(){
-    done[mode] = total();
-    $("#plRes").textContent = mode === "pipe" ? "З конвеєром: " + total() + " тактів" : "Без конвеєра: " + total() + " тактів";
-    if (mode === "seq"){ D.say(el, "Без конвеєра це " + total() + " тактів. А якщо перемкнути на конвеєр?"); return; }
-    const faster = done.seq ? (done.seq / done.pipe) : 0;
-    D.say(el, done.seq ? "Було " + done.seq + " тактів, стало " + done.pipe + ": у " + (Number.isInteger(faster) ? faster : faster.toFixed(1)) + " рази швидше! Команда та сама, але частини процесора не простоюють."
-                       : "З конвеєром це " + done.pipe + " тактів. Перемкни на «Без конвеєра» й порівняй!");
-    Sound.win(); happy(el); stamp("pipe");
+  async function one(){
+    if (idx >= prog.length || busy) return false;
+    busy = true; const my = token, i = idx, t = trace[i], k = prog[i];
+    const belt = $("#blTrack").parentElement, cards = $$(".bl-card", belt);
+    /* 1. the first card is taken by the processor, the rest of the queue moves up */
+    belt.classList.add("moving"); Sound.whoosh();
+    cards[i].classList.add("eaten");
+    cards.forEach((c, j) => { if (j > i){ c.style.left = (6 + (j - i - 1) * SLOT) + "px"; c.classList.toggle("first", j === i + 1); } });
+    $("#blNow").className = "bl-now busy"; $("#blNow").innerHTML = cmdIco(k) + GAME_NAME[k] + "<small>" + code3(CMD_CODE[k]) + "</small>";
+    $("#blGear").classList.add("spin");
+    D.say(el, "Процесор взяв команду «" + GAME_NAME[k] + "».");
+    await Deck.wait(650); if (my !== token) return false;
+    belt.classList.remove("moving");
+    /* 2. Bit obeys */
+    world(t.state); (t.event === "on" || t.event === "off") ? Sound.ding() : Sound.click();
+    D.say(el, "«" + GAME_NAME[k] + "»: " + (MSG[t.event] || "Готово."));
+    await Deck.wait(750); if (my !== token) return false;
+    idx++; busy = false; $("#blGear").classList.remove("spin");
+    if (idx >= prog.length){
+      $("#blNow").className = "bl-now"; $("#blNow").textContent = "черга порожня";
+      D.say(el, "Черга порожня: усі команди виконано, і транзистор світиться. Це і є робота програми!");
+      $("#blRun").disabled = $("#blStep").disabled = true; auto = false; $("#blRun").textContent = "▶ Пуск";
+      Sound.win(); happy(el); stamp("pipe"); return false;
+    }
+    return true;
+  }
+  async function run(){
+    if (auto){ auto = false; $("#blRun").textContent = "▶ Далі"; return; }   // pause: the current command finishes first
+    if (busy) return;
+    auto = true; $("#blRun").textContent = "⏸ Пауза"; const my = token;
+    while (auto && my === token){ if (!(await one())) break; }
+    if (my === token && idx < prog.length){ auto = false; $("#blRun").textContent = "▶ Далі"; }
   }
   return {
     init(s){
-      el = s;
-      $("#plStep").addEventListener("click", () => { if (tick >= total()) return; tick++; Sound.click(); paint(); if (tick >= total()) finish(); });
-      $("#plReset").addEventListener("click", () => { Sound.click(); reset(); });
-      $("#plSeq").addEventListener("click", () => { if (mode === "seq") return; mode = "seq"; Sound.pop(); reset(); });
-      $("#plPipe").addEventListener("click", () => { if (mode === "pipe") return; mode = "pipe"; Sound.pop(); reset(); });
+      el = s; lv = BitGame.getLevel("2-02"); prog = BitGame.solve(lv); trace = BitGame.run(lv, prog).trace;
+      /* top-down map of the level */
+      const map = $("#blMap"); map.style.width = (lv.w * (CELL + GAP) - GAP) + "px"; map.style.height = (lv.h * (CELL + GAP) - GAP) + "px";
+      let h = "";
+      for (let y = 0; y < lv.h; y++) for (let x = 0; x < lv.w; x++) if (lv.cells[y][x]){
+        h += '<div class="bl-cell" style="left:' + x * (CELL + GAP) + "px;top:" + y * (CELL + GAP) + 'px">' + (lv.cells[y][x].t ? '<div class="bl-chip" id="blChip">0</div>' : "") + "</div>";
+      }
+      h += '<div class="bl-bit" id="blBit"><div class="bl-face"><i></i></div><div class="bl-sprite">' + Deck.bitSVG() + "</div></div>";
+      map.innerHTML = h;
+      $("#blRun").addEventListener("click", run);
+      $("#blStep").addEventListener("click", () => { if (!auto) one(); });
+      $("#blReset").addEventListener("click", () => { Sound.click(); reset(); });
       reset();
-    }
+    },
+    leave(){ token++; busy = auto = false; reset(); }
   };
 })();
 
