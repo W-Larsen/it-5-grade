@@ -19,7 +19,8 @@ site/index.html          головна сторінка курсу
 shared/deck/             каркас презентацій для уроків 2+ (deck.css, deck.js)
 shared/bit-game/         гра «Біт-програміст»: engine.js (логіка), bit-game.js (компонент), levels-*.js (рівні)
 game/index.html          сторінка «Всі рівні»
-tools/                   тести рушія, перевірка рівнів, збірка сайту
+tools/                   тести рушія, перевірка рівнів, збірка сайту (build-site.py)
+serve.cmd                локальний перегляд сайту: збірка + сервер на http://localhost:8080/
 lesson-NN-<тема>/        урок: index.html (тіло сторінки), teacher-notes.md, теорія .docx
 docs/specs/              дизайн-специфікації та журнали рішень
 docs/plans/              плани реалізації

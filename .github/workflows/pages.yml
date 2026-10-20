@@ -23,7 +23,7 @@ jobs:
       # Lesson pages and game/ are page bodies (no doctype/head); the script wraps them and copies shared/.
       - name: Build site
         run: |
-          bash tools/build-site.sh
+          python3 tools/build-site.py
           ls -R _site
 
       - name: Check levels
