@@ -20,24 +20,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Lesson pages are written as page bodies (no doctype/head), so wrap them here.
+      # Lesson pages and game/ are page bodies (no doctype/head); the script wraps them and copies shared/.
       - name: Build site
         run: |
-          set -euo pipefail
-          mkdir -p _site
-          cp site/index.html _site/index.html
-          for dir in lesson-*/; do
-            name="${dir%/}"
-            [ -f "$name/index.html" ] || continue
-            mkdir -p "_site/$name"
-            {
-              printf '%s\n' '<!doctype html>' '<html lang="uk">' '<head>' \
-                '<meta charset="utf-8">' \
-                '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
-              cat "$name/index.html"
-            } > "_site/$name/index.html"
-          done
+          bash tools/build-site.sh
           ls -R _site
+
+      - name: Check levels
+        run: node tools/check-levels.js
 
       - uses: actions/configure-pages@v5
 
