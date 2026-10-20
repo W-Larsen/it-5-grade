@@ -655,5 +655,10 @@ P.onKey = function (e) {
   }
 };
 
+/* Mascot for host pages (e.g. game/index.html). */
+B.bitSVG = function (cls) {
+  return '<svg class="' + (cls || "bit") + '" viewBox="0 0 120 130" aria-hidden="true">' + bitInner() + "</svg>";
+};
+
 customElements.define("bit-game", BitGameElement);
 })();

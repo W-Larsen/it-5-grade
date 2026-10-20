@@ -1,19 +1,92 @@
-<title>Біт-програміст</title>
+<title>Біт-програміст · Всі рівні</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-:root{color-scheme:light;--ground:#E9F0FB;--paper:#fff;--ink:#16193A;--sun:#FFC93C;--f-display:"Unbounded","Trebuchet MS",sans-serif;--f-body:"Nunito","Segoe UI",system-ui,sans-serif;--f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+/* All levels of the game in one place: pick a set, play it. Same comic-sticker look as the lessons. */
+:root{
+  color-scheme: light;
+  --ground:#E9F0FB; --paper:#FFFFFF; --ink:#16193A; --ink-soft:#4E5584; --line:#C9D5EC;
+  --bit:#FF8A3D; --sun:#FFC93C;
+  --f-display:"Unbounded","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --f-body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body)}
-.wrap{max-width:1180px;margin:0 auto;padding:20px}
-h1{font:800 clamp(22px,3.5vw,32px)/1.2 var(--f-display);margin:0 0 14px}
-.stage{height:680px}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body)}
+a:focus-visible,button:focus-visible{outline:3px solid #2F80ED;outline-offset:3px}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 20px 48px}
+.back{display:inline-block;margin-bottom:14px;font:800 15px/1 var(--f-body);color:var(--ink);text-decoration:none;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:9px 14px;box-shadow:0 3px 0 var(--ink)}
+.back:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+.hero{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+.hero-bit{flex:none;width:76px}
+.hero-bit svg{width:100%;display:block}
+h1{margin:0 0 6px;font:800 clamp(24px,4vw,40px)/1.1 var(--f-display);letter-spacing:-.02em}
+.hero p{margin:0;font:700 clamp(16px,2.2vw,19px)/1.4 var(--f-body);color:var(--ink-soft)}
+.world{margin:0 0 10px;font:800 13px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.sets{list-style:none;margin:0 0 22px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.set{width:100%;text-align:left;display:block;background:var(--paper);border:3px solid var(--ink);border-radius:22px;padding:14px 16px 16px;box-shadow:5px 5px 0 var(--ink);cursor:pointer;font-family:inherit;color:inherit;transition:transform .12s,box-shadow .12s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.set:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+.set[aria-pressed="true"]{background:var(--sun)}
+.set b{display:block;font:800 18px/1.2 var(--f-display)}
+.set .d{display:block;margin:5px 0 10px;font:700 14px/1.35 var(--f-body);color:var(--ink-soft)}
+.set[aria-pressed="true"] .d{color:var(--ink)}
+.set .st{display:flex;align-items:center;justify-content:space-between;font:800 15px/1 var(--f-mono)}
+.set .stars{color:#E0A100;font-size:18px;letter-spacing:2px;text-shadow:0 1px 0 var(--ink)}
+.stage{height:700px;min-height:560px}
+@media (max-width:900px){.stage{height:640px}}
 </style>
 <div class="wrap">
-  <h1>Біт-програміст</h1>
-  <div class="stage"><bit-game levels="2-01,2-02,2-03,2-04,2-05,2-06,2-07,2-08,2-09,2-b1,2-b2,2-b3"></bit-game></div>
+  <a class="back" href="../">← До курсу</a>
+  <header class="hero">
+    <div class="hero-bit" id="heroBit"></div>
+    <div>
+      <h1>Біт-програміст</h1>
+      <p>Тут усі рівні. Грай скільки хочеш і шукай найкоротші програми!</p>
+    </div>
+  </header>
+  <div class="world">Урок 2 · Процесор</div>
+  <ul class="sets" id="sets"></ul>
+  <div class="stage"><bit-game id="game"></bit-game></div>
 </div>
 <script src="../shared/bit-game/engine.js"></script>
 <script src="../shared/bit-game/levels-02.js"></script>
 <script src="../shared/bit-game/bit-game.js"></script>
+<script>
+(function () {
+"use strict";
+var B = window.BitGame;
+var SETS = [
+  { name: "Тренування", d: "Вперед, повороти й увімкнути", ids: ["2-01", "2-02", "2-03"] },
+  { name: "Стрибки", d: "Угору по сходах і вниз у ями", ids: ["2-04", "2-05", "2-06"] },
+  { name: "Іспит диспетчерської", d: "Мало команд — багато думання", ids: ["2-07", "2-08", "2-09"] },
+  { name: "Бонус", d: "Для найсміливіших програмістів", ids: ["2-b1", "2-b2", "2-b3"] }
+];
+var game = document.getElementById("game"), list = document.getElementById("sets"), selected = 0;
+document.getElementById("heroBit").innerHTML = B.bitSVG("bit");
+
+function paint() {
+  list.innerHTML = "";
+  SETS.forEach(function (s, i) {
+    var got = B.progress.total(s.ids), max = s.ids.length * 3;
+    var li = document.createElement("li"), b = document.createElement("button");
+    b.type = "button"; b.className = "set"; b.setAttribute("aria-pressed", i === selected ? "true" : "false");
+    b.innerHTML = "<b>" + s.name + '</b><span class="d">' + s.d + '</span><span class="st"><span class="stars">' +
+      "★".repeat(Math.round(got / max * 3)) + "☆".repeat(3 - Math.round(got / max * 3)) + "</span><span>" + got + "/" + max + "</span></span>";
+    b.addEventListener("click", function () { pick(i, true); });
+    li.appendChild(b); list.appendChild(li);
+  });
+}
+
+function pick(i, scroll) {
+  selected = i;
+  game.index = 0;
+  game.setAttribute("levels", SETS[i].ids.join(","));
+  paint();
+  if (scroll && game.scrollIntoView) game.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.addEventListener("bitgame:win", paint);
+pick(0, false);
+})();
+</script>

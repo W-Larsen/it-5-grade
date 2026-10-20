@@ -9,12 +9,16 @@
 | # | Урок | Сторінка | Для вчителя |
 |---|---|---|---|
 | 1 | Подорож Біта: як працює інтернет | [`lesson-01-internet/`](lesson-01-internet/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-01-internet/) | [конспект](lesson-01-internet/teacher-notes.md) · теорія `.docx` |
-| 2 | Біт у процесорі *(у розробці)* | — | — |
+| 2 | Біт у процесорі *(у розробці)* | `lesson-02-processor/` | [конспект](lesson-02-processor/teacher-notes.md) |
+| — | Біт-програміст · Всі рівні | [`game/`](game/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/game/) | — |
 
 ## Структура
 
 ```
 site/index.html          головна сторінка курсу
+shared/bit-game/         гра «Біт-програміст»: engine.js (логіка), bit-game.js (компонент), levels-*.js (рівні)
+game/index.html          сторінка «Всі рівні»
+tools/                   тести рушія, перевірка рівнів, збірка сайту
 lesson-NN-<тема>/        урок: index.html (тіло сторінки), teacher-notes.md, теорія .docx
 docs/specs/              дизайн-специфікації та журнали рішень
 docs/plans/              плани реалізації
