@@ -1,0 +1,253 @@
+<title>Біт у процесорі</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="../shared/deck/deck.css">
+<style>
+/* Lesson 2 — colours and slide-specific bits; the chassis (stage, route, drawer, stamps) is shared/deck/deck.css. */
+:root{
+  --prog:#2F80ED; --algo:#12B5A4; --zoom:#3C4A6B; --cpu:#7A5CFA; --race:#E5487B; --play:#FF8A3D; --exam:#E5484D;
+}
+
+/* ---------- back (cover) ---------- */
+.q-card .front h3{font-size:24px;line-height:1.2}
+.q-card .front .big-ico{width:96px;height:96px}
+.q-card .front .big-ico svg{width:52px;height:52px}
+.q-card .back p{font-size:20px}
+.q-card .back p b{color:var(--prog)}
+.back-bottom{display:flex;align-items:center;gap:22px;background:var(--ink);color:#fff;border-radius:22px;padding:14px 24px;font:800 20px/1.35 var(--f-body)}
+.back-bottom .bit-slot{width:70px;flex:none}
+.back-bottom .btn{margin-left:auto;flex:none}
+.dive{position:absolute;inset:0;z-index:20;display:grid;place-items:center;background:rgba(22,25,58,.55);animation:fade .3s}
+@keyframes fade{from{opacity:0}}
+.dive-ipad{width:230px;position:relative}
+.dive-ipad svg{display:block;width:100%}
+.dive-bit{position:absolute;left:50%;top:50%;width:150px;margin:-95px 0 0 -75px}
+.dive-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+
+/* ---------- recap ---------- */
+.rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.rule{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.rule .num{width:38px;height:38px;border-radius:50%;background:var(--rc);border:3px solid var(--ink);color:#fff;display:grid;place-items:center;font:800 18px/1 var(--f-display)}
+.rule b{font:800 20px/1.25 var(--f-display);letter-spacing:-.01em}
+.rule span{font:700 17px/1.4 var(--f-body);color:var(--ink-soft)}
+.sites-h{margin:4px 0 0;font:900 13px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.sites{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.site{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:12px 14px;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.site:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.site b{font:800 17px/1.2 var(--f-body)}
+.site small{font:700 14px/1.3 var(--f-body);color:var(--ink-soft)}
+.site em{align-self:flex-start;font:800 11px/1 var(--f-body);font-style:normal;letter-spacing:.08em;text-transform:uppercase;background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:4px 8px;margin-top:2px}
+
+/* ---------- badge (programmer ID) ---------- */
+.stamps{grid-template-columns:repeat(5,1fr)}
+.stars-line{display:flex;align-items:center;gap:12px;font:800 18px/1 var(--f-body)}
+.stars-line .big{font:800 24px/1 var(--f-display);color:#B07A00}
+</style>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <button class="brand" id="brandBtn" aria-label="На початок"><span class="brand-bit" data-bit></span><span>Біт у процесорі</span></button>
+    <nav class="route" id="route" aria-label="Маршрут уроку"><div class="route-fill" id="routeFill"></div></nav>
+  </header>
+
+  <main class="viewport" id="viewport">
+    <div class="deck" id="deck">
+
+      <!-- 0 · BACK -->
+      <section class="slide stack" data-key="back" data-title="Повтор" data-ico="back" style="--c:var(--bit)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="back"></span>Урок 2 · Біт у процесорі</span>
+          <h2>Біт повернувся!</h2>
+        </div>
+        <div class="cards3" data-noswipe>
+          <button class="fcard q-card" style="--fc:#FFE9A8"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="bolt"></span><h3>Що означає «1» в оптоволокні?</h3><small>торкнись</small></div>
+            <div class="face back"><p>Спалах світла. А темрява — це <b>0</b>.</p></div>
+          </div></button>
+          <button class="fcard q-card" style="--fc:#BFE3FF"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="book"></span><h3>Що таке DNS?</h3><small>торкнись</small></div>
+            <div class="face back"><p><b>Телефонна книга</b> інтернету: за назвою сайту знаходить його адресу.</p></div>
+          </div></button>
+          <button class="fcard q-card" style="--fc:#C8F2D9"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="wifi"></span><h3>Wi-Fi є, а відео не грає. Чому?</h3><small>торкнись</small></div>
+            <div class="face back"><p>Wi-Fi — лише останні метри. Мабуть, <b>до роутера не доходить інтернет</b> від провайдера.</p></div>
+          </div></button>
+        </div>
+        <div class="back-bottom"><span class="bit-slot" data-bit></span><span>Минулого разу ми мандрували інтернетом. Сьогодні я потрапив усередину самого iPad. Допоможеш мені там?</span><button class="btn big" id="diveBtn" data-noswipe>Зайти всередину →</button></div>
+      </section>
+
+      <!-- recap -->
+      <section class="slide stack" data-key="recap" data-title="Запам’ятай" data-ico="star" style="--c:var(--sun-deep)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="star"></span>Запам’ятай</span>
+          <h2>Три правила програміста</h2>
+        </div>
+        <div class="rules3">
+          <div class="rule" style="--rc:var(--algo)"><span class="num">1</span><b>Алгоритм</b><span>Точні кроки, виконані по порядку. Переставиш кроки — вийде інше.</span></div>
+          <div class="rule" style="--rc:var(--prog)"><span class="num">2</span><b>Програма</b><span>Алгоритм, записаний так, щоб його зрозумів комп’ютер.</span></div>
+          <div class="rule" style="--rc:var(--cpu)"><span class="num">3</span><b>Процесор</b><span>Виконує команди по одній, але мільярди за секунду.</span></div>
+        </div>
+        <div class="sites-h">Цікаві сайти: дослідити вдома або з дорослими</div>
+        <div class="sites" data-noswipe>
+          <a class="site" href="https://blockly.games/maze?lang=uk" target="_blank" rel="noopener"><b>Blockly Games: Лабіринт</b><small>Програмуй блоками, схоже на нашу гру</small><em>можна українською</em></a>
+          <a class="site" href="https://code.org/videos" target="_blank" rel="noopener"><b>Code.org: How Computers Work</b><small>Короткі відео про процесор і пам’ять</small><em>англійською · є субтитри</em></a>
+          <a class="site" href="https://www.ifixit.com/Teardown/iPad+7+Teardown/126291" target="_blank" rel="noopener"><b>iFixit: iPad зсередини</b><small>Справжні фото розібраного iPad</small><em>англійською · фото</em></a>
+          <a class="site" href="https://floooh.github.io/visual6502remix/" target="_blank" rel="noopener"><b>Visual 6502</b><small>Справжній старий процесор: видно, як перемикаються транзистори</small><em>краще на комп’ютері</em></a>
+          <a class="site" href="https://www.bbc.co.uk/bitesize/guides/zpp49j6/revision/1" target="_blank" rel="noopener"><b>BBC Bitesize: алгоритм</b><small>Що таке алгоритм, з прикладами</small><em>англійською</em></a>
+          <a class="site" href="https://nandgame.com/" target="_blank" rel="noopener"><b>NandGame</b><small>Збери комп’ютер з нуля: для найдопитливіших</small><em>англійською · складно</em></a>
+        </div>
+      </section>
+
+      <!-- badge -->
+      <section class="slide stack" data-key="badge" data-title="Посвідчення" data-ico="passport" style="--c:var(--bit)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="passport"></span>Фініш</span>
+          <h2>Твоє посвідчення</h2>
+        </div>
+        <div class="book2" data-noswipe>
+          <div class="pp-left">
+            <h3>Посвідчення програміста</h3>
+            <div class="pp-photo" data-bit></div>
+            <div class="pp-field"><label for="ppName">Ім’я програміста</label><input id="ppName" type="text" maxlength="24" placeholder="Напиши своє ім’я"></div>
+            <div class="pp-field"><small>Дата</small><b id="ppDate"></b></div>
+          </div>
+          <div class="pp-right">
+            <div class="pp-right-head"><b>Бейджі уроку</b><span id="ppCount"></span></div>
+            <div class="stamps" id="stamps"></div>
+            <div class="stars-line"><span>Зірки в грі</span><span class="big" id="ppStars"></span></div>
+            <div class="pp-actions"><span class="hint" id="ppHint"></span><button class="btn small ghost" id="resetBtn">Почати знову</button></div>
+          </div>
+        </div>
+        <template class="theory"><h2>Словничок програміста</h2>
+<dl>
+<dt>Алгоритм</dt><dd>Точні кроки, які треба виконати по порядку, щоб отримати результат.</dd>
+<dt>Програма</dt><dd>Алгоритм, записаний мовою, яку розуміє комп’ютер.</dd>
+<dt>Команда</dt><dd>Один крок програми. Наприклад, «вперед» або «увімкнути».</dd>
+<dt>Процесор</dt><dd>«Мозок» комп’ютера: чип, який виконує команди програм.</dd>
+<dt>Транзистор</dt><dd>Крихітний перемикач у чипі: увімкнений (1) або вимкнений (0).</dd>
+<dt>Код</dt><dd>Текст програми: команди, записані словами.</dd>
+<dt>Баг</dt><dd>Помилка в програмі, через яку вона працює не так, як треба.</dd>
+</dl></template>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="bottombar">
+    <button class="nav-btn" id="prevBtn">← Назад</button>
+    <div class="where"><span id="whereNum">1 / 3</span><b id="whereTitle">Повтор</b></div>
+    <div class="tools">
+      <button class="tool" id="homeBtn" aria-label="На початок"><span data-ri="home"></span><span class="tl">Початок</span></button>
+      <button class="tool" id="soundBtn" aria-label="Звук"></button>
+      <button class="tool" id="passBtn" aria-label="Посвідчення"><span data-ri="passport"></span><span class="tl">Посвідчення</span><span class="count" id="passCount">0/9</span></button>
+      <button class="tool" id="fsBtn" aria-label="Повний екран"><span data-ri="full"></span></button>
+    </div>
+    <button class="nav-btn next" id="nextBtn">Далі →</button>
+  </footer>
+
+  <div class="th-backdrop" id="thBack"></div>
+  <aside class="th-drawer" id="thDrawer" role="dialog" aria-modal="true" aria-label="Детальніше" aria-hidden="true">
+    <div class="th-head"><span class="th-label"><span data-ri="book"></span>Для допитливих</span><button class="th-close" id="thClose" aria-label="Закрити">✕</button></div>
+    <div class="th-body" id="thBody"></div>
+  </aside>
+  <div class="stampfx" id="stampFx" aria-live="polite"></div>
+</div>
+
+<script src="../shared/bit-game/engine.js"></script>
+<script src="../shared/bit-game/levels-02.js"></script>
+<script src="../shared/bit-game/bit-game.js"></script>
+<script src="../shared/deck/deck.js"></script>
+<script>
+(function(){
+"use strict";
+const { $, $$, ri } = Deck;
+
+Object.assign(Deck.RI, {
+  pencil: '<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
+  zoom: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M8 10.5h5M10.5 8v5"/>',
+  chip: '<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>',
+  timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 3h5"/>'
+});
+
+const D = Deck.create({
+  prefix: "bit-cpu:",
+  passport: "badge",
+  stamps: {
+    back:      { label: "ПОВТОР",     c: "#E2632A", ico: "back" },
+    teacher:   { label: "ПРОГРАМА",   c: "#2F80ED", ico: "pencil" },
+    algorithm: { label: "АЛГОРИТМ",   c: "#0E9C8D", ico: "list" },
+    deep:      { label: "ГЛИБИНА",    c: "#3C4A6B", ico: "zoom" },
+    cpu:       { label: "ПРОЦЕСОР",   c: "#7A5CFA", ico: "chip" },
+    race:      { label: "ШВИДКІСТЬ",  c: "#E5487B", ico: "timer" },
+    game1:     { label: "ТРЕНУВАННЯ", c: "#D9701A", ico: "game" },
+    game2:     { label: "СТРИБКИ",    c: "#C2410C", ico: "bolt" },
+    game3:     { label: "ІСПИТ",      c: "#E04848", ico: "shield" }
+  },
+  onSoundChange: on => { BitGame.muted = !on; }
+});
+const { H, Sound, store, stamp, happy } = D;
+const LEVEL_IDS = BitGame.levelIds();
+
+/* back: three question cards, then Bit dives into the iPad */
+H.back = { init(el){
+  const cards = $$(".fcard", el);
+  cards.forEach(c => c.addEventListener("click", () => {
+    c.classList.toggle("flipped"); Sound.pop();
+    c.dataset.seen = "1";
+    if (cards.every(x => x.dataset.seen)){ happy(el); stamp("back"); }
+  }));
+  $("#diveBtn").addEventListener("click", () => dive(el));
+}};
+
+function dive(slide){
+  if ($(".dive", slide)) return;
+  Sound.whoosh();
+  const fx = document.createElement("div");
+  fx.className = "dive";
+  fx.innerHTML = '<div class="dive-ipad"><svg viewBox="0 0 84 110"><rect x="3" y="3" width="78" height="104" rx="12" fill="#16193A"/><rect x="9" y="11" width="66" height="86" rx="5" fill="#0F3550"/><circle cx="42" cy="102" r="2.4" fill="#4E5584"/></svg><div class="dive-bit">' + Deck.bitSVG() + '</div></div><div class="dive-flash"></div>';
+  slide.appendChild(fx);
+  const bit = $(".dive-bit", fx), flash = $(".dive-flash", fx);
+  const anim = bit.animate([
+    { transform: "translate(-420px,-60px) scale(1.5)", opacity: 1 },
+    { transform: "translate(0,-10px) scale(1)", opacity: 1, offset: .6 },
+    { transform: "translate(0,0) scale(.05)", opacity: 0 }
+  ], { duration: 1100, easing: "cubic-bezier(.5,0,.3,1)", fill: "forwards" });
+  anim.onfinish = () => {
+    Sound.flash();
+    flash.animate([{ opacity: 0 }, { opacity: .95 }, { opacity: 0 }], { duration: 450 }).onfinish = () => { fx.remove(); D.next(); };
+  };
+}
+
+/* badge: stamps, game stars, name, reset */
+H.badge = (function(){
+  let armed = false;
+  function render(){
+    const rot = k => ((k.charCodeAt(0) * 7 + k.length * 13) % 24) - 12;
+    $("#stamps").innerHTML = D.stampKeys.map(k => '<div class="st">' + (D.hasStamp(k) ? D.stampSVG(k, rot(k)) : '<div class="empty">' + D.stampLabel(k) + "</div>") + "</div>").join("");
+    $("#ppCount").textContent = D.stampCount() + " з " + D.stampKeys.length;
+    $("#ppStars").textContent = BitGame.progress.total(LEVEL_IDS) + " / " + LEVEL_IDS.length * 3;
+    $("#ppHint").textContent = D.stampCount() === D.stampKeys.length ? "Усі бейджі зібрано. Ти справжній програміст!" : "Порожні кружечки: де ще є бейдж.";
+  }
+  return {
+    init(){
+      $("#ppDate").textContent = new Date().toLocaleDateString("uk-UA");
+      const name = $("#ppName"); name.value = store.get("name", "");
+      name.addEventListener("input", () => store.set("name", name.value));
+      $("#resetBtn").addEventListener("click", e => {
+        const b = e.currentTarget;
+        if (!armed){ armed = true; b.textContent = "Точно? Натисни ще раз"; setTimeout(() => { armed = false; b.textContent = "Почати знову"; }, 3000); return; }
+        armed = false; b.textContent = "Почати знову";
+        D.clearStamps(); BitGame.progress.clear(LEVEL_IDS); store.set("name", ""); name.value = "";
+        try { location.hash = ""; } catch(_){}
+        location.reload();
+      });
+    },
+    enter(){ render(); }
+  };
+})();
+
+D.start();
+})();
+</script>
