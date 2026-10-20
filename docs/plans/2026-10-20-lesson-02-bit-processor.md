@@ -41,7 +41,7 @@
 | `shared/bit-game/engine.js` | `BitGame`: реєстр рівнів, парсинг, `step`/`run`/`isWon`/`stars`/`solve`, назви коду, `createProgress` + `progress` |
 | `shared/bit-game/levels-02.js` | 12 рівнів уроку 2 (`2-01`…`2-09`, `2-b1`…`2-b3`) |
 | `shared/bit-game/bit-game.js` | Вебкомпонент `<bit-game>`: рендер, керування, анімації, звуки, події |
-| `tools/engine.test.js` | Тести рушія (`node --test tools/`) |
+| `tools/engine.test.js` | Тести рушія (`node --test tools/engine.test.js` (Node 25 не приймає теку)) |
 | `tools/check-levels.js` | CLI: перевірка всіх рівнів, exit 1 при помилці |
 | `tools/build-site.sh` | Збирає `_site/` (той самий скрипт у workflow і локально) |
 | `.claude/launch.json` | Локальний сервер `_site/` на порту 8080 для перевірки |
@@ -100,9 +100,9 @@ git commit -m "docs: specs for course/lesson 1 and lesson 2, CLAUDE.md, implemen
   - `solve(L)` дорівнює `["forward","jump","light"]`; для `parseLevel("u", {…, map:["1 3t"], start:{x:0,y:0,dir:"E"}, slots:4, best:1})` (транзистор недосяжний) `solve` → `null`.
   - `CODE.uk.light === "увімкнути()"`, `CODE.en.left === "turn_left()"`.
   - `remainingText(1)`, `(2)`, `(5)`, `(11)`, `(21)`, `(22)` → очікувані рядки вище.
-- [ ] **Step 2:** `node --test tools/` → FAIL (`Cannot find module`).
+- [ ] **Step 2:** `node --test tools/engine.test.js` (Node 25 не приймає теку) → FAIL (`Cannot find module`).
 - [ ] **Step 3: Реалізувати `engine.js`.** Обгортка `(function (root) { … root.BitGame = BitGame; if (typeof module !== "undefined") module.exports = BitGame; })(typeof window !== "undefined" ? window : globalThis);`. `solve` — BFS по станах `(x, y, dir, lit)` з ребрами-командами; ключ стану `x,y,dir|lit.join(";")`; перший стан з `isWon` дає шлях.
-- [ ] **Step 4:** `node --test tools/` → PASS.
+- [ ] **Step 4:** `node --test tools/engine.test.js` (Node 25 не приймає теку) → PASS.
 - [ ] **Step 5: Commit** — `feat(bit-game): engine — level parsing, commands, solver`
 
 ---
@@ -118,9 +118,9 @@ git commit -m "docs: specs for course/lesson 1 and lesson 2, CLAUDE.md, implemen
 - Формат: `localStorage["bitgame:v1"] = JSON {"2-01": 3, …}`. Пошкоджений JSON → порожній прогрес.
 
 - [ ] **Step 1: Тести:** фейкове сховище на `Map`: `record("2-01", 2)` → `get` = 2; `record("2-01", 1)` → лишається 2; `record("2-01", 3)` → 3; `total(["2-01","2-02"]) === 3`; `clear(["2-01"])` → `get` = 0; новий `createProgress` на тому ж сховищі бачить збережене. **throwing storage** (усі методи кидають) → `record`/`get` працюють у пам'яті, винятків немає. `createProgress(null)` — те саме. Пошкоджений JSON у `bitgame:v1` → `get` = 0.
-- [ ] **Step 2:** `node --test tools/` → FAIL.
+- [ ] **Step 2:** `node --test tools/engine.test.js` (Node 25 не приймає теку) → FAIL.
 - [ ] **Step 3:** Реалізувати.
-- [ ] **Step 4:** `node --test tools/` → PASS.
+- [ ] **Step 4:** `node --test tools/engine.test.js` (Node 25 не приймає теку) → PASS.
 - [ ] **Step 5: Commit** — `feat(bit-game): star progress with in-memory fallback`
 
 ---
@@ -330,7 +330,7 @@ git commit -m "docs: specs for course/lesson 1 and lesson 2, CLAUDE.md, implemen
 
 ### Task 13: Фінальна перевірка
 
-- [ ] **Step 1:** `node --test tools/` і `node tools/check-levels.js` → PASS / exit 0.
+- [ ] **Step 1:** `node --test tools/engine.test.js` (Node 25 не приймає теку) і `node tools/check-levels.js` → PASS / exit 0.
 - [ ] **Step 2:** `bash tools/build-site.sh`; у браузері 1180×820 пройти весь урок від `back` до `badge` без консольних помилок; Lesson 1 і `/game/` теж відкриваються.
 - [ ] **Step 3:** Відкрити `lesson-02-processor/index.html` як локальний файл (`file://`) — гра працює (запасний варіант).
 - [ ] **Step 4:** Оновити статус у spec («реалізовано»).
