@@ -1,0 +1,1300 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Біт у процесорі</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="../shared/deck/deck.css">
+<style>
+/* Lesson 2 — colours and slide-specific bits; the chassis (stage, route, drawer, stamps) is shared/deck/deck.css. */
+:root{
+  --prog:#2F80ED; --algo:#12B5A4; --zoom:#3C4A6B; --cpu:#7A5CFA; --race:#E5487B; --play:#FF8A3D; --exam:#E5484D;
+}
+
+/* ---------- back (cover) ---------- */
+.q-card .front h3{font-size:24px;line-height:1.2}
+.q-card .front .big-ico{width:96px;height:96px}
+.q-card .front .big-ico svg{width:52px;height:52px}
+.q-card .back p{font-size:20px}
+.q-card .back p b{color:var(--prog)}
+.back-bottom{display:flex;align-items:center;gap:22px;background:var(--ink);color:#fff;border-radius:22px;padding:14px 24px;font:800 20px/1.35 var(--f-body)}
+.back-bottom .bit-slot{width:70px;flex:none}
+.back-bottom .btn{margin-left:auto;flex:none}
+.dive{position:absolute;inset:0;z-index:20;display:grid;place-items:center;background:rgba(22,25,58,.55);animation:fade .3s}
+@keyframes fade{from{opacity:0}}
+.dive-ipad{width:230px;position:relative}
+.dive-ipad svg{display:block;width:100%}
+.dive-bit{position:absolute;left:50%;top:50%;width:150px;margin:-95px 0 0 -75px}
+.dive-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+
+/* ---------- circuit-board backdrop for the "computer inside" slides ---------- */
+.circuit::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180' fill='none' stroke='%23C9D5EC' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M0 44h54l22 22h70M90 0v54l34 34h56M0 134h44l22-22h46l22 22h46'/><circle cx='54' cy='44' r='5' fill='%23C9D5EC'/><circle cx='146' cy='66' r='5' fill='%23C9D5EC'/><circle cx='124' cy='88' r='5' fill='%23C9D5EC'/><circle cx='44' cy='134' r='5' fill='%23C9D5EC'/></svg>")}
+.circuit > *{position:relative}
+
+/* ---------- teacher (program the teacher) ---------- */
+.tprog{display:grid;grid-template-columns:292px 1fr 430px;gap:16px;height:430px}
+.tp-col{display:flex;flex-direction:column;gap:10px;min-height:0}
+.tp-h{display:flex;justify-content:space-between;align-items:baseline;font:800 15px/1 var(--f-display);letter-spacing:-.01em}
+.tp-h small{font:700 13px/1 var(--f-body);color:var(--ink-soft)}
+.tp-pal{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start}
+.cmd-chip{min-height:54px;border:3px solid var(--ink);border-radius:14px;background:var(--paper);box-shadow:0 4px 0 var(--ink);font:800 14.5px/1.2 var(--f-body);padding:6px 8px;cursor:pointer;text-align:center}
+.cmd-chip:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.cmd-chip:disabled{opacity:.45;cursor:default}
+.tp-rows{display:flex;flex-direction:column;gap:5px;background:#1B2040;border:3px solid var(--ink);border-radius:18px;padding:9px;flex:1;min-height:0}
+.tp-row{display:flex;align-items:center;gap:7px;border:0;border-radius:10px;background:rgba(255,255,255,.07);color:#EAF0FF;padding:4px 8px;font:700 13px/1.15 var(--f-body);cursor:pointer;text-align:left}
+.tp-row i{font:700 12px/1 var(--f-mono);font-style:normal;color:#6F7DB8;width:1.3em;flex:none}
+.tp-row .tx{flex:1}
+.tp-row code{font:700 12px/1 var(--f-mono);color:#FFC93C;flex:none}
+.tp-row.now{background:#FFC93C;color:var(--ink)}
+.tp-row.now code{color:var(--ink)}
+.tp-row.done{opacity:.55}
+.tp-empty{margin:auto;font:700 15px/1.4 var(--f-body);color:#6F7DB8;text-align:center}
+.tp-scene{position:relative;background:#EAF0FF;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);overflow:hidden}
+.tp-scene svg{display:block;width:100%;height:auto}
+.sc-t{transition:transform .55s cubic-bezier(.3,1.15,.5,1)}
+.sc-chalk{font:800 38px "Unbounded",sans-serif;fill:#F6F6EE;letter-spacing:2px}
+.tp-cap{text-align:center;font:800 14px/1.2 var(--f-body);color:var(--ink-soft);margin-top:-2px}
+.tprog .memo{margin-top:auto;padding:8px 12px 10px}
+.tprog .memo > b{font-size:14.5px}
+.tp-bottom{display:flex;align-items:center;gap:16px}
+.tp-bottom .say{margin:0}
+.tp-bottom .bubble{max-width:600px}
+.tp-bottom .row{margin-left:auto}
+
+/* ---------- algorithm (start a game on the iPad) ---------- */
+.alg-scene{padding:18px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(#F3F8FF,#E4F1F0)}
+.alg-top{display:flex;gap:16px;align-items:center}
+.ipad{flex:none;width:190px}
+.ipad svg{display:block;width:100%;overflow:visible}
+.ipad [data-l]{opacity:0;transition:opacity .35s}
+.ipad[data-s="off"] [data-l="off"],.ipad[data-s="lock"] [data-l="lock"],.ipad[data-s="home"] [data-l="home"],.ipad[data-s="found"] [data-l="home"],.ipad[data-s="game"] [data-l="game"]{opacity:1}
+.ipad .app-target{opacity:0}
+.ipad[data-s="found"] .app-target{opacity:1;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.ipad .qmark{opacity:0;transition:opacity .2s}
+.ipad.err .qmark{opacity:1;animation:shake .45s}
+.alg-slots{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;gap:8px}
+.alg-slot{display:flex;align-items:center;gap:10px;min-height:54px;width:100%;border:3px dashed #B9C6E0;border-radius:14px;background:rgba(255,255,255,.7);padding:6px 10px;font:800 15px/1.2 var(--f-body);text-align:left;cursor:pointer}
+.alg-slot b{flex:none;width:30px;height:30px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);display:grid;place-items:center;font:800 14px/1 var(--f-display)}
+.alg-slot.full{border:3px solid var(--ink);background:var(--paper);box-shadow:0 3px 0 var(--ink)}
+.alg-slot.now{background:var(--sun)}
+.alg-slot.bad{background:#FFD9D9;animation:shake .45s}
+.alg-slot.ok{background:#C8F2D9}
+.alg-pool{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.step-chip{min-height:58px;border:3px solid var(--ink);border-radius:14px;background:#FFE9A8;box-shadow:0 4px 0 var(--ink);font:800 15px/1.2 var(--f-body);padding:6px 10px;cursor:pointer}
+.step-chip:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.step-chip.used{visibility:hidden}
+.alg-actions{display:flex;gap:10px;justify-content:center;margin-top:auto}
+
+/* ---------- deep ---------- */
+.deep-scene{background:radial-gradient(circle at 50% 40%,#EDF1FF,#D9E2F7)}
+.crumbs{position:absolute;left:14px;right:14px;top:12px;display:flex;gap:6px;z-index:3;flex-wrap:wrap}
+.crumb{border:2px solid var(--ink);background:var(--paper);border-radius:999px;font:800 13px/1 var(--f-body);padding:7px 11px;cursor:pointer}
+.crumb.on{background:var(--sun)}
+.crumb:disabled{opacity:.45;cursor:default}
+.lv{position:absolute;left:20px;top:64px;width:560px;height:520px;transition:opacity .5s,transform .7s cubic-bezier(.2,.8,.2,1)}
+.lv svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lv[data-pos="before"]{opacity:0;transform:scale(.55);pointer-events:none}
+.lv[data-pos="after"]{opacity:0;transform:scale(1.7);pointer-events:none}
+.hot{position:absolute;border:4px dashed var(--ink);background:rgba(255,201,60,.22);cursor:pointer;padding:0;animation:pulse 1.2s ease-in-out infinite}
+.plabel{font:800 16px var(--f-body);fill:var(--ink)}
+.part{cursor:pointer}
+.tr{cursor:pointer}
+.tr rect.body{fill:#EEF1FA;stroke:var(--ink);stroke-width:4;transition:fill .2s}
+.tr.on rect.body{fill:#FFC93C}
+.tr text{font:800 20px var(--f-mono);fill:var(--ink-soft);text-anchor:middle}
+.tr.on text{fill:var(--ink)}
+
+/* ---------- cpu ---------- */
+.cpu-scene{background:linear-gradient(#F3F8FF,#E7EEFA)}
+.cp-mem{position:absolute;left:18px;right:18px;top:16px;height:226px;background:#1B2040;border:3px solid var(--ink);border-radius:18px;padding:10px 12px;color:#EAF0FF}
+.cp-h{display:flex;justify-content:space-between;align-items:baseline;font:800 13px/1 var(--f-display);letter-spacing:.5px;margin-bottom:8px}
+.cp-h small{font:700 12px var(--f-body);opacity:.7}
+.cp-rows{display:flex;flex-direction:column;gap:6px}
+.cp-row{display:flex;gap:10px;align-items:center;border-radius:10px;background:rgba(255,255,255,.07);padding:9px 12px;font:700 18px/1 var(--f-mono)}
+.cp-row i{font-style:normal;color:#6F7DB8;width:1.2em}
+.cp-row.now{background:#FFC93C;color:var(--ink)}
+.cp-row.done{opacity:.5}
+.cp-cpu{position:absolute;left:18px;right:18px;top:258px;height:190px;background:#fff;border:3px solid var(--ink);border-radius:18px;padding:10px 12px;box-shadow:0 5px 0 var(--ink)}
+.lamps{display:flex;align-items:center;gap:6px}
+.lamps span{font:800 22px/1 var(--f-display);color:var(--ink-soft)}
+.lamp{flex:1;border:3px solid var(--ink);border-radius:14px;padding:8px 4px;text-align:center;font:800 15px/1.2 var(--f-body);background:#EEF1FA;color:var(--ink-soft);transition:background .25s}
+.lamp b{display:block;font:800 20px/1.1 var(--f-display)}
+.lamp.on{background:#FFC93C;color:var(--ink);box-shadow:0 0 0 4px rgba(255,201,60,.45)}
+.reg{margin-top:12px;border:3px dashed #B9C6E0;border-radius:14px;padding:8px 12px;display:flex;align-items:center;gap:12px;min-height:62px}
+.reg small{font:900 11px/1.2 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);width:86px}
+.reg div{font:800 20px/1.1 var(--f-mono)}
+.fly{position:absolute;z-index:5;background:#FFC93C;border:3px solid var(--ink);border-radius:10px;padding:6px 12px;font:700 17px/1 var(--f-mono);pointer-events:none}
+.cp-track{position:absolute;left:18px;right:18px;top:464px;height:104px}
+.t4{position:absolute;bottom:6px;width:120px;height:46px;border:3px solid var(--ink);border-radius:10px;background:#6FE3B8;box-shadow:0 5px 0 #2D8F6C}
+.t4 .tz{position:absolute;left:34px;top:-12px;width:52px;height:26px;border:3px solid var(--ink);border-radius:8px;background:#39467A;color:#8794D6;display:grid;place-items:center;font:800 15px/1 var(--f-mono);transition:background .3s}
+.t4 .tz.on{background:#FFD84D;color:var(--ink);box-shadow:0 0 14px #FFC93C}
+.cp-bit{position:absolute;bottom:34px;left:32px;width:56px;transition:left .5s cubic-bezier(.3,1.3,.5,1)}
+.cp-bit svg{display:block;width:100%}
+.cp-actions{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:10px}
+
+/* ---------- bits ---------- */
+.bits-scene{padding:16px 18px;display:flex;flex-direction:column;gap:8px;background:linear-gradient(#F7F3FF,#EAEFFF)}
+.bt-h{display:flex;justify-content:space-between;align-items:baseline;font:800 14px/1 var(--f-display);letter-spacing:-.01em;margin-top:2px}
+.bt-h small{font:700 13px/1 var(--f-body);color:var(--ink-soft)}
+.bt-list{display:flex;flex-direction:column;gap:6px}
+.bt-row{display:flex;align-items:center;gap:10px;border:3px solid var(--ink);border-radius:14px;background:var(--paper);box-shadow:0 3px 0 var(--ink);padding:4px 10px 4px 5px;cursor:pointer;font:800 16px/1 var(--f-mono);text-align:left;width:100%}
+.bt-row:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.bt-row.sel{background:#FFF3C4}
+.bt-ico{flex:none;width:34px;height:34px;border-radius:9px;border:2px solid var(--ink);display:grid;place-items:center;color:#fff}
+.bt-ico svg{width:22px;height:22px}
+.bt-row .nm{flex:1}
+.bt-row .num{font:700 13px/1 var(--f-body);color:var(--ink-soft);min-width:70px;text-align:right}
+.bits3{display:flex;gap:4px}
+.bit1{width:30px;height:30px;border-radius:8px;border:2px solid var(--ink);background:#39467A;color:#8794D6;display:grid;place-items:center;font:800 15px/1 var(--f-mono);transition:background .25s,color .25s,box-shadow .25s}
+.bit1.on{background:#FFD84D;color:var(--ink);box-shadow:0 0 10px #FFC93C}
+.bt-prog{display:flex;gap:8px}
+.bt-chip{display:flex;align-items:center;gap:6px;border:3px solid var(--ink);border-radius:12px;padding:4px 9px 4px 5px;background:var(--paper);font:700 13px/1 var(--f-mono)}
+.bt-chip .bt-ico{width:26px;height:26px;border-radius:7px}
+.bt-chip .bt-ico svg{width:17px;height:17px}
+.bt-chip.now{background:#FFC93C}
+.bt-mem{display:flex;gap:12px;background:#1B2040;border:3px solid var(--ink);border-radius:14px;padding:10px 12px;min-height:54px;align-items:center}
+.bt-mem .bits3{padding-right:12px;border-right:2px dashed #4A5694}
+.bt-mem .bits3:last-child{border-right:0;padding-right:0}
+.bt-actions{display:flex;gap:10px;justify-content:center;margin-top:auto}
+
+/* ---------- command belt ---------- */
+.belt-scene{padding:16px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(#EEF6FF,#E4EEF8)}
+.bl-top{display:flex;gap:10px;align-items:stretch}
+.bl-cpu{flex:none;width:152px;border:3px solid var(--ink);border-radius:16px;background:#fff;box-shadow:0 4px 0 var(--ink);padding:8px;display:grid;grid-template-columns:34px 1fr;align-items:center;gap:8px;text-align:left}
+.bl-cpu b{font:800 12.5px/1 var(--f-display);letter-spacing:-.02em}
+.bl-gear{width:34px;height:34px;color:var(--cpu)}
+.bl-gear svg{width:100%;height:100%}
+.bl-gear.spin svg{animation:spin 1.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bl-now{grid-column:1/-1;min-height:84px;width:100%;padding:6px 4px;border:2px dashed #B9C6E0;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:700 12px/1.2 var(--f-mono);color:var(--ink-soft)}
+.bl-now.busy{border-style:solid;border-color:var(--ink);background:#FFE680;color:var(--ink)}
+.bl-now .bt-ico{width:26px;height:26px;border-radius:7px}
+.bl-now .bt-ico svg{width:17px;height:17px}
+.bl-belt{position:relative;flex:1;min-width:0;height:128px;border:3px solid var(--ink);border-radius:16px;background:#3C4A6B;overflow:hidden;box-shadow:0 4px 0 var(--ink)}
+.bl-track{position:absolute;left:0;right:0;top:50%;height:96px;margin-top:-48px;background:repeating-linear-gradient(90deg,#4E5C88 0 14px,#445180 14px 28px)}
+.bl-belt.moving .bl-track{animation:belt .5s linear infinite}
+@keyframes belt{to{background-position:-28px 0}}
+.bl-card{position:absolute;top:50%;margin-top:-42px;width:70px;height:84px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font:800 11.5px/1 var(--f-mono);transition:left .5s cubic-bezier(.3,1.1,.5,1),opacity .4s,transform .4s}
+.bl-card .bt-ico{width:32px;height:32px;border-radius:9px}
+.bl-card .bt-ico svg{width:20px;height:20px}
+.bl-card small{font:700 10.5px/1 var(--f-mono);color:var(--ink-soft)}
+.bl-card.first{background:#FFF3C4}
+.bl-card.eaten{opacity:0;transform:scale(.4)}
+.bl-world{flex:1;display:grid;place-items:center;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);min-height:0}
+.bl-map{position:relative}
+.bl-cell{position:absolute;width:104px;height:104px;border:3px solid var(--ink);border-radius:14px;background:#6FE3B8;box-shadow:inset 0 -6px 0 rgba(22,25,58,.18)}
+.bl-chip{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border:3px solid var(--ink);border-radius:10px;background:#39467A;color:#8794D6;display:grid;place-items:center;font:800 24px/1 var(--f-mono);transition:background .3s,color .3s,box-shadow .3s}
+.bl-chip.on{background:#FFD84D;color:var(--ink);box-shadow:0 0 18px #FFC93C}
+.bl-bit{position:absolute;width:104px;height:104px;transition:left .5s cubic-bezier(.3,1.2,.5,1),top .5s cubic-bezier(.3,1.2,.5,1);pointer-events:none}
+.bl-bit .bl-sprite{position:absolute;left:50%;top:50%;width:62px;margin:-36px 0 0 -31px}
+.bl-bit .bl-sprite svg{display:block;width:100%}
+.bl-face{position:absolute;inset:0;transition:transform .35s cubic-bezier(.3,1.4,.5,1)}
+.bl-face i{position:absolute;left:50%;top:2px;margin-left:-13px;width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:20px solid #FFC93C;filter:drop-shadow(0 2px 0 var(--ink))}
+.bl-actions{display:flex;gap:10px;justify-content:center}
+
+/* ---------- race ---------- */
+.race-scene{background:linear-gradient(#FFF1F5,#FFE3EA);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.race-clock{font:800 72px/1 var(--f-display);letter-spacing:-.03em;color:var(--race)}
+.race-tap{width:220px;height:220px;border-radius:50%;border:5px solid var(--ink);background:var(--race);color:#fff;font:800 42px/1 var(--f-display);box-shadow:0 10px 0 var(--ink);cursor:pointer;touch-action:none}
+.race-tap:active:not(:disabled){transform:translateY(8px);box-shadow:0 2px 0 var(--ink)}
+.race-tap:disabled{opacity:.45;cursor:default}
+.race-res{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:92%}
+.race-res div{background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:12px;text-align:center;box-shadow:0 4px 0 var(--ink)}
+.race-res small{display:block;font:900 12px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+.race-res b{font:800 24px/1.1 var(--f-display)}
+.race-res .cpu b{color:var(--cpu);font-size:19px}
+
+/* ---------- game slides ---------- */
+.game-head{position:absolute;left:36px;right:36px;top:16px;height:54px;display:flex;align-items:center;gap:18px}
+.game-head .kick-row{flex:none}
+.game-tip{font:700 17px/1.35 var(--f-body);color:var(--ink-soft);min-width:0}
+.game-wrap{position:absolute;left:36px;right:36px;top:78px;bottom:14px}
+
+.reset-link{position:absolute;right:28px;top:16px;z-index:5}
+
+/* ---------- recap ---------- */
+.rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.rule{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.rule .num{width:38px;height:38px;border-radius:50%;background:var(--rc);border:3px solid var(--ink);color:#fff;display:grid;place-items:center;font:800 18px/1 var(--f-display)}
+.rule b{font:800 20px/1.25 var(--f-display);letter-spacing:-.01em}
+.rule span{font:700 17px/1.4 var(--f-body);color:var(--ink-soft)}
+.sites-h{margin:4px 0 0;font:900 13px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.sites{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.site{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:12px 14px;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.site:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.site b{font:800 17px/1.2 var(--f-body)}
+.site small{font:700 14px/1.3 var(--f-body);color:var(--ink-soft)}
+.site em{align-self:flex-start;font:800 11px/1 var(--f-body);font-style:normal;letter-spacing:.08em;text-transform:uppercase;background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:4px 8px;margin-top:2px}
+
+/* ---------- badge (programmer ID) ---------- */
+.stamps{grid-template-columns:repeat(5,1fr)}
+.stars-line{display:flex;align-items:center;gap:12px;font:800 18px/1 var(--f-body)}
+.stars-line .big{font:800 24px/1 var(--f-display);color:#B07A00}
+</style>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <a class="home-link" href="../" aria-label="Усі уроки">←<span>Усі уроки</span></a>
+    <button class="brand" id="brandBtn" aria-label="На початок"><span class="brand-bit" data-bit></span><span>Біт у процесорі</span></button>
+    <nav class="route" id="route" aria-label="Маршрут уроку"><div class="route-fill" id="routeFill"></div></nav>
+  </header>
+
+  <main class="viewport" id="viewport">
+    <div class="deck" id="deck">
+
+      <!-- 0 · BACK -->
+      <section class="slide stack" data-key="back" data-title="Повтор" data-ico="back" style="--c:var(--bit)">
+        <button class="btn small ghost reset-link" id="resetTop" hidden data-noswipe>↺ Скинути прогрес</button>
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="back"></span>Урок 2 · Біт у процесорі</span>
+          <h2>Біт повернувся!</h2>
+        </div>
+        <div class="cards3" data-noswipe>
+          <button class="fcard q-card" style="--fc:#FFE9A8"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="bolt"></span><h3>Що означає «1» в оптоволокні?</h3><small>торкнись</small></div>
+            <div class="face back"><p>Спалах світла. А темрява — це <b>0</b>.</p></div>
+          </div></button>
+          <button class="fcard q-card" style="--fc:#BFE3FF"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="book"></span><h3>Що таке DNS?</h3><small>торкнись</small></div>
+            <div class="face back"><p><b>Телефонна книга</b> інтернету: за назвою сайту знаходить його адресу.</p></div>
+          </div></button>
+          <button class="fcard q-card" style="--fc:#C8F2D9"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="wifi"></span><h3>Wi-Fi є, а відео не грає. Чому?</h3><small>торкнись</small></div>
+            <div class="face back"><p>Wi-Fi — лише останні метри. Мабуть, <b>до роутера не доходить інтернет</b> від провайдера.</p></div>
+          </div></button>
+        </div>
+        <div class="back-bottom"><span class="bit-slot" data-bit></span><span>Минулого разу ми мандрували інтернетом. Сьогодні я потрапив усередину самого iPad. Допоможеш мені там?</span><button class="btn big" id="diveBtn" data-noswipe>Зайти всередину →</button></div>
+      </section>
+
+      <!-- teacher -->
+      <section class="slide stack circuit" data-key="teacher" data-title="Запрограмуй вчителя" data-ico="pencil" style="--c:var(--prog)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="pencil"></span>Розминка</span>
+          <h2>Запрограмуй вчителя: напиши «БІТ» на дошці</h2>
+        </div>
+        <div class="tprog" data-noswipe>
+          <div class="tp-col">
+            <div class="tp-h">Команди <small>торкнись, щоб додати</small></div>
+            <div class="tp-pal" id="tpPal"></div>
+          </div>
+          <div class="tp-col">
+            <div class="tp-h">Програма <small id="tpCount">0 / 10</small></div>
+            <div class="tp-rows" id="tpRows"></div>
+          </div>
+          <div class="tp-col">
+            <div class="tp-scene">
+              <svg viewBox="0 0 430 280" role="img" aria-label="Вчитель, стіл із маркером і дошка на стіні">
+                <rect width="430" height="232" fill="#EAF0FF"/>
+                <rect y="232" width="430" height="48" fill="#E3C79A"/>
+                <rect y="232" width="430" height="4" fill="#C49A62"/>
+                <g fill="#C9D5EC"><circle cx="150" cy="60" r="4"/><circle cx="190" cy="60" r="4"/><circle cx="230" cy="60" r="4"/></g>
+                <!-- chalkboard on the wall -->
+                <rect x="290" y="16" width="124" height="136" rx="6" fill="#A9794B" stroke="#16193A" stroke-width="4"/>
+                <rect x="298" y="24" width="108" height="120" fill="#1F4D3A"/>
+                <rect x="294" y="150" width="116" height="8" rx="3" fill="#A9794B" stroke="#16193A" stroke-width="2.5"/>
+                <text id="scChalk" class="sc-chalk" x="352" y="98" text-anchor="middle"></text>
+                <!-- table with the marker -->
+                <rect x="22" y="204" width="8" height="28" fill="#8A5A2B" stroke="#16193A" stroke-width="2.5"/>
+                <rect x="82" y="204" width="8" height="28" fill="#8A5A2B" stroke="#16193A" stroke-width="2.5"/>
+                <rect x="14" y="190" width="84" height="14" rx="3" fill="#C98F4E" stroke="#16193A" stroke-width="3"/>
+                <g id="scMkT"><rect x="36" y="181" width="34" height="9" rx="3" fill="#E5487B" stroke="#16193A" stroke-width="2"/><rect x="62" y="181" width="8" height="9" rx="3" fill="#16193A"/></g>
+                <!-- steps on the floor -->
+                <g id="scTicks" font-family="Nunito,sans-serif" font-weight="800" font-size="12" text-anchor="middle" fill="#16193A"></g>
+                <!-- the teacher: feet at (0,0); drawn facing the board (right); mirrored when turned away -->
+                <g id="scT" class="sc-t" style="transform:translate(116px,232px)">
+                  <ellipse cx="0" cy="2" rx="28" ry="5" fill="rgba(22,25,58,.2)"/>
+                  <g id="scFace" transform="scale(-1 1)">
+                    <rect x="-13" y="-64" width="12" height="62" rx="5" fill="#2B3566" stroke="#16193A" stroke-width="2.5"/>
+                    <rect x="2" y="-64" width="12" height="62" rx="5" fill="#2B3566" stroke="#16193A" stroke-width="2.5"/>
+                    <rect x="-9" y="-9" width="24" height="10" rx="5" fill="#16193A"/>
+                    <rect x="-24" y="-112" width="46" height="58" rx="15" fill="#2F80ED" stroke="#16193A" stroke-width="3"/>
+                    <path d="M4 -108l10 0-5 26z" fill="#FFC93C" stroke="#16193A" stroke-width="2" stroke-linejoin="round"/>
+                    <circle cx="0" cy="-134" r="23" fill="#FFD7B5" stroke="#16193A" stroke-width="3"/>
+                    <path d="M-21 -138A23 23 0 0 1 23 -138Q6 -153 -21 -138Z" fill="#5A3A22" stroke="#16193A" stroke-width="2.5" stroke-linejoin="round"/>
+                    <circle cx="11" cy="-135" r="7.5" fill="#fff" stroke="#16193A" stroke-width="2.5"/><circle cx="13" cy="-135" r="2.8" fill="#16193A"/>
+                    <path d="M3 -136L-10 -140" stroke="#16193A" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M23 -132q6 3 0 7" fill="none" stroke="#16193A" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M9 -122q6 5 12 0" fill="none" stroke="#16193A" stroke-width="2.5" stroke-linecap="round"/>
+                    <g id="scArmD"><path d="M2 -102L10 -66" stroke="#2F80ED" stroke-width="15" stroke-linecap="round"/><path d="M2 -102L10 -66" stroke="#16193A" stroke-width="3" stroke-linecap="round" opacity=".25"/><circle cx="11" cy="-58" r="8" fill="#FFD7B5" stroke="#16193A" stroke-width="2.5"/></g>
+                    <g id="scArmU" hidden><path d="M2 -102L50 -138" stroke="#2F80ED" stroke-width="15" stroke-linecap="round"/><circle cx="57" cy="-144" r="8" fill="#FFD7B5" stroke="#16193A" stroke-width="2.5"/></g>
+                    <g id="scMkD" hidden transform="translate(11 -58) rotate(-15)"><rect x="-4" y="-5" width="34" height="10" rx="3" fill="#E5487B" stroke="#16193A" stroke-width="2"/><rect id="scCapD" x="24" y="-5" width="9" height="10" rx="3" fill="#16193A"/></g>
+                    <g id="scMkU" hidden transform="translate(57 -144) rotate(-30)"><rect x="-4" y="-5" width="34" height="10" rx="3" fill="#E5487B" stroke="#16193A" stroke-width="2"/><rect id="scCapU" x="24" y="-5" width="9" height="10" rx="3" fill="#16193A"/></g>
+                  </g>
+                  <g id="scQ" hidden transform="translate(0 -182)"><circle r="15" fill="#FF5E7E" stroke="#16193A" stroke-width="3"/><text y="7" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="19" fill="#fff">?</text></g>
+                </g>
+              </svg>
+            </div>
+            <div class="tp-cap" id="stgCap"></div>
+            <div class="memo"><small>Запам’ятай</small><b>Комп’ютер виконує команди буквально: що написано, те й робить. Нічого не додумує.</b></div>
+          </div>
+        </div>
+        <div class="tp-bottom">
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="tpBubble">Вчитель стоїть спиною до дошки, за 3 кроки від неї. Маркер лежить на столі. Склади програму!</div></div>
+          <div class="row" data-noswipe>
+            <button class="btn" id="tpStep" disabled>⏭ Наступна команда</button>
+            <button class="btn ghost" id="tpReset" aria-label="Спочатку">⟲</button>
+          </div>
+        </div>
+        <template class="theory"><h2>Чому комп’ютер такий буквальний?</h2>
+<p>Людина вміє здогадуватися. Якщо сказати «напиши слово на дошці», вона сама згадає зняти ковпачок із маркера. Комп’ютер так не вміє: він робить <b>тільки те, що написано</b>, і саме в такому порядку.</p>
+<h3>Команда і код</h3>
+<p>Один крок програми називають <b>командою</b>. Текст із команд, який бачить комп’ютер, називають <b>кодом</b>. Справа від кожного кроку ти бачиш його «код»: <code>взяти("маркер")</code>.</p>
+<h3>Хто пише команди?</h3>
+<p>Людей, які складають такі команди для комп’ютерів, називають <b>програмістами</b>. Саме ними ми сьогодні й станемо.</p>
+<div class="fun"><b>Цікаво знати</b>Багато програмістів кажуть, що найважча частина їхньої роботи — це не писати команди, а нічого не пропустити.</div></template>
+      </section>
+
+      <!-- algorithm -->
+      <section class="slide circuit" data-key="algorithm" data-title="Алгоритм" data-ico="list" style="--c:var(--algo)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="list"></span>Що таке алгоритм</span>
+          <h2>Алгоритм: кроки по порядку</h2>
+          <p class="lead">Алгоритм — це <b>точні кроки</b>, виконані <b>по порядку</b>. Розстав кроки так, щоб запустити гру на iPad.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="algBubble">Торкайся кроків по черзі. Потім натисни «Перевірити».</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Переставиш кроки, і нічого не вийде. Порядок важливий!</b></div>
+        </div>
+        <div class="scene alg-scene" data-noswipe>
+          <div class="alg-top">
+            <div class="ipad" id="algPad" data-s="off">
+              <svg viewBox="0 0 200 270" aria-hidden="true">
+                <rect x="3" y="3" width="194" height="264" rx="26" fill="#16193A"/>
+                <g data-l="off"><rect x="14" y="16" width="172" height="238" rx="12" fill="#0B0E22"/></g>
+                <g data-l="lock"><rect x="14" y="16" width="172" height="238" rx="12" fill="#2B4A9A"/>
+                  <text x="100" y="86" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="34" fill="#fff">9:41</text>
+                  <rect x="82" y="148" width="36" height="30" rx="6" fill="#fff"/><path d="M88 148v-9a12 12 0 0 1 24 0v9" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/></g>
+                <g data-l="home"><rect x="14" y="16" width="172" height="238" rx="12" fill="#7FC4FF"/>
+                  <g id="algApps"></g>
+                  <rect class="app-target" x="77" y="139" width="48" height="48" rx="14" fill="none" stroke="#16193A" stroke-width="4" stroke-dasharray="6 5"/></g>
+                <g data-l="game"><rect x="14" y="16" width="172" height="238" rx="12" fill="#16193A"/>
+                  <path d="M100 60l10 22 24 3-18 16 5 24-21-12-21 12 5-24-18-16 24-3z" fill="#FFC93C"/>
+                  <rect x="64" y="160" width="72" height="62" rx="18" fill="#FF8A3D" stroke="#fff" stroke-width="3"/><circle cx="86" cy="188" r="6" fill="#fff"/><circle cx="114" cy="188" r="6" fill="#fff"/><circle cx="87" cy="189" r="3" fill="#16193A"/><circle cx="113" cy="189" r="3" fill="#16193A"/></g>
+                <g class="qmark"><circle cx="172" cy="28" r="18" fill="#FF5E7E" stroke="#16193A" stroke-width="3"/><text x="172" y="36" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="22" fill="#fff">?</text></g>
+              </svg>
+            </div>
+            <ol class="alg-slots" id="algSlots"></ol>
+          </div>
+          <div class="alg-pool" id="algPool"></div>
+          <div class="alg-actions"><button class="btn" id="algGo" disabled>Перевірити</button><button class="btn ghost" id="algReset">Спочатку</button></div>
+        </div>
+        <template class="theory"><h2>Звідки слово «алгоритм»?</h2>
+<p>Воно походить від імені середньовічного вченого <b>аль-Хорезмі</b>, який жив понад тисячу років тому й описував у книжках, як крок за кроком розв’язувати математичні задачі.</p>
+<h3>Алгоритми навколо нас</h3>
+<ul>
+<li>Рецепт борщу: що, коли і скільки класти.</li>
+<li>Інструкція до LEGO: кроки зі збирання моделі.</li>
+<li>Маршрут у навігаторі: де повернути, де їхати прямо.</li>
+<li>Як чистити зуби вранці.</li>
+</ul>
+<h3>Алгоритм і програма</h3>
+<p>Алгоритм можна розповісти будь-як. <b>Програма</b> — це алгоритм, записаний так, щоб його зрозумів комп’ютер.</p>
+<div class="fun"><b>Спробуй</b>Що буде, якщо спочатку одягти взуття, а потім шкарпетки? Теж порушили порядок кроків.</div></template>
+      </section>
+
+      <!-- deep -->
+      <section class="slide circuit" data-key="deep" data-title="Подорож углиб" data-ico="zoom" style="--c:var(--zoom)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="zoom"></span>Що всередині iPad</span>
+          <h2>Подорож углиб</h2>
+          <p class="lead">Біт зазирає всередину iPad, дедалі глибше й глибше. Торкайся підсвічених місць.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="deepBubble">Що ж там усередині? Торкнись iPad.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Процесор — чип, у якому понад 10 мільярдів крихітних перемикачів: транзисторів.</b></div>
+        </div>
+        <div class="scene deep-scene" data-noswipe>
+          <div class="crumbs" id="deepCrumbs"></div>
+          <div class="lv" data-pos="on">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="140" y="40" width="280" height="420" rx="40" fill="#16193A"/>
+              <rect x="162" y="68" width="236" height="364" rx="16" fill="#BFE3FF"/>
+              <circle cx="280" cy="250" r="44" fill="#FF8A3D" stroke="#16193A" stroke-width="5"/><path d="M262 250h36M280 232v36" stroke="#16193A" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="280" cy="446" r="7" fill="#4E5584"/>
+            </svg>
+            <button class="hot" id="hot0" style="left:140px;top:40px;width:280px;height:420px;border-radius:40px" aria-label="Зазирнути всередину"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="40" y="60" width="480" height="400" rx="28" fill="#2BAA6B" stroke="#16193A" stroke-width="5"/>
+              <path d="M70 120h90l30 30h60M70 400h120l40-40h80M500 200h-70l-30 30M360 90v50l30 30h80" fill="none" stroke="#9BE3BE" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+              <g class="part" data-part="battery"><rect x="70" y="290" width="190" height="110" rx="16" fill="#FFD7B5" stroke="#16193A" stroke-width="5"/><rect x="262" y="325" width="16" height="40" rx="4" fill="#16193A"/><path d="M150 306l-22 32h30l-18 36 52-48h-32l20-20z" fill="#FFC93C" stroke="#16193A" stroke-width="3" stroke-linejoin="round"/><text x="165" y="424" text-anchor="middle" class="plabel">батарея</text></g>
+              <g class="part" data-part="ram"><rect x="320" y="270" width="74" height="74" rx="10" fill="#4E5584" stroke="#16193A" stroke-width="5"/><rect x="412" y="270" width="74" height="74" rx="10" fill="#4E5584" stroke="#16193A" stroke-width="5"/><text x="403" y="366" text-anchor="middle" class="plabel">пам’ять</text></g>
+              <g class="part" data-part="wifi"><rect x="320" y="390" width="60" height="44" rx="8" fill="#12B5A4" stroke="#16193A" stroke-width="4"/><text x="350" y="450" text-anchor="middle" class="plabel">Wi-Fi</text></g>
+              <rect id="cpuPart" x="180" y="100" width="130" height="130" rx="16" fill="#7A5CFA" stroke="#16193A" stroke-width="5"/>
+              <rect x="205" y="125" width="80" height="80" rx="10" fill="#B7A6FF" stroke="#16193A" stroke-width="3"/>
+              <path d="M200 100v-14M225 100v-14M250 100v-14M275 100v-14M200 230v14M225 230v14M250 230v14M275 230v14M180 125h-14M180 150h-14M180 175h-14M180 200h-14M310 125h14M310 150h14M310 175h14M310 200h14" stroke="#16193A" stroke-width="5" stroke-linecap="round"/>
+              <text x="245" y="171" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="18" fill="#16193A">CPU</text>
+              <text x="245" y="266" text-anchor="middle" class="plabel">процесор</text>
+            </svg>
+            <button class="hot" id="hot1" style="left:164px;top:84px;width:162px;height:162px;border-radius:24px" aria-label="Приблизити процесор"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="90" y="50" width="380" height="380" rx="24" fill="#4E5584" stroke="#16193A" stroke-width="5"/>
+              <path d="M130 50v-24M180 50v-24M230 50v-24M280 50v-24M330 50v-24M380 50v-24M430 50v-24M130 430v24M180 430v24M230 430v24M280 430v24M330 430v24M380 430v24M430 430v24M90 100h-24M90 160h-24M90 220h-24M90 280h-24M90 340h-24M90 400h-24M470 100h24M470 160h24M470 220h24M470 280h24M470 340h24M470 400h24" stroke="#16193A" stroke-width="6" stroke-linecap="round"/>
+              <rect x="120" y="80" width="320" height="320" rx="12" fill="#B7A6FF" stroke="#16193A" stroke-width="4"/>
+              <rect x="135" y="95" width="130" height="130" rx="10" fill="#7A5CFA" stroke="#16193A" stroke-width="3"/><rect x="295" y="95" width="130" height="130" rx="10" fill="#7A5CFA" stroke="#16193A" stroke-width="3"/>
+              <rect x="135" y="255" width="130" height="130" rx="10" fill="#7A5CFA" stroke="#16193A" stroke-width="3"/><rect x="295" y="255" width="130" height="130" rx="10" fill="#7A5CFA" stroke="#16193A" stroke-width="3"/>
+              <g font-family="Unbounded,sans-serif" font-weight="800" font-size="15" fill="#fff" text-anchor="middle"><text x="200" y="165">ядро</text><text x="360" y="165">ядро</text><text x="200" y="325">ядро</text><text x="360" y="325">ядро</text></g>
+              <text x="280" y="248" text-anchor="middle" class="plabel">чип зблизька</text>
+            </svg>
+            <button class="hot" id="hot2" style="left:125px;top:85px;width:150px;height:150px;border-radius:16px" aria-label="Приблизити ядро"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" id="trSvg" aria-hidden="true"></svg>
+          </div>
+        </div>
+        <template class="theory"><h2>Що ховається в iPad?</h2>
+<p>Відкрий iPad, і ти побачиш <b>плату</b> з кількома чипами: <b>процесор</b>, <b>пам’ять</b>, чип Wi-Fi, а ще батарею майже на весь корпус.</p>
+<h3>Система на чипі</h3>
+<p>У сучасних планшетів і телефонів процесор, графіка та інші «мізки» зібрані в одному чипі. Його так і називають: <b>система на чипі</b>.</p>
+<h3>Транзистор</h3>
+<p>Це крихітний перемикач без рук: пропускає струм (1) або не пропускає (0). Як вимикач світла, тільки в мільярд разів менший. Процесор складається з мільярдів таких перемикачів і складає з нулів та одиниць усе: літери, фото, ігри.</p>
+<div class="fun"><b>Цікаво знати</b>Транзистор у процесорі менший за вірус. Якби ти збільшив його до розміру горошини, чип став би завбільшки з велике місто.</div></template>
+      </section>
+
+      <!-- cpu -->
+      <section class="slide circuit" data-key="cpu" data-title="Процесор працює" data-ico="chip" style="--c:var(--cpu)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="chip"></span>Як працює процесор</span>
+          <h2>Взяти, зрозуміти, виконати</h2>
+          <p class="lead">Для кожної команди процесор робить три кроки. Тисни «Крок» і дивись, як Біт виконує програму.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="cpuBubble">Натисни «Крок»: процесор візьме першу команду.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Для кожної команди процесор робить три кроки: взяти → зрозуміти → виконати.</b></div>
+        </div>
+        <div class="scene cpu-scene" id="cpuScene" data-noswipe>
+          <div class="cp-mem"><div class="cp-h">ПАМ’ЯТЬ <small>програма Біта</small></div><div class="cp-rows" id="cpuRows"></div></div>
+          <div class="cp-cpu">
+            <div class="cp-h">ПРОЦЕСОР</div>
+            <div class="lamps"><div class="lamp" data-p="0"><b>1</b>Взяти</div><span>›</span><div class="lamp" data-p="1"><b>2</b>Зрозуміти</div><span>›</span><div class="lamp" data-p="2"><b>3</b>Виконати</div></div>
+            <div class="reg"><small>Поточна команда</small><div id="cpuReg">—</div></div>
+          </div>
+          <div class="cp-track" id="cpuTrack"><div class="cp-bit" id="cpuBit" data-bit></div></div>
+          <div class="cp-actions"><button class="btn" id="cpuStep">⏭ Крок</button><button class="btn ghost" id="cpuReset" aria-label="Спочатку">⟲</button></div>
+        </div>
+        <template class="theory"><h2>Що робить процесор?</h2>
+<p>Програма лежить у <b>пам’яті</b>. Процесор бере з неї одну команду, розуміє, що вона означає, і виконує. Потім бере наступну. І так мільярди разів за секунду.</p>
+<h3>Номер команди</h3>
+<p>Процесор пам’ятає номер команди, яку треба взяти наступною. У нашій грі цей номер показує <b>підсвічений рядок</b> коду.</p>
+<h3>Оперативна пам’ять</h3>
+<p>Програма, поки працює, лежить в оперативній пам’яті. Вона швидка, але «забуває» все, коли вимкнути живлення. Назавжди програми зберігаються на диску. Про це поговоримо пізніше.</p>
+<div class="fun"><b>Цікаво знати</b>Ці три кроки називають «цикл команди». Так працює процесор і в iPad, і в ігровій приставці, і в роботі-пилососі.</div></template>
+      </section>
+
+      <!-- bits -->
+      <section class="slide circuit" data-key="bits" data-title="Команда = число" data-ico="bin" style="--c:var(--exam)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="bin"></span>Мова комп’ютера</span>
+          <h2>Команда — це число</h2>
+          <p class="lead">У пам’яті немає слів «вперед» чи «увімкнути». Там лише <b>нулі й одиниці</b>. Торкайся команд і дивись, який у кожної код.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="bitsBubble">Кожна команда має свій код із трьох бітів. Торкнись будь-якої!</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>У пам’яті кожна команда — це число, записане нулями та одиницями. Один біт — це 0 або 1.</b></div>
+        </div>
+        <div class="scene bits-scene" data-noswipe>
+          <div class="bt-h">Коди команд <small>1 = горить, 0 = ні</small></div>
+          <div class="bt-list" id="btList"></div>
+          <div class="bt-h">Програма Біта</div>
+          <div class="bt-prog" id="btProg"></div>
+          <div class="bt-h">У пам’яті <small id="btCode">порожньо</small></div>
+          <div class="bt-mem" id="btMem"></div>
+          <div class="bt-actions"><button class="btn" id="btGo">Записати в пам’ять →</button><button class="btn ghost" id="btReset" aria-label="Спочатку">⟲</button></div>
+        </div>
+        <template class="theory"><h2>Як комп’ютер розуміє команди?</h2>
+<p>Процесор уміє працювати лише з числами, які записані нулями й одиницями. Тому кожна команда в пам’яті має свій <b>код</b>, тобто число. Наприклад, у нашій грі «вперед» може мати код <code>001</code>, а «увімкнути» — <code>101</code>.</p>
+<h3>Три біти — вісім команд</h3>
+<p>З трьох бітів можна скласти 8 різних кодів: від <code>000</code> до <code>111</code>. У нашій грі потрібно п’ять, тож трьох бітів вистачає. Справжні процесори мають сотні команд, і їхні коди довші.</p>
+<h3>Команда й число</h3>
+<p>Команду на кшталт «зроби 3 кроки» процесор отримує так: код дії плюс число, наприклад <code>крок</code> і <code>3</code>. Тому в справжніх програмах біти бувають і «що робити», і «з чим».</p>
+<h3>Нулі й одиниці знайомі?</h3>
+<p>Так! У першому уроці світло в оптоволокні було «1», а темрява «0». У процесорі «1» і «0» — це транзистор, який увімкнений або вимкнений.</p>
+<div class="fun"><b>Цікаво знати</b>Коли програмісти пишуть код словами, спеціальна програма, <b>компілятор</b>, перекладає його в такі самі нулі й одиниці. Про це ми ще поговоримо.</div></template>
+      </section>
+
+      <!-- command belt -->
+      <section class="slide circuit" data-key="pipe" data-title="Конвеєр" data-ico="pipe" style="--c:var(--zoom)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="pipe"></span>Черга команд</span>
+          <h2>Конвеєр команд</h2>
+          <p class="lead">Програма — це черга команд на стрічці. Процесор бере їх по одній, з початку черги, і виконує. Дивись, як Біт слухається.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="pipeBubble">Тисни «Пуск»: процесор візьме команди зі стрічки.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Програма — це черга команд. Процесор бере їх по одній і виконує в тому порядку, як вони стоять.</b></div>
+        </div>
+        <div class="scene belt-scene" data-noswipe>
+          <div class="bl-top">
+            <div class="bl-cpu" id="blCpu">
+              <div class="bl-gear" id="blGear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg></div>
+              <b>Процесор</b>
+              <div class="bl-now" id="blNow">чекає</div>
+            </div>
+            <div class="bl-belt" id="blBelt"><div class="bl-track" id="blTrack"></div></div>
+          </div>
+          <div class="bl-world"><div class="bl-map" id="blMap"></div></div>
+          <div class="bl-actions"><button class="btn" id="blRun">▶ Пуск</button><button class="btn ghost" id="blStep">⏭ Крок</button><button class="btn ghost" id="blReset" aria-label="Спочатку">⟲</button></div>
+        </div>
+        <template class="theory"><h2>Черга команд</h2>
+<p>Коли ти складаєш програму для Біта, команди стають у чергу. Процесор бере першу команду, виконує її, потім бере наступну. Коли черга закінчилась, програма завершена.</p>
+<h3>Бере по одній</h3>
+<p>Процесор ніколи не виконує дві команди зразу. Він робить усе по порядку, зате дуже швидко. Тому в програмі так важливо, у якому порядку стоять команди.</p>
+<h3>А справжній процесор?</h3>
+<p>Справжній процесор ще хитріший: поки він виконує одну команду, то вже готує наступну. Таку «стрічку з заготовками» теж називають конвеєром. Для нас головне: команди йдуть у черзі й виконуються по порядку.</p>
+<div class="fun"><b>Для тих, хто любить ігри</b>Є відома гра про програмування «Human Resource Machine»: там працівник береже коробки на стрічці й виконує команди. Дуже схоже на наш конвеєр.</div></template>
+      </section>
+
+      <!-- race -->
+      <section class="slide circuit" data-key="race" data-title="Хто швидший?" data-ico="timer" style="--c:var(--race)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="timer"></span>Змагання</span>
+          <h2>Хто швидший: ти чи процесор?</h2>
+          <p class="lead">Натисни «Старт» і 5 секунд тапай по кнопці якнайшвидше. Потім порівняємо з процесором.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="raceBubble">Готовий? Я за тебе вболіваю!</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Процесор не розумний, він просто ДУЖЕ швидкий і робить рівно те, що написано в програмі.</b></div>
+        </div>
+        <div class="scene race-scene" data-noswipe>
+          <div class="race-clock" id="raceClock">5.0</div>
+          <button class="race-tap" id="raceTap" disabled>Тап!</button>
+          <div class="race-res" id="raceRes" hidden></div>
+          <button class="btn big" id="raceStart">Старт</button>
+        </div>
+        <template class="theory"><h2>Скільки це — «дуже швидко»?</h2>
+<p>Сучасний процесор працює з частотою близько <b>3 ГГц</b>. Це три мільярди «тактів» за секунду. За один такт він встигає зробити кілька крихітних дій.</p>
+<h3>Ядра</h3>
+<p>У процесора кілька <b>ядер</b> (ти бачив їх на чипі). Кожне ядро виконує свою програму, тож усі разом вони працюють ще швидше.</p>
+<div class="fun"><b>Для порівняння</b>За той час, поки ти встигнеш кліпнути оком (десята частка секунди), процесор виконає близько трьохсот мільйонів тактів.</div></template>
+      </section>
+
+      <!-- game 1 -->
+      <section class="slide full circuit" data-key="game1" data-title="Тренування" data-ico="game" style="--c:var(--play)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="game"></span>Гра · Тренування</span>
+          <span class="game-tip">Склади програму з іконок і натисни ▶. Світіння всіх транзисторів = перемога.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="2-01,2-02,2-03"></bit-game></div>
+        <template class="theory"><h2>Що означає підсвічений рядок?</h2>
+<p>Праворуч ти бачиш програму Біта як <b>код</b>. Коли програма виконується, рядок, який зараз працює, підсвічується жовтим.</p>
+<p>Так само працює процесор: він пам’ятає <b>номер команди</b>, яку виконує зараз, і бере наступну. Кнопка «Крок» дозволяє зупинити цей процес і розглянути кожен крок.</p>
+<h3>Українська чи англійська?</h3>
+<p>Кнопка <b>EN</b> перемикає код на англійську: <code>forward()</code>, <code>turn_left()</code>, <code>jump()</code>. Так виглядають справжні програми. Більшість мов програмування використовує англійські слова.</p>
+<div class="fun"><b>Спробуй</b>Знайди найкоротшу програму. Якщо команд рівно стільки, скільки треба, отримаєш три зірки.</div></template>
+      </section>
+
+      <!-- game 2 -->
+      <section class="slide full circuit" data-key="game2" data-title="Стрибки" data-ico="bolt" style="--c:var(--exam)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="bolt"></span>Гра · Стрибки</span>
+          <span class="game-tip">Нова команда: стрибок! Біт піднімається на одну сходинку вгору або стрибає вниз.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="2-04,2-05,2-06"></bit-game></div>
+      </section>
+
+      <!-- game 3 -->
+      <section class="slide full circuit" data-key="game3" data-title="Іспит" data-ico="shield" style="--c:#C2410C">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="shield"></span>Гра · Іспит диспетчерської</span>
+          <span class="game-tip">Команд мало, тож спершу придумай план, а потім складай програму.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="2-07,2-08,2-09"></bit-game></div>
+      </section>
+
+      <!-- bonus -->
+      <section class="slide full circuit" data-key="bonus" data-title="Бонус" data-ico="star" style="--c:var(--sun-deep)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="star"></span>Бонус · для сміливих</span>
+          <span class="game-tip">Тут команд рівно стільки, скільки треба. Можна пропустити.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="2-b1,2-b2,2-b3"></bit-game></div>
+      </section>
+
+      <!-- recap -->
+      <section class="slide stack" data-key="recap" data-title="Запам’ятай" data-ico="star" style="--c:var(--sun-deep)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="star"></span>Запам’ятай</span>
+          <h2>Три правила програміста</h2>
+        </div>
+        <div class="rules3">
+          <div class="rule" style="--rc:var(--algo)"><span class="num">1</span><b>Алгоритм</b><span>Точні кроки, виконані по порядку. Переставиш кроки — вийде інше.</span></div>
+          <div class="rule" style="--rc:var(--prog)"><span class="num">2</span><b>Програма</b><span>Алгоритм, записаний так, щоб його зрозумів комп’ютер.</span></div>
+          <div class="rule" style="--rc:var(--cpu)"><span class="num">3</span><b>Процесор</b><span>Виконує команди по одній, але мільярди за секунду.</span></div>
+        </div>
+        <div class="sites-h">Цікаві сайти: дослідити вдома або з дорослими</div>
+        <div class="sites" data-noswipe>
+          <a class="site" href="https://blockly.games/maze?lang=uk" target="_blank" rel="noopener"><b>Blockly Games: Лабіринт</b><small>Програмуй блоками, схоже на нашу гру</small><em>можна українською</em></a>
+          <a class="site" href="https://code.org/videos" target="_blank" rel="noopener"><b>Code.org: How Computers Work</b><small>Короткі відео про процесор і пам’ять</small><em>англійською · є субтитри</em></a>
+          <a class="site" href="https://www.ifixit.com/Teardown/iPad+7+Teardown/126291" target="_blank" rel="noopener"><b>iFixit: iPad зсередини</b><small>Справжні фото розібраного iPad</small><em>англійською · фото</em></a>
+          <a class="site" href="https://floooh.github.io/visual6502remix/" target="_blank" rel="noopener"><b>Visual 6502</b><small>Справжній старий процесор: видно, як перемикаються транзистори</small><em>краще на комп’ютері</em></a>
+          <a class="site" href="https://www.bbc.co.uk/bitesize/guides/zpp49j6/revision/1" target="_blank" rel="noopener"><b>BBC Bitesize: алгоритм</b><small>Що таке алгоритм, з прикладами</small><em>англійською</em></a>
+          <a class="site" href="https://nandgame.com/" target="_blank" rel="noopener"><b>NandGame</b><small>Збери комп’ютер з нуля: для найдопитливіших</small><em>англійською · складно</em></a>
+        </div>
+      </section>
+
+      <!-- badge -->
+      <section class="slide stack" data-key="badge" data-title="Посвідчення" data-ico="passport" style="--c:var(--bit)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="passport"></span>Фініш</span>
+          <h2>Твоє посвідчення</h2>
+        </div>
+        <div class="book2" data-noswipe>
+          <div class="pp-left">
+            <h3>Посвідчення програміста</h3>
+            <div class="pp-photo" data-bit></div>
+            <div class="pp-field"><label for="ppName">Ім’я програміста</label><input id="ppName" type="text" maxlength="24" placeholder="Напиши своє ім’я"></div>
+            <div class="pp-field"><small>Дата</small><b id="ppDate"></b></div>
+          </div>
+          <div class="pp-right">
+            <div class="pp-right-head"><b>Бейджі уроку</b><span id="ppCount"></span></div>
+            <div class="stamps" id="stamps"></div>
+            <div class="stars-line"><span>Зірки в грі</span><span class="big" id="ppStars"></span></div>
+            <div class="pp-actions"><span class="hint" id="ppHint"></span><button class="btn small ghost" id="resetBtn">Почати знову</button></div>
+          </div>
+        </div>
+        <template class="theory"><h2>Словничок програміста</h2>
+<dl>
+<dt>Алгоритм</dt><dd>Точні кроки, які треба виконати по порядку, щоб отримати результат.</dd>
+<dt>Програма</dt><dd>Алгоритм, записаний мовою, яку розуміє комп’ютер.</dd>
+<dt>Команда</dt><dd>Один крок програми. Наприклад, «вперед» або «увімкнути».</dd>
+<dt>Процесор</dt><dd>«Мозок» комп’ютера: чип, який виконує команди програм.</dd>
+<dt>Транзистор</dt><dd>Крихітний перемикач у чипі: увімкнений (1) або вимкнений (0).</dd>
+<dt>Код</dt><dd>Текст програми: команди, записані словами.</dd>
+<dt>Баг</dt><dd>Помилка в програмі, через яку вона працює не так, як треба.</dd>
+</dl></template>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="bottombar">
+    <button class="nav-btn" id="prevBtn">← Назад</button>
+    <div class="where"><span id="whereNum">1 / 3</span><b id="whereTitle">Повтор</b></div>
+    <div class="tools">
+      <button class="tool" id="homeBtn" aria-label="На початок"><span data-ri="home"></span><span class="tl">Початок</span></button>
+      <button class="tool" id="soundBtn" aria-label="Звук"></button>
+      <button class="tool" id="passBtn" aria-label="Посвідчення"><span data-ri="passport"></span><span class="tl">Посвідчення</span><span class="count" id="passCount">0/11</span></button>
+      <button class="tool" id="fsBtn" aria-label="Повний екран"><span data-ri="full"></span></button>
+    </div>
+    <button class="nav-btn next" id="nextBtn">Далі →</button>
+  </footer>
+
+  <div class="th-backdrop" id="thBack"></div>
+  <aside class="th-drawer" id="thDrawer" role="dialog" aria-modal="true" aria-label="Детальніше" aria-hidden="true">
+    <div class="th-head"><span class="th-label"><span data-ri="book"></span>Для допитливих</span><button class="th-close" id="thClose" aria-label="Закрити">✕</button></div>
+    <div class="th-body" id="thBody"></div>
+  </aside>
+  <div class="stampfx" id="stampFx" aria-live="polite"></div>
+</div>
+
+<script src="../shared/bit-game/engine.js"></script>
+<script src="../shared/bit-game/levels-02.js"></script>
+<script src="../shared/bit-game/bit-game.js"></script>
+<script src="../shared/deck/deck.js"></script>
+<script>
+(function(){
+"use strict";
+const { $, $$, ri } = Deck;
+
+Object.assign(Deck.RI, {
+  pencil: '<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
+  zoom: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M8 10.5h5M10.5 8v5"/>',
+  chip: '<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>',
+  timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 3h5"/>',
+  pipe: '<path d="M3 8h13l5 4-5 4H3z"/><path d="M8 8v8M12.5 8v8"/>'
+});
+
+const D = Deck.create({
+  prefix: "bit-cpu:",
+  passport: "badge",
+  stamps: {
+    back:      { label: "ПОВТОР",     c: "#E2632A", ico: "back" },
+    teacher:   { label: "ПРОГРАМА",   c: "#2F80ED", ico: "pencil" },
+    algorithm: { label: "АЛГОРИТМ",   c: "#0E9C8D", ico: "list" },
+    deep:      { label: "ГЛИБИНА",    c: "#3C4A6B", ico: "zoom" },
+    cpu:       { label: "ПРОЦЕСОР",   c: "#7A5CFA", ico: "chip" },
+    bits:      { label: "КОД",        c: "#C2410C", ico: "bin" },
+    pipe:      { label: "КОНВЕЄР",    c: "#3C4A6B", ico: "pipe" },
+    race:      { label: "ШВИДКІСТЬ",  c: "#E5487B", ico: "timer" },
+    game1:     { label: "ТРЕНУВАННЯ", c: "#D9701A", ico: "game" },
+    game2:     { label: "СТРИБКИ",    c: "#C2410C", ico: "bolt" },
+    game3:     { label: "ІСПИТ",      c: "#E04848", ico: "shield" }
+  },
+  onSoundChange: on => { BitGame.muted = !on; }
+});
+const { H, Sound, store, stamp, happy } = D;
+const LEVEL_IDS = BitGame.levelIds();
+
+/* back: three question cards, then Bit dives into the iPad */
+/* Clears stamps, name and game stars; both reset buttons ask for a second tap first. */
+function armReset(btn, label){
+  let armed = false;
+  btn.addEventListener("click", () => {
+    if (!armed){ armed = true; btn.textContent = "Точно? Натисни ще раз"; setTimeout(() => { armed = false; btn.textContent = label; }, 3000); return; }
+    armed = false; btn.textContent = label;
+    D.clearStamps(); BitGame.progress.clear(LEVEL_IDS); store.set("name", ""); const n = $("#ppName"); if (n) n.value = "";
+    try { location.hash = ""; } catch(_){}
+    location.reload();
+  });
+}
+const hasProgress = () => D.stampCount() > 0 || BitGame.progress.total(LEVEL_IDS) > 0 || !!store.get("name", "");
+
+H.back = { enter(){ $("#resetTop").hidden = !hasProgress(); }, init(el){
+  armReset($("#resetTop"), "↺ Скинути прогрес");
+  const cards = $$(".fcard", el);
+  cards.forEach(c => c.addEventListener("click", () => {
+    c.classList.toggle("flipped"); Sound.pop();
+    c.dataset.seen = "1";
+    if (cards.every(x => x.dataset.seen)){ happy(el); stamp("back"); $("#resetTop").hidden = false; }
+  }));
+  $("#diveBtn").addEventListener("click", () => dive(el));
+}};
+
+function dive(slide){
+  if ($(".dive", slide)) return;
+  const from = D.current();
+  Sound.whoosh();
+  const fx = document.createElement("div");
+  fx.className = "dive";
+  fx.innerHTML = '<div class="dive-ipad"><svg viewBox="0 0 84 110"><rect x="3" y="3" width="78" height="104" rx="12" fill="#16193A"/><rect x="9" y="11" width="66" height="86" rx="5" fill="#0F3550"/><circle cx="42" cy="102" r="2.4" fill="#4E5584"/></svg><div class="dive-bit">' + Deck.bitSVG() + '</div></div><div class="dive-flash"></div>';
+  slide.appendChild(fx);
+  const bit = $(".dive-bit", fx), flash = $(".dive-flash", fx);
+  bit.animate([
+    { transform: "translate(-420px,-60px) scale(1.5)", opacity: 1 },
+    { transform: "translate(0,-10px) scale(1)", opacity: 1, offset: .6 },
+    { transform: "translate(0,0) scale(.05)", opacity: 0 }
+  ], { duration: 1100, easing: "cubic-bezier(.5,0,.3,1)", fill: "forwards" });
+  /* timers, not animation events, drive the steps; only go on if the student is still on this slide */
+  setTimeout(() => {
+    Sound.flash();
+    flash.animate([{ opacity: 0 }, { opacity: .95 }, { opacity: 0 }], { duration: 450 });
+    setTimeout(() => { fx.remove(); if (D.current() === from) D.next(); }, 460);
+  }, 1100);
+}
+
+/* teacher: build a program from cards; the teacher then performs it literally, one command per tap.
+   World: the teacher starts with his back to the board, 3 steps from it, marker lying on the table next to him. */
+H.teacher = (function(){
+  const CMD = {
+    turn:  { l: "Розвернись",              c: "розвернутись()" },
+    step1: { l: "Зроби 1 крок вперед",     c: "крок(1)", n: 1 },
+    step3: { l: "Зроби 3 кроки вперед",    c: "крок(3)", n: 3 },
+    up:    { l: "Підніми руку",            c: "підняти_руку()" },
+    down:  { l: "Опусти руку",             c: "опустити_руку()" },
+    take:  { l: "Візьми маркер",           c: 'взяти("маркер")' },
+    open:  { l: "Зніми ковпачок",          c: 'зняти("ковпачок")' },
+    close: { l: "Надінь ковпачок",         c: 'надіти("ковпачок")' },
+    wB:    { l: "Напиши «Б»",              c: 'написати("Б")', ch: "Б" },
+    wI:    { l: "Напиши «І»",              c: 'написати("І")', ch: "І" },
+    wT:    { l: "Напиши «Т»",              c: 'написати("Т")', ch: "Т" }
+  };
+  const ORDER = ["wI", "step3", "take", "close", "turn", "wT", "up", "open", "step1", "wB", "down"];
+  const MAX = 10, DIST = 3;
+  const FOOT_X = [116, 168, 220, 270];   // teacher x in the scene (px), by steps taken towards the board
+  let el, prog = [], done = 0, st;
+
+  const fresh = () => ({ pos: 0, toBoard: false, handUp: false, has: false, capOff: false, board: "", err: "", bad: false });
+  const steps = n => n + (n === 1 ? " крок" : n >= 2 && n <= 4 ? " кроки" : " кроків");
+  function perform(key){
+    const c = CMD[key], bad = m => { st.err = st.err || m; st.bad = true; return m; };
+    switch (key){
+      case "turn": st.toBoard = !st.toBoard; return st.toBoard ? "Розвертаюсь обличчям до дошки." : "Розвертаюсь спиною до дошки.";
+      case "step1": case "step3": {
+        const n = c.n;
+        if (st.toBoard){
+          if (st.pos + n > DIST){ st.pos = DIST; return bad("Ой, я вперся в дошку!"); }
+          st.pos += n; return "Іду до дошки: " + steps(n) + ".";
+        }
+        if (st.pos - n < 0){ st.pos = 0; return bad("Позаду стіна кімнати, далі йти нікуди!"); }
+        st.pos -= n; return "Іду від дошки: " + steps(n) + ".";
+      }
+      case "up": st.handUp = true; return "Піднімаю руку.";
+      case "down": st.handUp = false; return "Опускаю руку.";
+      case "take":
+        if (st.pos !== 0) return bad("Маркер лишився на столі, а я вже відійшов від нього!");
+        st.has = true; return "Беру маркер зі столу.";
+      case "open":
+        if (!st.has) return bad("Нічого знімати: маркера в мене немає!");
+        st.capOff = true; return "Знімаю ковпачок.";
+      case "close": st.capOff = false; return "Надіваю ковпачок.";
+    }
+    if (!st.toBoard) return bad("Я стою спиною до дошки, пишу в повітря!");
+    if (st.pos < DIST) return bad("Дошка занадто далеко: не дістаю маркером!");
+    if (!st.handUp) return bad("Рука опущена, на дошці нічого не написати!");
+    if (!st.has) return bad("Чим писати? Маркера в мене немає!");
+    if (!st.capOff) return bad("Маркер закритий, на дошці нічого не з’явилося!");
+    st.board += c.ch; return "Пишу «" + c.ch + "».";
+  }
+  function reset(){ done = 0; st = fresh(); render(); D.say(el, "Вчитель стоїть спиною до дошки, за 3 кроки від неї. Маркер лежить на столі. Склади програму!"); }
+  const show = (id, on) => { const n = $("#" + id); if (on) n.removeAttribute("hidden"); else n.setAttribute("hidden", ""); };
+  function renderStage(){
+    $("#scT").style.transform = "translate(" + FOOT_X[st.pos] + "px,232px)";
+    $("#scFace").setAttribute("transform", st.toBoard ? "scale(1 1)" : "scale(-1 1)");
+    show("scArmD", !st.handUp); show("scArmU", st.handUp);
+    show("scMkD", st.has && !st.handUp); show("scMkU", st.has && st.handUp);
+    show("scMkT", !st.has);
+    $("#scCapD").style.display = $("#scCapU").style.display = st.capOff ? "none" : "";
+    show("scQ", st.bad);
+    $("#scChalk").textContent = st.board;
+    const left = DIST - st.pos;
+    $("#stgCap").textContent = (st.toBoard ? "Вчитель лицем до дошки" : "Вчитель спиною до дошки") + " · до дошки " + (left ? steps(left) : "0 кроків");
+  }
+  function render(){
+    const rows = $("#tpRows");
+    rows.innerHTML = prog.length ? "" : '<div class="tp-empty">Торкайся команд зліва.<br>Торкнись рядка, щоб прибрати його.</div>';
+    prog.forEach((k, i) => {
+      const b = document.createElement("button");
+      b.className = "tp-row" + (i === done - 1 ? " now" : i < done ? " done" : "");
+      b.innerHTML = "<i>" + (i + 1) + '</i><span class="tx">' + CMD[k].l + "</span><code>" + CMD[k].c + "</code>";
+      b.addEventListener("click", () => { Sound.click(); prog.splice(i, 1); reset(); });
+      rows.appendChild(b);
+    });
+    $("#tpCount").textContent = prog.length + " / " + MAX;
+    $("#tpStep").disabled = !prog.length || done >= prog.length;
+    renderStage();
+  }
+  function step(){
+    if (done >= prog.length) return;
+    st.bad = false;
+    const msg = perform(prog[done]);
+    done++; render();
+    if (done < prog.length){ D.say(el, msg); return; }
+    if (st.board === "БІТ"){ D.say(el, "Вийшло «БІТ»! Програма працює, бо ти не пропустив жодного кроку."); happy(el); stamp("teacher"); }
+    else { D.say(el, (st.err ? st.err + " " : "") + "Вийшло: «" + (st.board || "…") + "». Знайди, чого не вистачає, і спробуй ще!"); Sound.buzz(); }
+  }
+  return {
+    init(s){
+      el = s; st = fresh();
+      $("#scTicks").innerHTML = FOOT_X.map((x, i) => '<circle cx="' + x + '" cy="256" r="10" fill="#fff" stroke="#16193A" stroke-width="2.5"/><text x="' + x + '" y="260.5">' + i + "</text>").join("");
+      const pal = $("#tpPal");
+      ORDER.forEach(k => {
+        const b = document.createElement("button");
+        b.className = "cmd-chip"; b.textContent = CMD[k].l;
+        b.addEventListener("click", () => {
+          if (prog.length >= MAX){ Sound.buzz(); return; }
+          Sound.click(); prog.push(k); done = 0; st = fresh(); render();
+        });
+        pal.appendChild(b);
+      });
+      $("#tpStep").addEventListener("click", () => { Sound.pop(); step(); });
+      $("#tpReset").addEventListener("click", () => { Sound.click(); reset(); });
+      render();
+    }
+  };
+})();
+
+/* algorithm: put four steps in order; the drawn iPad plays them and reacts to a wrong order */
+H.algorithm = (function(){
+  const STEPS = { power: "Натисни кнопку живлення", unlock: "Розблокуй екран", find: "Знайди іконку гри", tap: "Торкнися іконки" };
+  const SHUFFLED = ["find", "power", "tap", "unlock"];
+  const COLORS = ["#FF8A3D", "#2BAA6B", "#E5487B", "#FFC93C", "#7A5CFA", "#12B5A4", "#FF5E7E", "#2F80ED", "#FFD7B5", "#C8F2D9", "#BFE3FF", "#E3DBFF"];
+  let el, slots = [null, null, null, null], busy = false, pad;
+
+  function render(){
+    const full = slots.every(Boolean);
+    $("#algPool").innerHTML = "";
+    SHUFFLED.forEach(k => {
+      const b = document.createElement("button");
+      b.className = "step-chip" + (slots.includes(k) ? " used" : ""); b.textContent = STEPS[k];
+      b.addEventListener("click", () => {
+        if (busy || slots.includes(k)) return;
+        const i = slots.indexOf(null); if (i < 0) return;
+        Sound.click(); clearState(); slots[i] = k; render();
+      });
+      $("#algPool").appendChild(b);
+    });
+    $("#algSlots").innerHTML = "";
+    slots.forEach((k, i) => {
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.className = "alg-slot" + (k ? " full" : ""); b.innerHTML = "<b>" + (i + 1) + "</b><span>" + (k ? STEPS[k] : "…") + "</span>";
+      b.addEventListener("click", () => { if (busy || !k) return; Sound.click(); clearState(); slots[i] = null; render(); });
+      li.appendChild(b); $("#algSlots").appendChild(li);
+    });
+    $("#algGo").disabled = !full || busy;
+  }
+  function clearState(){ pad.dataset.s = "off"; pad.classList.remove("err"); }
+  async function check(){
+    busy = true; clearState(); render();
+    const btns = $$(".alg-slot", el);
+    let s = "off", failMsg = "";
+    for (let i = 0; i < 4; i++){
+      btns[i].classList.add("now"); await Deck.wait(750);
+      const k = slots[i];
+      if (k === "power"){ if (s === "off") s = "lock"; }
+      else if (k === "unlock"){ if (s === "lock") s = "home"; else failMsg = s === "off" ? "Екран вимкнений: нема чого розблоковувати!" : "Екран уже розблоковано."; }
+      else if (k === "find"){ if (s === "home") s = "found"; else failMsg = s === "off" ? "Екран вимкнений, я нічого не бачу!" : "Екран заблокований: іконок не видно!"; }
+      else if (k === "tap"){ if (s === "found") s = "game"; else failMsg = s === "home" ? "Я не знаю, яку іконку торкатися. Спершу її треба знайти!" : "Не можу торкнутися: екран не готовий!"; }
+      btns[i].classList.remove("now");
+      if (failMsg){ btns[i].classList.add("bad"); pad.classList.add("err"); Sound.buzz(); D.say(el, failMsg + " Спробуй інший порядок."); busy = false; render(); return; }
+      pad.dataset.s = s; Sound.click();
+    }
+    btns.forEach(b => b.classList.add("ok"));
+    Sound.ding(); D.say(el, "Працює! Алгоритм — це кроки по порядку. Переставиш, і нічого не вийде."); happy(el); stamp("algorithm");
+    busy = false; $("#algGo").disabled = false;
+  }
+  return {
+    init(s){
+      el = s; pad = $("#algPad");
+      $("#algApps").innerHTML = COLORS.map((c, n) => {
+        const x = 30 + (n % 3) * 52, y = 36 + Math.floor(n / 3) * 54;
+        return '<rect x="' + x + '" y="' + y + '" width="38" height="38" rx="10" fill="' + (n === 7 ? "#FF8A3D" : c) + '" stroke="#16193A" stroke-width="2.5"/>';
+      }).join("");
+      $("#algGo").addEventListener("click", () => { if (!busy) check(); });
+      $("#algReset").addEventListener("click", () => { if (busy) return; Sound.click(); slots = [null, null, null, null]; clearState(); render(); D.say(el, "Торкайся кроків по черзі. Потім натисни «Перевірити»."); });
+      render();
+    }
+  };
+})();
+
+/* deep: iPad → board → chip → transistors */
+H.deep = (function(){
+  const NAMES = ["iPad", "плата", "чип", "транзистори"];
+  const MSG = ["Що ж там усередині? Торкнись iPad.", "Це плата. Знайди процесор: найголовніший чип!", "Це процесор зблизька. Торкнись ядра.", "Це транзистори, перемикачі. Торкайся, щоб вмикати!"];
+  const PART_MSG = { battery: "Це батарея: вона дає енергію всім деталям.", ram: "Це пам’ять: тут лежить програма, поки вона працює.", wifi: "Це чип Wi-Fi: через нього iPad «розмовляє» з роутером." };
+  let el, lv = 0;
+  const lit = new Set();
+  function setLevel(n){
+    lv = n;
+    $$(".lv", el).forEach((d, i) => { d.dataset.pos = i < n ? "before" : i > n ? "after" : "on"; });
+    $$(".crumb", el).forEach((b, i) => { b.disabled = i > n; b.classList.toggle("on", i === n); });
+    D.say(el, MSG[n]);
+  }
+  return {
+    init(s){
+      el = s;
+      const cr = $("#deepCrumbs");
+      NAMES.forEach((nm, i) => {
+        const b = document.createElement("button"); b.className = "crumb"; b.textContent = (i ? "› " : "") + nm;
+        b.addEventListener("click", () => { if (i < lv){ Sound.whoosh(); setLevel(i); } });
+        cr.appendChild(b);
+      });
+      ["hot0", "hot1", "hot2"].forEach((id, i) => $("#" + id).addEventListener("click", () => { Sound.pop(); setLevel(i + 1); }));
+      $$(".part", el).forEach(p => p.addEventListener("click", () => { Sound.click(); D.say(el, PART_MSG[p.dataset.part]); }));
+      /* transistor grid */
+      const svg = $("#trSvg");
+      let h = "";
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 8; c++){
+        const k = r * 8 + c;
+        h += '<g class="tr" data-k="' + k + '" transform="translate(' + (24 + c * 66) + " " + (30 + r * 80) + ')"><rect class="body" width="50" height="64" rx="12"/><text x="25" y="42">0</text></g>';
+      }
+      h += '<text x="280" y="480" text-anchor="middle" class="plabel">Кожен перемикач — 0 або 1</text>';
+      svg.innerHTML = h;
+      $$(".tr", svg).forEach(g => g.addEventListener("click", () => {
+        const k = g.dataset.k, on = !lit.has(k);
+        if (on) lit.add(k); else lit.delete(k);
+        g.classList.toggle("on", on); g.querySelector("text").textContent = on ? "1" : "0";
+        on ? Sound.ding() : Sound.dark();
+        if (lit.size >= 3){ D.say(el, "Бачиш? Увімкнені перемикачі — це одиниці. З них складається все в комп’ютері."); stamp("deep"); }
+      }));
+      setLevel(0);
+    },
+    leave(){ setLevel(0); }
+  };
+})();
+
+/* cpu: fetch → decode → execute, one step per tap */
+H.cpu = (function(){
+  const PROG = [
+    { c: "вперед()", m: "іти вперед" }, { c: "вперед()", m: "іти вперед" }, { c: "вперед()", m: "іти вперед" },
+    { c: "увімкнути()", m: "увімкнути транзистор" }
+  ];
+  const TXT = ["Беру команду з пам’яті.", "Розумію, що вона означає.", "Виконую!"];
+  let el, scene, pc = 0, phase = 0, finished = false, busy = false, pos = 0, tz, tok = 0;
+
+  function offsetIn(node){
+    let x = 0, y = 0;
+    for (let n = node; n && n !== scene; n = n.offsetParent){ x += n.offsetLeft; y += n.offsetTop; }
+    return { x, y };
+  }
+  function paint(){
+    $$(".cp-row", el).forEach((r, i) => { r.classList.toggle("now", i === pc && !finished); r.classList.toggle("done", i < pc); });
+    $$(".lamp", el).forEach((l, i) => l.classList.toggle("on", !finished && busyPhase === i));
+    $("#cpuBit").style.left = (pos * 148 + 32) + "px";
+    tz.classList.toggle("on", pos === 3 && pc >= PROG.length);
+    tz.textContent = tz.classList.contains("on") ? "1" : "0";
+    $("#cpuStep").disabled = finished || busy;
+  }
+  let busyPhase = -1;
+  function reset(){
+    tok++;   // a step still animating belongs to the old run: it will see the new token and stop
+    pc = 0; phase = 0; finished = false; busy = false; pos = 0; busyPhase = -1;
+    $("#cpuReg").textContent = "—";
+    D.say(el, "Натисни «Крок»: процесор візьме першу команду.");
+    paint();
+  }
+  function fly(text, from, to){
+    return new Promise(res => {
+      const f = document.createElement("div"); f.className = "fly"; f.textContent = text;
+      f.style.left = from.x + "px"; f.style.top = from.y + "px"; scene.appendChild(f);
+      f.animate([{ transform: "translate(0,0)" }, { transform: "translate(" + (to.x - from.x) + "px," + (to.y - from.y) + "px)" }], { duration: 600, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" });
+      setTimeout(() => { f.remove(); res(); }, 610);
+    });
+  }
+  async function step(){
+    if (finished || busy) return;
+    busy = true; busyPhase = phase;
+    const my = tok, cmd = PROG[pc];
+    D.say(el, TXT[phase] + " (команда " + (pc + 1) + ")");
+    if (phase === 0){
+      paint();
+      const row = $$(".cp-row", el)[pc], reg = $("#cpuReg");
+      const a = offsetIn(row), b = offsetIn(reg);
+      Sound.whoosh();
+      await fly(cmd.c, { x: a.x + 40, y: a.y }, { x: b.x, y: b.y - 6 });
+      if (my !== tok) return;
+      reg.textContent = cmd.c;
+    } else if (phase === 1){
+      paint(); Sound.pop();
+      $("#cpuReg").textContent = cmd.c + " = " + cmd.m;
+      await Deck.wait(700);
+      if (my !== tok) return;
+    } else {
+      paint();
+      if (cmd.c === "вперед()"){ pos++; Sound.click(); }
+      await Deck.wait(650);
+      if (my !== tok) return;
+      if (cmd.c === "увімкнути()") Sound.ding();
+      pc++;
+    }
+    phase = (phase + 1) % 3;
+    if (pc >= PROG.length){
+      finished = true; busyPhase = -1;
+      D.say(el, "Усю програму виконано, команда за командою. Так працює кожен процесор!");
+      happy(el); stamp("cpu");
+    }
+    busy = false; if (phase === 0) busyPhase = -1;
+    paint();
+  }
+  return {
+    init(s){
+      el = s; scene = $("#cpuScene");
+      $("#cpuRows").innerHTML = PROG.map((p, i) => '<div class="cp-row"><i>' + (i + 1) + "</i>" + p.c + "</div>").join("");
+      const track = $("#cpuTrack");
+      for (let i = 0; i < 4; i++){
+        const t = document.createElement("div"); t.className = "t4"; t.style.left = (i * 148) + "px";
+        if (i === 3){ t.innerHTML = '<div class="tz">0</div>'; }
+        track.appendChild(t);
+      }
+      tz = $(".tz", track);
+      $("#cpuStep").addEventListener("click", step);
+      $("#cpuReset").addEventListener("click", () => { Sound.click(); reset(); });
+      reset();
+    }
+  };
+})();
+
+/* shared bits for the two new slides: the game's command icons, colours and a 3-bit code per command */
+const CMD_ICON = {
+  forward: '<path d="M12 20V5M5 11l7-7 7 7"/>',
+  left: '<path d="M9 4L4 9l5 5"/><path d="M4 9h9a6 6 0 0 1 0 12h-3"/>',
+  right: '<path d="M15 4l5 5-5 5"/><path d="M20 9h-9a6 6 0 0 0 0 12h3"/>',
+  jump: '<path d="M3 19C5 7 14 5 18 12"/><path d="M13 12h6v-6"/>',
+  light: '<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>'
+};
+const CMD_COLOR = { forward: "#2F80ED", left: "#7A5CFA", right: "#7A5CFA", jump: "#E5487B", light: "#E0A100" };
+const CMD_CODE = { forward: 1, left: 2, right: 3, jump: 4, light: 5 };
+const cmdIco = k => '<span class="bt-ico" style="background:' + CMD_COLOR[k] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' + CMD_ICON[k] + "</svg></span>";
+const bits3 = n => '<span class="bits3">' + [4, 2, 1].map(w => '<i class="bit1' + (n & w ? " on" : "") + '">' + (n & w ? 1 : 0) + "</i>").join("") + "</span>";
+const code3 = n => ((n >> 2) & 1) + "" + ((n >> 1) & 1) + "" + (n & 1);
+const GAME_CMDS = ["forward", "left", "right", "jump", "light"];
+const GAME_NAME = { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()" };
+const SAMPLE = ["forward", "forward", "right", "light"];
+
+/* bits: every command is a 3-bit number; the sample program turns into a row of bits */
+H.bits = (function(){
+  let el, busy = false;
+  function reset(){
+    $("#btMem").innerHTML = ""; $("#btCode").textContent = "порожньо";
+    $$(".bt-chip", el).forEach(c => c.classList.remove("now"));
+    $("#btGo").disabled = false; busy = false;
+  }
+  async function write(){
+    if (busy) return; busy = true; $("#btGo").disabled = true;
+    const mem = $("#btMem"), chips = $$(".bt-chip", el); mem.innerHTML = ""; const codes = [];
+    for (let i = 0; i < SAMPLE.length; i++){
+      chips.forEach((c, k) => c.classList.toggle("now", k === i));
+      const n = CMD_CODE[SAMPLE[i]]; mem.insertAdjacentHTML("beforeend", bits3(0));
+      const grp = mem.lastElementChild;
+      for (let b = 0; b < 3; b++){
+        await Deck.wait(260);
+        const on = !!(n & [4, 2, 1][b]), lamp = grp.children[b];
+        lamp.classList.toggle("on", on); lamp.textContent = on ? "1" : "0";
+        on ? Sound.ding() : Sound.click();
+      }
+      codes.push(code3(n)); $("#btCode").textContent = codes.join(" ");
+    }
+    chips.forEach(c => c.classList.remove("now"));
+    D.say(el, "Уся програма Біта записана нулями й одиницями: " + codes.join(" ") + ". Так її й бачить комп’ютер!");
+    happy(el); stamp("bits"); busy = false; $("#btGo").disabled = false;
+  }
+  return {
+    init(s){
+      el = s;
+      $("#btList").innerHTML = GAME_CMDS.map(k => '<button class="bt-row" data-k="' + k + '">' + cmdIco(k) + '<span class="nm">' + GAME_NAME[k] + "</span>" + bits3(CMD_CODE[k]) + '<span class="num">= ' + CMD_CODE[k] + "</span></button>").join("");
+      $$(".bt-row .bit1", el).forEach(b => { b.classList.remove("on"); b.textContent = "0"; });
+      $("#btProg").innerHTML = SAMPLE.map(k => '<span class="bt-chip">' + cmdIco(k) + GAME_NAME[k].replace("()", "") + "</span>").join("");
+      $$(".bt-row", el).forEach(r => r.addEventListener("click", () => {
+        const k = r.dataset.k, n = CMD_CODE[k];
+        $$(".bt-row", el).forEach(x => x.classList.toggle("sel", x === r));
+        $$(".bit1", r).forEach((b, i) => { const on = !!(n & [4, 2, 1][i]); b.classList.toggle("on", on); b.textContent = on ? "1" : "0"; });
+        Sound.pop(); D.say(el, "«" + GAME_NAME[k] + "» у пам’яті виглядає як " + code3(n) + ". Це число " + n + ".");
+      }));
+      $("#btGo").addEventListener("click", write);
+      $("#btReset").addEventListener("click", () => { if (busy) return; Sound.click(); reset(); D.say(el, "Кожна команда має свій код із трьох бітів. Торкнись будь-якої!"); });
+    },
+    leave(){ if (busy){ /* let the animation finish silently; state resets on return */ } }
+  };
+})();
+
+/* pipe: commands wait on a belt, the processor takes them one by one, Bit obeys on a little map.
+   The world is driven by the real game engine (level 2-02), so the result matches the game. */
+H.pipe = (function(){
+  const CELL = 104, GAP = 8, SLOT = 70 + 6;
+  const DEG = { N: 0, E: 90, S: 180, W: 270 };
+  const MSG = { move: "Біт іде вперед.", jump: "Біт стрибає.", turn: "Біт повертається.", on: "Транзистор світиться!", off: "Транзистор згас.",
+    "bump-edge": "Далі нічого немає.", "bump-step": "Там сходинка.", "bump-flat": "Тут рівно.", "bump-high": "Занадто високо.", "no-target": "Тут немає транзистора." };
+  let el, lv, prog, trace, idx = 0, busy = false, auto = false, token = 0;
+
+  function world(st){
+    const bit = $("#blBit"), pos = (x, y) => ({ left: x * (CELL + GAP), top: y * (CELL + GAP) });
+    const p = pos(st.x, st.y);
+    bit.style.left = p.left + "px"; bit.style.top = p.top + "px";
+    $(".bl-face", bit).style.transform = "rotate(" + DEG[st.dir] + "deg)";
+    lv.targets.forEach(t => { const on = st.lit.indexOf(BitGame.keyOf(t.x, t.y)) >= 0, c = $("#blChip"); c.classList.toggle("on", on); c.textContent = on ? "1" : "0"; });
+  }
+  function buildBelt(){
+    const track = $("#blTrack").parentElement;
+    $$(".bl-card", track).forEach(c => c.remove());
+    prog.forEach((k, i) => {
+      const c = document.createElement("div"); c.className = "bl-card" + (i === 0 ? " first" : ""); c.dataset.i = i;
+      c.innerHTML = cmdIco(k) + GAME_NAME[k].replace("()", "") + "<small>" + code3(CMD_CODE[k]) + "</small>";
+      c.style.left = (5 + i * SLOT) + "px"; track.appendChild(c);
+    });
+  }
+  function reset(msg){
+    token++; busy = auto = false; idx = 0;
+    buildBelt(); world(BitGame.initialState(lv));
+    $("#blNow").className = "bl-now"; $("#blNow").textContent = "чекає"; $("#blGear").classList.remove("spin"); $("#blTrack").parentElement.classList.remove("moving");
+    $("#blRun").textContent = "▶ Пуск"; $("#blRun").disabled = $("#blStep").disabled = false;
+    D.say(el, msg || "Тисни «Пуск»: процесор візьме команди зі стрічки.");
+  }
+  async function one(){
+    if (idx >= prog.length || busy) return false;
+    busy = true; const my = token, i = idx, t = trace[i], k = prog[i];
+    const belt = $("#blTrack").parentElement, cards = $$(".bl-card", belt);
+    /* 1. the first card is taken by the processor, the rest of the queue moves up */
+    belt.classList.add("moving"); Sound.whoosh();
+    cards[i].classList.add("eaten");
+    cards.forEach((c, j) => { if (j > i){ c.style.left = (5 + (j - i - 1) * SLOT) + "px"; c.classList.toggle("first", j === i + 1); } });
+    $("#blNow").className = "bl-now busy"; $("#blNow").innerHTML = cmdIco(k) + GAME_NAME[k] + "<small>" + code3(CMD_CODE[k]) + "</small>";
+    $("#blGear").classList.add("spin");
+    D.say(el, "Процесор взяв команду «" + GAME_NAME[k] + "».");
+    await Deck.wait(650); if (my !== token) return false;
+    belt.classList.remove("moving");
+    /* 2. Bit obeys */
+    world(t.state); (t.event === "on" || t.event === "off") ? Sound.ding() : Sound.click();
+    D.say(el, "«" + GAME_NAME[k] + "»: " + (MSG[t.event] || "Готово."));
+    await Deck.wait(750); if (my !== token) return false;
+    idx++; busy = false; $("#blGear").classList.remove("spin");
+    if (idx >= prog.length){
+      $("#blNow").className = "bl-now"; $("#blNow").textContent = "черга порожня";
+      D.say(el, "Черга порожня: усі команди виконано, і транзистор світиться. Це і є робота програми!");
+      $("#blRun").disabled = $("#blStep").disabled = true; auto = false; $("#blRun").textContent = "▶ Пуск";
+      Sound.win(); happy(el); stamp("pipe"); return false;
+    }
+    return true;
+  }
+  async function run(){
+    if (auto){ auto = false; $("#blRun").textContent = "▶ Далі"; return; }   // pause: the current command finishes first
+    if (busy) return;
+    auto = true; $("#blRun").textContent = "⏸ Пауза"; const my = token;
+    while (auto && my === token){ if (!(await one())) break; }
+    if (my === token && idx < prog.length){ auto = false; $("#blRun").textContent = "▶ Далі"; }
+  }
+  return {
+    init(s){
+      el = s; lv = BitGame.getLevel("2-02"); prog = BitGame.solve(lv); trace = BitGame.run(lv, prog).trace;
+      /* top-down map of the level */
+      const map = $("#blMap"); map.style.width = (lv.w * (CELL + GAP) - GAP) + "px"; map.style.height = (lv.h * (CELL + GAP) - GAP) + "px";
+      let h = "";
+      for (let y = 0; y < lv.h; y++) for (let x = 0; x < lv.w; x++) if (lv.cells[y][x]){
+        h += '<div class="bl-cell" style="left:' + x * (CELL + GAP) + "px;top:" + y * (CELL + GAP) + 'px">' + (lv.cells[y][x].t ? '<div class="bl-chip" id="blChip">0</div>' : "") + "</div>";
+      }
+      h += '<div class="bl-bit" id="blBit"><div class="bl-face"><i></i></div><div class="bl-sprite">' + Deck.bitSVG() + "</div></div>";
+      map.innerHTML = h;
+      $("#blRun").addEventListener("click", run);
+      $("#blStep").addEventListener("click", () => { if (!auto) one(); });
+      $("#blReset").addEventListener("click", () => { Sound.click(); reset(); });
+      reset();
+    },
+    leave(){ token++; busy = auto = false; reset(); }
+  };
+})();
+
+/* race: five seconds of tapping against the processor */
+H.race = (function(){
+  let el, state = "idle", taps = 0, t0 = 0, timer = 0, token = 0;
+  const fmt = n => n.toLocaleString("uk-UA").replace(/ /g, " ");
+  function finish(){
+    clearInterval(timer); state = "done";
+    $("#raceTap").disabled = true; $("#raceClock").textContent = "0.0";
+    const ns = Math.max(1, Math.round(taps / 3));
+    const res = $("#raceRes"); res.hidden = false;
+    res.innerHTML = '<div><small>Ти за 5 секунд</small><b>' + fmt(taps) + ' тапів</b></div><div class="cpu"><small>Процесор за 5 секунд</small><b>' + fmt(15000000000) + ' дій</b></div>';
+    D.say(el, "Стільки дій, скільки ти зробив за 5 секунд, процесор робить приблизно за " + ns + " " + (ns === 1 ? "наносекунду" : "наносекунд") + ". Це мільярдні частки секунди!");
+    $("#raceStart").textContent = "Ще раз"; $("#raceStart").disabled = false;
+    Sound.win(); happy(el); stamp("race");
+  }
+  function go(){
+    state = "run"; taps = 0; t0 = Date.now();
+    $("#raceTap").disabled = false; $("#raceTap").textContent = "Тап!";
+    D.say(el, "Тапай!");
+    timer = setInterval(() => {
+      const left = Math.max(0, 5 - (Date.now() - t0) / 1000);
+      $("#raceClock").textContent = left.toFixed(1);
+      if (left <= 0) finish();
+    }, 50);
+  }
+  async function start(){
+    if (state === "run" || state === "count") return;
+    state = "count"; $("#raceStart").disabled = true; $("#raceRes").hidden = true; $("#raceTap").disabled = true;
+    $("#raceClock").textContent = "5.0";
+    const mine = ++token;
+    for (const n of ["3", "2", "1"]){ $("#raceTap").textContent = n; Sound.click(); await Deck.wait(650); if (mine !== token) return; }
+    go();
+  }
+  return {
+    init(s){
+      el = s;
+      $("#raceStart").addEventListener("click", start);
+      $("#raceTap").addEventListener("pointerdown", e => { if (state !== "run") return; e.preventDefault(); taps++; Sound.click(); });
+    },
+    leave(){ token++; clearInterval(timer); if (state === "run" || state === "count"){ state = "idle"; $("#raceStart").disabled = false; $("#raceTap").disabled = true; $("#raceTap").textContent = "Тап!"; $("#raceClock").textContent = "5.0"; } }
+  };
+})();
+
+/* game slides: a stamp once every level of the set has at least one star (bonus has none); leaving a slide stops a running program */
+["game1", "game2", "game3", "bonus"].forEach(key => {
+  H[key] = {
+    init(el){ el.addEventListener("bitgame:solved-set", () => { happy(el); if (key !== "bonus") stamp(key); }); },
+    leave(el){ const g = $("bit-game", el); if (g && g.stop) g.stop(); }
+  };
+});
+
+/* badge: stamps, game stars, name, reset */
+H.badge = (function(){
+  function render(){
+    const rot = k => ((k.charCodeAt(0) * 7 + k.length * 13) % 24) - 12;
+    $("#stamps").innerHTML = D.stampKeys.map(k => '<div class="st">' + (D.hasStamp(k) ? D.stampSVG(k, rot(k)) : '<div class="empty">' + D.stampLabel(k) + "</div>") + "</div>").join("");
+    $("#ppCount").textContent = D.stampCount() + " з " + D.stampKeys.length;
+    $("#ppStars").textContent = BitGame.progress.total(LEVEL_IDS) + " / " + LEVEL_IDS.length * 3;
+    $("#ppHint").textContent = D.stampCount() === D.stampKeys.length ? "Усі бейджі зібрано. Ти справжній програміст!" : "Порожні кружечки: де ще є бейдж.";
+  }
+  return {
+    init(){
+      $("#ppDate").textContent = new Date().toLocaleDateString("uk-UA");
+      const name = $("#ppName"); name.value = store.get("name", "");
+      name.addEventListener("input", () => store.set("name", name.value));
+      armReset($("#resetBtn"), "Почати знову");
+    },
+    enter(){ render(); }
+  };
+})();
+
+D.start();
+})();
+</script>

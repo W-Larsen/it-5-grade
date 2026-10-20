@@ -1,0 +1,120 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Біт-програміст · Всі рівні</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* All levels of the game on ONE screen: a slim top bar (title + the four sets) and the game scaled into what is left. */
+:root{
+  color-scheme: light;
+  --ground:#E9F0FB; --paper:#FFFFFF; --ink:#16193A; --ink-soft:#4E5584; --line:#C9D5EC;
+  --bit:#FF8A3D; --sun:#FFC93C;
+  --f-display:"Unbounded","Arial Rounded MT Bold","Trebuchet MS",sans-serif;
+  --f-body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--f-body)}
+a:focus-visible,button:focus-visible{outline:3px solid #2F80ED;outline-offset:3px}
+.page{padding:calc(12px*var(--u,1)) 20px 12px}
+/* Everything in the top bar is sized with --u, which the script sets from the screen size, so the bar grows together with the game.
+   The bar is as wide as the game and centred with it, so title, set buttons and game share one left edge. */
+.bar{display:flex;flex-direction:column;align-items:flex-start;gap:calc(30px*var(--u,1));margin:0 auto calc(20px*var(--u,1))}
+.top{display:flex;align-items:center;gap:calc(16px*var(--u,1));flex-wrap:wrap}
+.back{flex:none;font:800 calc(15px*var(--u,1))/1 var(--f-body);color:var(--ink);text-decoration:none;white-space:nowrap;background:var(--paper);border:3px solid var(--ink);border-radius:999px;padding:calc(10px*var(--u,1)) calc(16px*var(--u,1));box-shadow:0 4px 0 var(--ink)}
+.back:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+.brand{flex:none;display:flex;align-items:center;gap:calc(10px*var(--u,1))}
+.hero-bit{width:calc(46px*var(--u,1))}
+.hero-bit svg{width:100%;display:block}
+h1{margin:0;font:800 calc(25px*var(--u,1))/1.1 var(--f-display);letter-spacing:-.02em;white-space:nowrap}
+.sets{list-style:none;margin:0;padding:0;display:flex;gap:calc(12px*var(--u,1));flex-wrap:wrap}
+.set{display:flex;flex-direction:column;gap:calc(5px*var(--u,1));text-align:left;background:var(--paper);border:3px solid var(--ink);border-radius:calc(16px*var(--u,1));padding:calc(8px*var(--u,1)) calc(16px*var(--u,1)) calc(9px*var(--u,1));box-shadow:0 4px 0 var(--ink);cursor:pointer;font-family:inherit;color:inherit;transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.set:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.set[aria-pressed="true"]{background:var(--sun)}
+.set b{font:800 calc(16px*var(--u,1))/1.15 var(--f-display);white-space:nowrap}
+.set .st{display:flex;align-items:center;justify-content:space-between;gap:calc(12px*var(--u,1));font:800 calc(14px*var(--u,1))/1 var(--f-mono)}
+.set .stars{color:#E0A100;font-size:calc(17px*var(--u,1));letter-spacing:1px;text-shadow:0 1px 0 var(--ink)}
+/* The game is drawn on a fixed 1128×708 stage and scaled to the free space, like on the lesson slides. */
+.stage-box{position:relative;margin:0 auto}
+.stage{position:absolute;left:0;top:0;width:1128px;height:708px;transform-origin:0 0}
+</style>
+<div class="page" id="page">
+  <header class="bar" id="bar">
+    <div class="top">
+      <a class="back" href="../">← До курсу</a>
+      <div class="brand"><span class="hero-bit" id="heroBit"></span><h1>Біт-програміст</h1></div>
+    </div>
+    <ul class="sets" id="sets" aria-label="Набори рівнів"></ul>
+  </header>
+  <div class="stage-box" id="stageBox"><div class="stage" id="stage"><bit-game id="game"></bit-game></div></div>
+</div>
+<script src="../shared/bit-game/engine.js"></script>
+<script src="../shared/bit-game/levels-02.js"></script>
+<script src="../shared/bit-game/bit-game.js"></script>
+<script>
+(function () {
+"use strict";
+var B = window.BitGame;
+var SETS = [
+  { name: "Тренування", d: "Вперед, повороти й увімкнути", ids: ["2-01", "2-02", "2-03"] },
+  { name: "Стрибки", d: "Угору по сходах і вниз у ями", ids: ["2-04", "2-05", "2-06"] },
+  { name: "Іспит", d: "Іспит диспетчерської: мало команд — багато думання", ids: ["2-07", "2-08", "2-09"] },
+  { name: "Бонус", d: "Для найсміливіших програмістів", ids: ["2-b1", "2-b2", "2-b3"] }
+];
+var game = document.getElementById("game"), list = document.getElementById("sets"), selected = 0;
+var page = document.getElementById("page"), bar = document.getElementById("bar");
+var box = document.getElementById("stageBox"), stage = document.getElementById("stage");
+document.getElementById("heroBit").innerHTML = B.bitSVG("bit");
+
+function paint() {
+  list.innerHTML = "";
+  SETS.forEach(function (s, i) {
+    var got = B.progress.total(s.ids), max = s.ids.length * 3, filled = Math.round(got / max * 3);
+    var li = document.createElement("li"), b = document.createElement("button");
+    b.type = "button"; b.className = "set"; b.title = s.d; b.setAttribute("aria-pressed", i === selected ? "true" : "false");
+    b.innerHTML = "<b>" + s.name + '</b><span class="st"><span class="stars">' + "★".repeat(filled) + "☆".repeat(3 - filled) + "</span><span>" + got + "/" + max + "</span></span>";
+    b.addEventListener("click", function () { pick(i); });
+    li.appendChild(b); list.appendChild(li);
+  });
+  fit();   // the bar may have changed height
+}
+
+function pick(i) {
+  selected = i;
+  game.index = 0;
+  game.setAttribute("levels", SETS[i].ids.join(","));
+  paint();
+}
+
+var UI_SIZE = 0.85;   // how much of the free space the game takes (1 = fill it); lower = smaller interface
+
+/* The whole page must fit one screen: scale the stage to the width left and to the height left below the bar. */
+function fit() {
+  /* the bar grows a little with the screen (never below its iPad size), then the game takes what is left */
+  var u = Math.max(0.92, Math.min(1.15, Math.min(window.innerWidth / 1180, window.innerHeight / 820) * 0.92));
+  page.style.setProperty("--u", u.toFixed(3));
+  var cs = getComputedStyle(page);
+  var padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight), padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
+  var roomW = page.clientWidth - padX, gap = parseFloat(getComputedStyle(bar).marginBottom);
+  function scaleFor(barH) { return Math.max(0.45, Math.min(1.9, roomW / 1128, (window.innerHeight - padY - barH - gap) / 708) * UI_SIZE); }
+  bar.style.width = "";   // measure the bar at its natural width first
+  var s = scaleFor(bar.offsetHeight);
+  for (var pass = 0; pass < 2; pass++) {   // the bar is as wide as the game; if that makes it wrap, measure again
+    bar.style.width = Math.round(1128 * s) + "px";
+    var s2 = scaleFor(bar.offsetHeight);
+    if (Math.abs(s2 - s) < 0.002) break;
+    s = s2;
+  }
+  stage.style.transform = "scale(" + s + ")";
+  box.style.width = Math.round(1128 * s) + "px";
+  box.style.height = Math.round(708 * s) + "px";
+}
+window.addEventListener("resize", fit);
+if (window.ResizeObserver) new ResizeObserver(fit).observe(page);   // also when the page width changes by itself
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);   // bar height depends on the web font
+
+document.addEventListener("bitgame:win", paint);
+pick(0);
+})();
+</script>
