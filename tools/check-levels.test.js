@@ -81,3 +81,9 @@ test("margins for lesson 3 ids", () => {
   assert.equal(marginFor("3-05"), 1);
   assert.equal(marginFor("3-b2"), 0);
 });
+
+test("a reference solution that bumps into walls is reported", () => {
+  const lv = mkLoop("3-01", { solution: [{ repeat: 9, body: ["forward"] }, "light"] });   // the corridor is shorter than 9 steps
+  assert.equal(BitGame.run(lv, lv.solution).won, true);
+  assert.match(checkLevel(lv, ALL).join("\n"), /bump/);
+});

@@ -179,7 +179,7 @@ var CSS = [
 ".mem{display:flex;gap:4px;margin-bottom:10px}",
 ".cell{flex:1;height:14px;border-radius:5px;border:2px solid var(--ink,#16193A);background:#F4F7FD}",
 ".cell.full{background:#0E9C8D}",
-".prog{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start;min-height:60px;max-height:300px;overflow:auto;padding:2px}",
+".prog{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start;min-height:60px;max-height:330px;overflow:auto;padding:2px}",
 ".chip{width:38px;height:38px;border-radius:12px;border:3px solid var(--ink,#16193A);box-shadow:0 3px 0 var(--ink,#16193A);display:grid;place-items:center;padding:0}",
 ".chip.now{outline:4px solid #FFC93C;outline-offset:2px}",
 ".chip:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
@@ -196,6 +196,8 @@ var CSS = [
 "@keyframes jumpTag{0%{transform:translateY(8px) scale(.8);opacity:0}25%{transform:none;opacity:1}100%{opacity:0}}",
 ".del{width:30px;height:30px;border-radius:50%;border:3px solid var(--ink,#16193A);background:#fff;box-shadow:0 3px 0 var(--ink,#16193A);font:900 14px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center;margin-left:auto}",
 ".loop-body{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:44px;border:2px dashed #9BD6CC;border-radius:10px;padding:3px}",
+".tail{flex:1 1 100%;min-height:34px;display:flex;align-items:center;border:2px dashed #B9C6E0;border-radius:10px;padding:2px 3px}",
+".tail .caret{height:28px}",
 ".caret{display:inline-grid;place-items:center;width:24px;height:38px;border-radius:8px;border:2px dashed #2F80ED;color:#2F80ED;font:900 18px/1 var(--f-mono,monospace);animation:blink 1.1s steps(2,jump-none) infinite;pointer-events:none}",
 "@keyframes blink{50%{opacity:.25}}",
 ".deck{grid-column:1/-1;grid-row:3;display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;padding-bottom:6px}",
@@ -313,11 +315,13 @@ P.loadLevel = function (i) {
   this.program = [];
   this.cursor = [];
   this.steps = [];
+  this.curStep = -1;
   this.tree = this.level.commands.indexOf("repeat") >= 0;
   this.fails = 0;
   this.hintCache = null;
   this.running = this.busy = this.won = false;
   this.stepIdx = -1;
+  this.curStep = -1;
   this.state = B.initialState(this.level);
   this.removeWin();
   this.rot = B.bestRotation(this.level);   // start from the side that hides the fewest tiles
@@ -479,8 +483,9 @@ P.treeHTML = function (items, prefix) {
         '<div class="loop-body">' + self.treeHTML(it.body, path) + "</div></div>";
     }
   });
-  if (prefix.join(".") === this.cursor.join(".")) html += '<span class="caret">+</span>';
-  return html;
+  var caret = prefix.join(".") === this.cursor.join(".") ? '<span class="caret">+</span>' : "";
+  if (prefix.length) return html + caret;   // inside a loop the caret closes the body
+  return html + '<div class="tail" aria-label="Додати після усього">' + caret + "</div>";
 };
 
 /* Redraws memory/slots, counter and code from this.program; `now` = index of the step being executed in this.steps. */
@@ -584,7 +589,7 @@ P.addCmd = function (c) {
 };
 
 P.removeAt = function (path) {
-  if (this.locked()) return;
+  if (this.locked() || !B.hasItem(this.program, path)) return;
   Sound.click();
   this.program = B.removeItem(this.program, path);
   this.cursor = B.fixCursor(this.program, B.shiftCursor(this.cursor, path));
@@ -603,7 +608,7 @@ P.cycleTimes = function (path) {
 P.setCursor = function (path) {
   if (this.locked()) return;
   this.cursor = path;
-  this.renderProgram(this.stepIdx > 0 ? this.stepIdx - 1 : undefined);
+  this.renderProgram(this.curStep >= 0 ? this.curStep : undefined);
   this.syncUI();
 };
 
@@ -636,6 +641,7 @@ var BUMP_TEXT = {
 P.execOne = async function (i) {
   var id = this.runId, lv = this.level, cmd = this.steps[i].cmd;
   var r = B.step(lv, this.state, cmd), from = this.state, to = r.state, ev = r.event;
+  this.curStep = i;
   this.renderProgram(i, true);
   if (i > 0 && this.steps[i - 1].jumps.length) Sound.pop();
   if (ev === "move" || ev === "jump") {
@@ -648,6 +654,10 @@ P.execOne = async function (i) {
     this.state = to; this.renderLit();
     if (ev === "on") Sound.ding(); else Sound.dark();
     await sleep(STEP_MS * 0.85);
+  } else if (ev === "no-target" && this.tree) {
+    Sound.click();
+    this.say("Тут немає транзистора. Іду далі.");
+    await sleep(STEP_MS * 0.45);
   } else {
     Sound.buzz();
     this.say(BUMP_TEXT[ev]);
@@ -729,6 +739,7 @@ P.stepOnce = async function () {
 
 P.lose = function () {
   this.fails++;
+  this.curStep = -1;
   this.renderProgram();
   var left = this.level.targets.length - this.state.lit.length;
   this.say(left > 0 ? B.remainingText(left) : "Усі транзистори вже горять!");
@@ -740,6 +751,7 @@ P.win = function () {
   var self = this, lv = this.level, n = B.size(this.program);
   this.running = this.busy = false;
   this.won = true;
+  this.curStep = -1;
   this.renderProgram();
   var stars = B.stars(lv, n, true), best = B.progress.record(lv.id, stars);
   Sound.win();
@@ -832,7 +844,7 @@ P.wire = function () {
       self.codeLang = self.codeLang === "uk" ? "en" : "uk";
       store.set("lang", self.codeLang);
       t.textContent = self.codeLang === "uk" ? "EN" : "УКР";
-      return self.renderProgram(self.stepIdx > 0 ? self.stepIdx - 1 : undefined);
+      return self.renderProgram(self.curStep >= 0 ? self.curStep : undefined);
     }
     switch (t.dataset.act) {
       case "run": return self.run();

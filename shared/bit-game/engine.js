@@ -347,6 +347,18 @@ function addItem(program, cursor, item) {
   return next;
 }
 
+function hasItem(program, path) {
+  var list = program;
+  for (var k = 0; k < path.length; k++) {
+    var it = list[path[k]];
+    if (it === undefined) return false;
+    if (k === path.length - 1) return true;
+    if (!isLoop(it)) return false;
+    list = it.body;
+  }
+  return false;
+}
+
 function removeItem(program, path) {
   var next = clone(program);
   containerAt(next, path.slice(0, -1)).splice(path[path.length - 1], 1);
@@ -422,6 +434,7 @@ BitGame.expand = expand;
 BitGame.codeLines = codeLines;
 BitGame.validateProgram = validateProgram;
 BitGame.addItem = addItem;
+BitGame.hasItem = hasItem;
 BitGame.removeItem = removeItem;
 BitGame.setRepeat = setRepeat;
 BitGame.fixCursor = fixCursor;

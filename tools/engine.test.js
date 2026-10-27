@@ -396,3 +396,14 @@ test("shiftCursor keeps the cursor on the same container after a removal", () =>
   assert.deepEqual(BitGame.shiftCursor([0], [1]), [0]);        // removed an item after the loop
   assert.deepEqual(BitGame.shiftCursor([], [3]), []);
 });
+
+test("hasItem tells whether a path points at a command or a loop", () => {
+  const p = ["forward", loop(2, "light")];
+  assert.equal(BitGame.hasItem(p, [0]), true);
+  assert.equal(BitGame.hasItem(p, [1]), true);
+  assert.equal(BitGame.hasItem(p, [1, 0]), true);
+  assert.equal(BitGame.hasItem(p, [2]), false);      // an empty slot
+  assert.equal(BitGame.hasItem(p, [1, 1]), false);
+  assert.equal(BitGame.hasItem(p, [0, 0]), false);   // a command has no body
+  assert.equal(BitGame.hasItem(p, []), false);
+});

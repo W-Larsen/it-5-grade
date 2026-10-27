@@ -42,7 +42,10 @@ function checkLevel(lv, seen) {
 /* Levels with the loop command: `solution` is the reference; `flatLength` is the shortest program without loops. */
 function checkLoopLevel(lv, seen, flatLength) {
   const problems = [], sol = lv.solution;
-  if (!BitGame.run(lv, sol).won) return ["solution does not win: " + show(sol)];
+  const reference = BitGame.run(lv, sol);
+  if (!reference.won) return ["solution does not win: " + show(sol)];
+  const bumps = reference.trace.filter((t) => /^bump/.test(t.event)).length;
+  if (bumps) problems.push("the solution bumps into a wall or a step " + bumps + " times (" + show(sol) + "): a hint made from it would teach that");
   const cells = BitGame.size(sol);
   if (cells !== lv.best) problems.push("best " + lv.best + " but the solution takes " + cells + " cells (" + show(sol) + ")");
   const shorter = lv.best > 1 ? shortestProgram(lv, { maxSize: lv.best - 1, nest: lv.nest }) : null;
