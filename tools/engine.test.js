@@ -254,3 +254,91 @@ test("every shipped level has a view in which transistors stay in sight", () => 
     assert.ok(BitGame.hiddenTargets(lv, BitGame.bestRotation(lv)) <= 2, id + " hides a transistor");
   });
 });
+
+/* ---------- loops: program trees ---------- */
+const loop = (n, ...body) => ({ repeat: n, body });
+
+test("size counts a loop as one cell plus its body", () => {
+  assert.equal(BitGame.size([]), 0);
+  assert.equal(BitGame.size(["forward", "light"]), 2);
+  assert.equal(BitGame.size([loop(4, loop(3, "forward"), "right", "light")]), 5);
+});
+
+test("depth of flat, single and nested programs", () => {
+  assert.equal(BitGame.depth(["forward"]), 0);
+  assert.equal(BitGame.depth([loop(2, "forward")]), 1);
+  assert.equal(BitGame.depth(["light", loop(2, loop(2, "forward"))]), 2);
+});
+
+test("expand unrolls loops with paths, laps and jump-backs", () => {
+  const s = BitGame.expand(["light", loop(2, "forward", "right")]);
+  assert.deepEqual(s.map((x) => x.cmd), ["light", "forward", "right", "forward", "right"]);
+  assert.deepEqual(s[3].path, [1, 0]);
+  assert.deepEqual(s[3].laps, [{ path: [1], lap: 2, of: 2 }]);
+  assert.deepEqual(s[2].jumps, [[1]]);
+  assert.deepEqual(s[4].jumps, []);
+});
+
+test("expand nested: inner laps restart on every outer lap", () => {
+  const s = BitGame.expand([loop(2, loop(3, "forward"), "right")]);
+  assert.equal(s.length, 8);
+  assert.deepEqual(s[4].laps, [{ path: [0], lap: 2, of: 2 }, { path: [0, 0], lap: 1, of: 3 }]);
+  assert.deepEqual(s[2].jumps, []);            // inner loop ends its 3rd lap: no jump
+  assert.deepEqual(s[3].jumps, [[0]]);         // "right" ends outer lap 1
+  assert.deepEqual(s[1].jumps, [[0, 0]]);
+});
+
+test("expand of an empty loop yields no steps", () => {
+  assert.deepEqual(BitGame.expand([loop(3)]), []);
+  assert.equal(BitGame.hasEmptyLoop([loop(3)]), true);
+  assert.equal(BitGame.hasEmptyLoop([loop(3, "forward")]), false);
+});
+
+test("codeLines writes braces and indentation in both languages", () => {
+  const p = [loop(3, "forward"), "light"];
+  assert.deepEqual(BitGame.codeLines(p, "uk").map((l) => [l.depth, l.text, l.kind]), [
+    [0, "повтори(3) {", "open"], [1, "вперед()", "cmd"], [0, "}", "close"], [0, "увімкнути()", "cmd"]
+  ]);
+  assert.equal(BitGame.codeLines(p, "en")[0].text, "repeat(3) {");
+  assert.deepEqual(BitGame.codeLines(p, "uk")[2].path, [0]);
+});
+
+test("validateProgram rejects bad counts, depth and commands", () => {
+  const all = ["forward", "light", "repeat"];
+  assert.doesNotThrow(() => BitGame.validateProgram([loop(9, "forward")], 1, all));
+  assert.throws(() => BitGame.validateProgram([loop(1, "forward")], 1, all));
+  assert.throws(() => BitGame.validateProgram([loop(10, "forward")], 1, all));
+  assert.throws(() => BitGame.validateProgram([loop(2, loop(2, "forward"))], 1, all));
+  assert.throws(() => BitGame.validateProgram(["jump"], 1, all));
+  assert.throws(() => BitGame.validateProgram([{ repeat: 2 }], 1, all));
+});
+
+test("addItem appends into the cursor's container without mutating", () => {
+  const p0 = [loop(2)];
+  const p1 = BitGame.addItem(p0, [0], "forward");
+  assert.deepEqual(p1, [loop(2, "forward")]);
+  assert.deepEqual(p0, [loop(2)]);
+  assert.deepEqual(BitGame.addItem(p1, [], "light"), [loop(2, "forward"), "light"]);
+});
+
+test("removeItem and setRepeat work by path", () => {
+  const p = [loop(2, "forward", loop(3, "right")), "light"];
+  assert.deepEqual(BitGame.removeItem(p, [0, 0]), [loop(2, loop(3, "right")), "light"]);
+  assert.deepEqual(BitGame.removeItem(p, [0]), ["light"]);
+  assert.equal(BitGame.setRepeat(p, [0, 1], 7)[0].body[1].repeat, 7);
+});
+
+test("fixCursor after removing the loop that holds the cursor", () => {
+  const p = BitGame.removeItem([loop(2, loop(3, "right"))], [0]);
+  assert.deepEqual(BitGame.fixCursor(p, [0, 0]), []);
+  const q = BitGame.removeItem([loop(2, "forward", loop(3, "right"))], [0, 1]);
+  assert.deepEqual(BitGame.fixCursor(q, [0, 1]), [0]);
+});
+
+test("findRepeat finds the warm-up zigzag repetition", () => {
+  const f = "forward", r = "right", l = "left";
+  assert.deepEqual(BitGame.findRepeat([f, r, f, l, f, r, f, l, f, r, f, "light"]), { start: 0, len: 4, times: 2 });
+  assert.deepEqual(BitGame.findRepeat([f, f, f, "light"]), null);   // len 1 does not count
+  assert.deepEqual(BitGame.findRepeat([f, "jump", f, "jump", f, "jump"]), { start: 0, len: 2, times: 3 });
+  assert.equal(BitGame.findRepeat([f, r, l]), null);
+});

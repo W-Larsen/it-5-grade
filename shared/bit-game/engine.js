@@ -8,10 +8,12 @@ var DY = { N: -1, E: 0, S: 1, W: 0 };
 var COMMANDS = ["forward", "left", "right", "jump", "light"];
 var MAX_SLOTS = 12;
 var MAX_HEIGHT = 4;
+var MIN_REPEAT = 2;
+var MAX_REPEAT = 9;
 
 var CODE = {
-  uk: { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()" },
-  en: { forward: "forward()", left: "turn_left()", right: "turn_right()", jump: "jump()", light: "switch_on()" }
+  uk: { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()", repeat: "повтори" },
+  en: { forward: "forward()", left: "turn_left()", right: "turn_right()", jump: "jump()", light: "switch_on()", repeat: "repeat" }
 };
 
 var registry = {};
@@ -251,6 +253,127 @@ function bestRotation(lv) {
   return best;
 }
 
+/* ---------- programs with loops ----------
+   Program = Item[]; Item = command string | { repeat: N, body: Program }.
+   Path = indices from the top; a cursor is the path of the container new items go into ([] = top level, [i] = body of loop i). */
+function isLoop(item) { return !!item && typeof item === "object" && !Array.isArray(item); }
+
+function size(program) {
+  return program.reduce(function (sum, it) { return sum + (isLoop(it) ? 1 + size(it.body) : 1); }, 0);
+}
+
+function depth(program) {
+  return program.reduce(function (d, it) { return Math.max(d, isLoop(it) ? 1 + depth(it.body) : 0); }, 0);
+}
+
+function hasEmptyLoop(program) {
+  return program.some(function (it) { return isLoop(it) && (!it.body.length || hasEmptyLoop(it.body)); });
+}
+
+/* Unrolls loops into the flat list of steps the game animates.
+   laps: every loop around the step with its current lap; jumps: loops that jump back to their first command right after it. */
+function expand(program) {
+  var out = [];
+  (function walk(items, prefix, laps) {
+    items.forEach(function (it, i) {
+      var path = prefix.concat(i);
+      if (!isLoop(it)) { out.push({ cmd: it, path: path, laps: laps, jumps: [] }); return; }
+      for (var lap = 1; lap <= it.repeat; lap++) {
+        var before = out.length;
+        walk(it.body, path, laps.concat({ path: path, lap: lap, of: it.repeat }));
+        if (lap < it.repeat && out.length > before) out[out.length - 1].jumps.push(path);
+      }
+    });
+  })(program, [], []);
+  return out;
+}
+
+function codeLines(program, lang) {
+  var code = CODE[lang], lines = [];
+  (function walk(items, prefix, d) {
+    items.forEach(function (it, i) {
+      var path = prefix.concat(i);
+      if (!isLoop(it)) { lines.push({ text: code[it], depth: d, path: path, kind: "cmd" }); return; }
+      lines.push({ text: code.repeat + "(" + it.repeat + ") {", depth: d, path: path, kind: "open" });
+      walk(it.body, path, d + 1);
+      lines.push({ text: "}", depth: d, path: path, kind: "close" });
+    });
+  })(program, [], 0);
+  return lines;
+}
+
+function validateProgram(program, nest, commands) {
+  (function walk(items, d) {
+    if (!Array.isArray(items)) throw new Error("program must be an array");
+    items.forEach(function (it) {
+      if (!isLoop(it)) {
+        if (COMMANDS.indexOf(it) < 0 || commands.indexOf(it) < 0) throw new Error("command '" + it + "' is not allowed here");
+        return;
+      }
+      if (commands.indexOf("repeat") < 0) throw new Error("loops are not allowed here");
+      if (!(it.repeat % 1 === 0 && it.repeat >= MIN_REPEAT && it.repeat <= MAX_REPEAT)) throw new Error("repeat must be " + MIN_REPEAT + ".." + MAX_REPEAT);
+      if (d + 1 > nest) throw new Error("loops nested deeper than " + nest);
+      walk(it.body, d + 1);
+    });
+  })(program, 0);
+}
+
+function clone(program) { return JSON.parse(JSON.stringify(program)); }
+function containerAt(program, path) {
+  var list = program;
+  path.forEach(function (i) { list = list[i].body; });
+  return list;
+}
+
+function addItem(program, cursor, item) {
+  var next = clone(program);
+  containerAt(next, cursor).push(item);
+  return next;
+}
+
+function removeItem(program, path) {
+  var next = clone(program);
+  containerAt(next, path.slice(0, -1)).splice(path[path.length - 1], 1);
+  return next;
+}
+
+function setRepeat(program, path, n) {
+  var next = clone(program);
+  containerAt(next, path.slice(0, -1))[path[path.length - 1]].repeat = n;
+  return next;
+}
+
+/* The longest part of the cursor that still leads to a loop (after something was removed). */
+function fixCursor(program, cursor) {
+  var list = program, fixed = [];
+  for (var k = 0; k < cursor.length; k++) {
+    var it = list[cursor[k]];
+    if (!isLoop(it)) break;
+    fixed.push(cursor[k]);
+    list = it.body;
+  }
+  return fixed;
+}
+
+/* A stretch of ≥ 2 commands that repeats ≥ 2 times in a row: most covered, then longest, then earliest. */
+function findRepeat(cmds) {
+  var best = null, bestCover = 0;
+  for (var len = 2; len * 2 <= cmds.length; len++) {
+    for (var start = 0; start + len * 2 <= cmds.length; start++) {
+      var times = 1;
+      while (start + (times + 1) * len <= cmds.length && same(start, start + times * len, len)) times++;
+      if (times < 2) continue;
+      var cover = len * times;
+      if (cover > bestCover || (cover === bestCover && len > best.len)) { best = { start: start, len: len, times: times }; bestCover = cover; }
+    }
+  }
+  return best;
+  function same(a, b, n) {
+    for (var i = 0; i < n; i++) if (cmds[a + i] !== cmds[b + i]) return false;
+    return true;
+  }
+}
+
 var BitGame = root.BitGame || {};
 BitGame.ISO = ISO;
 BitGame.viewPos = viewPos;
@@ -262,6 +385,19 @@ BitGame.bestRotation = bestRotation;
 BitGame.keyOf = key;
 BitGame.createProgress = createProgress;
 BitGame.progress = createProgress(browserStorage());
+BitGame.MIN_REPEAT = MIN_REPEAT;
+BitGame.MAX_REPEAT = MAX_REPEAT;
+BitGame.size = size;
+BitGame.depth = depth;
+BitGame.hasEmptyLoop = hasEmptyLoop;
+BitGame.expand = expand;
+BitGame.codeLines = codeLines;
+BitGame.validateProgram = validateProgram;
+BitGame.addItem = addItem;
+BitGame.removeItem = removeItem;
+BitGame.setRepeat = setRepeat;
+BitGame.fixCursor = fixCursor;
+BitGame.findRepeat = findRepeat;
 BitGame.COMMANDS = COMMANDS;
 BitGame.CODE = CODE;
 BitGame.level = level;
