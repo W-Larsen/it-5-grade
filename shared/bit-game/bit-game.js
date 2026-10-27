@@ -176,28 +176,35 @@ var CSS = [
 ".ln.now{background:#FFC93C;color:#16193A}.ln.now i{color:#8A6500}",
 ".ln span{white-space:pre}",
 ".ln.empty{color:#6F7DB8}",
-".mem{display:flex;gap:4px;margin-bottom:10px}",
-".cell{flex:1;height:14px;border-radius:5px;border:2px solid var(--ink,#16193A);background:#F4F7FD}",
+".mem{flex:1;display:flex;gap:3px;margin:0 10px}",
+".cell{flex:1;height:12px;border-radius:4px;border:2px solid var(--ink,#16193A);background:#F4F7FD}",
 ".cell.full{background:#0E9C8D}",
-".prog{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start;min-height:60px;max-height:330px;overflow:auto;padding:2px}",
-".chip{width:38px;height:38px;border-radius:12px;border:3px solid var(--ink,#16193A);box-shadow:0 3px 0 var(--ink,#16193A);display:grid;place-items:center;padding:0}",
+".prog{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start;min-height:60px;overflow:auto;padding:2px}",
+".side.tree .prog-panel{flex:0 0 61%;display:flex;flex-direction:column;padding:8px 10px}",
+".side.tree .prog{flex:1 1 0;min-height:0}",
+".side.tree .code{flex:1 1 0;min-height:0;padding:6px 10px}",
+".side.tree .code-head{margin-bottom:2px}",
+".side.tree .code-head .btn.small{min-height:26px;padding:0 10px;font-size:12px;box-shadow:0 2px 0 var(--ink,#16193A)}",
+".side.tree .code-body{font-size:13px;line-height:1.35}",
+".chip{width:34px;height:34px;border-radius:12px;border:3px solid var(--ink,#16193A);box-shadow:0 3px 0 var(--ink,#16193A);display:grid;place-items:center;padding:0}",
 ".chip.now{outline:4px solid #FFC93C;outline-offset:2px}",
 ".chip:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
 ".loop{flex:1 1 100%;border:3px solid #0E9C8D;border-radius:14px;background:#E8F7F4;padding:5px;box-shadow:0 3px 0 #0E9C8D}",
-".loop-head{display:flex;align-items:center;gap:8px;color:#0E9C8D;margin-bottom:4px}",
+".loop-head{display:flex;align-items:center;gap:8px;color:#0E9C8D;margin-bottom:2px}",
 ".loop-head svg{flex:none}",
 ".times{font:800 15px/1 var(--f-mono,monospace);min-width:48px;height:32px;border-radius:999px;border:3px solid var(--ink,#16193A);background:#fff;box-shadow:0 3px 0 var(--ink,#16193A);padding:0 10px}",
 ".times:active,.del:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
 ".lap{font:800 13px/1 var(--f-body,sans-serif);color:#0A6F63;flex:1;white-space:nowrap}",
 ".loop{position:relative}",
 ".loop.jump{animation:loopJump .7s ease-out}",
-".loop.jump::after{content:'⤴ назад';position:absolute;right:48px;top:-12px;background:#FFC93C;border:2px solid var(--ink,#16193A);border-radius:999px;padding:3px 9px;font:800 12px/1 var(--f-body,sans-serif);box-shadow:0 2px 0 var(--ink,#16193A);animation:jumpTag .7s ease-out forwards}",
-"@keyframes loopJump{0%{box-shadow:0 0 0 0 rgba(255,201,60,.9)}100%{box-shadow:0 0 0 14px rgba(255,201,60,0)}}",
-"@keyframes jumpTag{0%{transform:translateY(8px) scale(.8);opacity:0}25%{transform:none;opacity:1}100%{opacity:0}}",
+".loop.jump > .loop-head .lap{animation:lapFlash .7s ease-out}",
+".loop.jump > .loop-head .lap::before{content:'⤴ '}",
+"@keyframes loopJump{0%{box-shadow:inset 0 0 0 5px rgba(255,201,60,.95),0 3px 0 #0E9C8D}100%{box-shadow:inset 0 0 0 5px rgba(255,201,60,0),0 3px 0 #0E9C8D}}",
+"@keyframes lapFlash{0%,60%{background:#FFC93C;border-radius:999px;padding:3px 8px;margin:-3px -8px}100%{background:transparent;padding:3px 8px;margin:-3px -8px}}",
 ".del{width:30px;height:30px;border-radius:50%;border:3px solid var(--ink,#16193A);background:#fff;box-shadow:0 3px 0 var(--ink,#16193A);font:900 14px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center;margin-left:auto}",
 ".loop-body{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:44px;border:2px dashed #9BD6CC;border-radius:10px;padding:3px}",
-".tail{flex:1 1 100%;min-height:34px;display:flex;align-items:center;border:2px dashed #B9C6E0;border-radius:10px;padding:2px 3px}",
-".tail .caret{height:28px}",
+".tail{flex:1 1 100%;min-height:26px;display:flex;align-items:center;border:2px dashed #B9C6E0;border-radius:10px;padding:2px 3px}",
+".tail .caret{height:20px}",
 ".caret{display:inline-grid;place-items:center;width:24px;height:38px;border-radius:8px;border:2px dashed #2F80ED;color:#2F80ED;font:900 18px/1 var(--f-mono,monospace);animation:blink 1.1s steps(2,jump-none) infinite;pointer-events:none}",
 "@keyframes blink{50%{opacity:.25}}",
 ".deck{grid-column:1/-1;grid-row:3;display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;padding-bottom:6px}",
@@ -272,7 +279,7 @@ P.build = function () {
     '<div class="tabs"></div>' +
     '<div class="field"><svg class="board" aria-hidden="true"></svg><div class="bubble"></div><button class="rot-btn" type="button" data-act="rotate" aria-label="Повернути поле" title="Повернути поле">⟳</button></div>' +
     '<aside class="side">' +
-      '<div class="panel"><div class="prog-head"><span class="prog-title">ПРОГРАМА</span><span class="count"></span></div><div class="slots"></div><div class="mem" hidden></div><div class="prog" hidden></div></div>' +
+      '<div class="panel prog-panel"><div class="prog-head"><span class="prog-title">ПРОГРАМА</span><div class="mem" hidden></div><span class="count"></span></div><div class="slots"></div><div class="prog" hidden></div></div>' +
       '<div class="panel code"><div class="code-head"><span>КОД</span><button class="btn small ghost lang" type="button"></button></div><div class="code-body"></div></div>' +
     '</aside>' +
     '<div class="deck"><div class="cmds"></div><div class="ctl">' +
@@ -452,6 +459,7 @@ P.renderSide = function () {
   slots.innerHTML = mem.innerHTML = "";
   slots.hidden = this.tree;
   mem.hidden = this.q(".prog").hidden = !this.tree;
+  this.q(".side").classList.toggle("tree", this.tree);
   this.q(".prog-title").textContent = this.tree ? "ПАМ'ЯТЬ" : "ПРОГРАМА";
   for (var i = 0; i < lv.slots; i++) {
     if (this.tree) {
@@ -508,7 +516,7 @@ P.renderProgram = function (now, flash) {
       var before = flash && now > 0 ? this.steps[now - 1].jumps : [];
       before.forEach(function (path) {
         var fr = box.querySelector('.loop[data-path="' + path.join(".") + '"]');
-        if (fr) fr.classList.add("jump");
+        if (fr) { fr.classList.add("jump"); setTimeout(function () { fr.classList.remove("jump"); }, 700); }
       });
     }
   } else {

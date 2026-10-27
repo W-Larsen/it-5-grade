@@ -121,35 +121,35 @@
 .bz-time .cpu b{color:var(--cpu)}
 
 /* ---------- counter (jump back) ---------- */
-.cn-scene{padding:16px 18px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(#F7F3FF,#EAEFFF)}
+.cn-scene{padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(#F7F3FF,#EAEFFF)}
 .cn-h{display:flex;justify-content:space-between;align-items:baseline;font:800 12px/1 var(--f-display);letter-spacing:.5px;margin-bottom:8px}
 .cn-h small{font:700 12px var(--f-body);opacity:.75}
-.cn-code{background:#1B2040;border:3px solid var(--ink);border-radius:16px;padding:10px 14px;color:#EAF0FF}
-.cn-lines{display:flex;flex-direction:column;gap:3px;font:700 17px/1.2 var(--f-mono)}
-.cn-ln{display:flex;gap:10px;padding:3px 8px;border-radius:8px;white-space:pre}
+.cn-code{background:#1B2040;border:3px solid var(--ink);border-radius:16px;padding:8px 12px;color:#EAF0FF}
+.cn-lines{display:flex;flex-direction:column;gap:1px;font:700 17px/1.2 var(--f-mono)}
+.cn-ln{display:flex;gap:10px;padding:2px 8px;border-radius:8px;white-space:pre}
 .cn-ln i{font-style:normal;color:#6F7DB8;width:1.2em}
 .cn-ln.now{background:#FFC93C;color:var(--ink)}
 .cn-ln.now i{color:#8A6500}
 .cn-mem{background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:12px 14px 14px}
-.cn-wrap{position:relative;padding-top:40px}
-.cn-ptr{position:absolute;top:0;left:0;width:30px;text-align:center;transition:left .5s cubic-bezier(.3,1.2,.5,1);font:900 22px/1 var(--f-display);color:var(--cpu)}
-.cn-ptr small{position:absolute;left:50%;top:-16px;transform:translateX(-50%);white-space:nowrap;font:800 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase}
+.cn-wrap{position:relative;padding-top:56px}
+.cn-ptr{position:absolute;top:20px;left:0;width:30px;text-align:center;transition:left .5s cubic-bezier(.3,1.2,.5,1);font:900 22px/1 var(--f-display);color:var(--cpu)}
+.cn-ptr small{position:absolute;left:50%;top:-18px;transform:translateX(-50%);white-space:nowrap;font:800 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase}
 .cn-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.cn-card{position:relative;border:3px solid var(--ink);border-radius:14px;background:#EEF1FA;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;font:800 15px/1.15 var(--f-body);transition:background .25s}
+.cn-card{position:relative;border:3px solid var(--ink);border-radius:14px;background:#EEF1FA;padding:10px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;font:800 15px/1.15 var(--f-body);transition:background .25s}
 .cn-card.now{background:#FFE680;box-shadow:0 0 0 4px rgba(255,201,60,.5)}
 .cn-card .num{position:absolute;left:8px;top:6px;font:800 11px/1 var(--f-mono);color:var(--ink-soft)}
 .cn-card code{font:800 15px/1 var(--f-mono);color:var(--cpu)}
 .cn-card .bt-ico{width:36px;height:36px;border-radius:10px;background:#7A5CFA}
 .cn-left{margin-top:2px;display:inline-flex;gap:6px;align-items:center;background:var(--ink);color:#fff;border-radius:999px;padding:5px 11px;font:800 13px/1 var(--f-body)}
 .cn-left b{font:800 18px/1 var(--f-mono);color:#FFC93C}
-.cn-world{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink)}
+.cn-world{position:relative;flex:1;min-height:104px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink)}
 .cn-track{position:relative;display:flex;width:416px;height:64px}
 .cn-tile{flex:none;width:104px;height:64px;border:3px solid var(--ink);margin-left:-3px;background:#6FE3B8;box-shadow:inset 0 -8px 0 rgba(22,25,58,.18);position:relative}
 .cn-tile:first-child{margin-left:0;border-radius:12px 0 0 12px}
 .cn-tile:last-child{border-radius:0 12px 12px 0}
 .cn-chip{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border:3px solid var(--ink);border-radius:8px;background:#39467A;color:#8794D6;display:grid;place-items:center;font:800 18px/1 var(--f-mono);transition:background .3s,color .3s,box-shadow .3s}
 .cn-chip.on{background:#FFD84D;color:var(--ink);box-shadow:0 0 16px #FFC93C}
-.cn-bit{position:absolute;top:50%;width:54px;margin-top:-80px;transition:left .45s cubic-bezier(.3,1.3,.5,1)}
+.cn-bit{position:absolute;bottom:38px;width:54px;transition:left .45s cubic-bezier(.3,1.3,.5,1)}
 .cn-bit svg{display:block;width:100%}
 
 /* ---------- forever (endless loop) ---------- */
