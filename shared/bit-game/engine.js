@@ -7,6 +7,7 @@ var DX = { N: 0, E: 1, S: 0, W: -1 };
 var DY = { N: -1, E: 0, S: 1, W: 0 };
 var COMMANDS = ["forward", "left", "right", "jump", "light"];
 var MAX_SLOTS = 12;
+var LOOP_MAX_SLOTS = 8;
 var MAX_HEIGHT = 4;
 var MIN_REPEAT = 2;
 var MAX_REPEAT = 9;
@@ -46,7 +47,19 @@ function parseLevel(id, def) {
 
   var cmds = def.commands;
   if (!Array.isArray(cmds) || !cmds.length) fail(id, "commands must be a non-empty array");
-  cmds.forEach(function (c) { if (COMMANDS.indexOf(c) < 0) fail(id, "unknown command '" + c + "'"); });
+  cmds.forEach(function (c) { if (COMMANDS.indexOf(c) < 0 && c !== "repeat") fail(id, "unknown command '" + c + "'"); });
+
+  var loops = cmds.indexOf("repeat") >= 0, nest = 1, solution = null;
+  if (loops) {
+    nest = def.nest == null ? 1 : def.nest;
+    if (nest !== 1 && nest !== 2) fail(id, "nest must be 1 or 2");
+    if (!Array.isArray(def.solution)) fail(id, "a level with 'repeat' needs a solution");
+    try { validateProgram(def.solution, nest, cmds); } catch (e) { fail(id, "solution: " + e.message); }
+    solution = clone(def.solution);
+    if (def.slots > LOOP_MAX_SLOTS) fail(id, "slots must be at most " + LOOP_MAX_SLOTS + " with loops");
+  } else if (def.nest != null || def.solution != null) {
+    fail(id, "nest and solution need 'repeat' in commands");
+  }
 
   if (!(def.slots >= 1 && def.slots <= MAX_SLOTS)) fail(id, "slots must be 1.." + MAX_SLOTS);
   if (!(def.best >= 1)) fail(id, "best must be >= 1");
@@ -56,7 +69,8 @@ function parseLevel(id, def) {
     id: id, title: def.title || "", say: def.say || "",
     w: w, h: rows.length, cells: cells,
     start: { x: s.x, y: s.y, dir: s.dir },
-    commands: cmds.slice(), slots: def.slots, best: def.best, targets: targets
+    commands: cmds.slice(), slots: def.slots, best: def.best, targets: targets,
+    nest: nest, solution: solution
   };
 }
 
@@ -112,11 +126,11 @@ function isWon(lv, st) {
 }
 
 function run(lv, program) {
-  var st = initialState(lv), trace = [];
-  for (var i = 0; i < program.length; i++) {
-    var r = step(lv, st, program[i]);
+  var st = initialState(lv), trace = [], steps = expand(program);
+  for (var i = 0; i < steps.length; i++) {
+    var r = step(lv, st, steps[i].cmd);
     st = r.state;
-    trace.push({ cmd: program[i], event: r.event, state: st });
+    trace.push({ cmd: steps[i].cmd, event: r.event, state: st, path: steps[i].path, laps: steps[i].laps });
     if (isWon(lv, st)) break;
   }
   return { won: isWon(lv, st), trace: trace };
@@ -139,7 +153,9 @@ function solve(lv) {
   for (var head = 0; head < queue.length; head++) {
     var cur = queue[head];
     for (var i = 0; i < lv.commands.length; i++) {
-      var c = lv.commands[i], r = step(lv, cur.st, c), k = stateKey(r.state);
+      var c = lv.commands[i];
+      if (c === "repeat") continue;   // the breadth-first search only knows single commands
+      var r = step(lv, cur.st, c), k = stateKey(r.state);
       if (seen[k]) continue;
       seen[k] = true;
       var path = cur.path.concat(c);
@@ -385,6 +401,7 @@ BitGame.bestRotation = bestRotation;
 BitGame.keyOf = key;
 BitGame.createProgress = createProgress;
 BitGame.progress = createProgress(browserStorage());
+BitGame.LOOP_MAX_SLOTS = LOOP_MAX_SLOTS;
 BitGame.MIN_REPEAT = MIN_REPEAT;
 BitGame.MAX_REPEAT = MAX_REPEAT;
 BitGame.size = size;

@@ -342,3 +342,47 @@ test("findRepeat finds the warm-up zigzag repetition", () => {
   assert.deepEqual(BitGame.findRepeat([f, "jump", f, "jump", f, "jump"]), { start: 0, len: 2, times: 3 });
   assert.equal(BitGame.findRepeat([f, r, l]), null);
 });
+
+/* ---------- loops: levels ---------- */
+const LOOPS = ALL.concat("repeat");
+const loopDef = (over) => def(Object.assign({
+  map: ["1 1 1 1t"], commands: LOOPS, slots: 5, best: 3,
+  solution: [{ repeat: 3, body: ["forward"] }, "light"]
+}, over));
+
+test("parseLevel accepts repeat with nest and solution", () => {
+  const lv = BitGame.parseLevel("l", loopDef({ nest: 2 }));
+  assert.equal(lv.nest, 2);
+  assert.deepEqual(lv.solution, [{ repeat: 3, body: ["forward"] }, "light"]);
+  assert.equal(BitGame.parseLevel("l", loopDef()).nest, 1);
+  assert.equal(L.solution, null);
+});
+
+test("parseLevel rejects broken loop levels", () => {
+  const bad = (over) => assert.throws(() => BitGame.parseLevel("b", loopDef(over)));
+  bad({ solution: undefined });
+  bad({ solution: [{ repeat: 2, body: [{ repeat: 2, body: ["forward"] }] }] });   // depth 2 > nest 1
+  bad({ nest: 3 });
+  bad({ slots: 9, best: 3 });                                                    // > LOOP_MAX_SLOTS
+  assert.throws(() => BitGame.parseLevel("b", def({ solution: ["forward"] }))); // no repeat in commands
+});
+
+test("run executes a loop program and reports paths and laps", () => {
+  const lv = BitGame.parseLevel("l", loopDef());
+  const r = BitGame.run(lv, lv.solution);
+  assert.equal(r.won, true);
+  assert.equal(r.trace.length, 4);
+  assert.deepEqual(r.trace[2].laps, [{ path: [0], lap: 3, of: 3 }]);
+  assert.deepEqual(r.trace[3].path, [1]);
+});
+
+test("solve ignores repeat and finds the flat optimum", () => {
+  const lv = BitGame.parseLevel("l", loopDef());
+  assert.deepEqual(BitGame.solve(lv), ["forward", "forward", "forward", "light"]);
+});
+
+test("CODE has a loop keyword in both languages", () => {
+  assert.equal(BitGame.CODE.uk.repeat, "повтори");
+  assert.equal(BitGame.CODE.en.repeat, "repeat");
+  assert.equal(BitGame.LOOP_MAX_SLOTS, 8);
+});
