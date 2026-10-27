@@ -51,6 +51,7 @@ h1{margin:0;font:800 calc(25px*var(--u,1))/1.1 var(--f-display);letter-spacing:-
 </div>
 <script src="../shared/bit-game/engine.js"></script>
 <script src="../shared/bit-game/levels-02.js"></script>
+<script src="../shared/bit-game/levels-03.js"></script>
 <script src="../shared/bit-game/bit-game.js"></script>
 <script>
 (function () {
@@ -60,7 +61,8 @@ var SETS = [
   { name: "Тренування", d: "Вперед, повороти й увімкнути", ids: ["2-01", "2-02", "2-03"] },
   { name: "Стрибки", d: "Угору по сходах і вниз у ями", ids: ["2-04", "2-05", "2-06"] },
   { name: "Іспит", d: "Іспит диспетчерської: мало команд — багато думання", ids: ["2-07", "2-08", "2-09"] },
-  { name: "Бонус", d: "Для найсміливіших програмістів", ids: ["2-b1", "2-b2", "2-b3"] }
+  { name: "Бонус", d: "Для найсміливіших програмістів", ids: ["2-b1", "2-b2", "2-b3"] },
+  { name: "Урок 3 (чернетка)", d: "Цикли", ids: ["3-i1", "3-01"] }
 ];
 var game = document.getElementById("game"), list = document.getElementById("sets"), selected = 0;
 var page = document.getElementById("page"), bar = document.getElementById("bar");

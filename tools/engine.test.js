@@ -386,3 +386,12 @@ test("CODE has a loop keyword in both languages", () => {
   assert.equal(BitGame.CODE.en.repeat, "repeat");
   assert.equal(BitGame.LOOP_MAX_SLOTS, 8);
 });
+
+test("shiftCursor keeps the cursor on the same container after a removal", () => {
+  assert.deepEqual(BitGame.shiftCursor([1], [0]), [0]);        // an earlier loop was removed: indexes move down
+  assert.deepEqual(BitGame.shiftCursor([2, 1], [0]), [1, 1]);
+  assert.deepEqual(BitGame.shiftCursor([0, 2], [0]), []);      // the loop holding the cursor is gone: its parent
+  assert.deepEqual(BitGame.shiftCursor([0], [0, 1]), [0]);     // removed an item inside the loop
+  assert.deepEqual(BitGame.shiftCursor([0], [1]), [0]);        // removed an item after the loop
+  assert.deepEqual(BitGame.shiftCursor([], [3]), []);
+});

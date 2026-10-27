@@ -371,6 +371,17 @@ function fixCursor(program, cursor) {
   return fixed;
 }
 
+/* Where the cursor goes when the item at `removed` is taken out: still the same container, or its parent if that is gone. */
+function shiftCursor(cursor, removed) {
+  var d = removed.length - 1, last = removed[d];
+  if (cursor.length <= d) return cursor.slice();
+  for (var k = 0; k < d; k++) if (cursor[k] !== removed[k]) return cursor.slice();
+  if (cursor[d] === last) return removed.slice(0, d);
+  var next = cursor.slice();
+  if (cursor[d] > last) next[d]--;
+  return next;
+}
+
 /* A stretch of ≥ 2 commands that repeats ≥ 2 times in a row: most covered, then longest, then earliest. */
 function findRepeat(cmds) {
   var best = null, bestCover = 0;
@@ -414,6 +425,7 @@ BitGame.addItem = addItem;
 BitGame.removeItem = removeItem;
 BitGame.setRepeat = setRepeat;
 BitGame.fixCursor = fixCursor;
+BitGame.shiftCursor = shiftCursor;
 BitGame.findRepeat = findRepeat;
 BitGame.COMMANDS = COMMANDS;
 BitGame.CODE = CODE;
