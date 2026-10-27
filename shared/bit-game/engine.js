@@ -427,6 +427,7 @@ BitGame.isWon = isWon;
 BitGame.run = run;
 BitGame.stars = stars;
 BitGame.solve = solve;
+BitGame.stateKey = stateKey;
 BitGame.remainingText = remainingText;
 root.BitGame = BitGame;
 if (typeof module !== "undefined" && module.exports) module.exports = BitGame;
