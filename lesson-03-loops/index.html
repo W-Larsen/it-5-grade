@@ -119,6 +119,64 @@
 .bz-time small{display:block;font:900 11px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
 .bz-time b{font:800 17px/1.15 var(--f-display)}
 .bz-time .cpu b{color:var(--cpu)}
+
+/* ---------- counter (jump back) ---------- */
+.cn-scene{padding:16px 18px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(#F7F3FF,#EAEFFF)}
+.cn-h{display:flex;justify-content:space-between;align-items:baseline;font:800 12px/1 var(--f-display);letter-spacing:.5px;margin-bottom:8px}
+.cn-h small{font:700 12px var(--f-body);opacity:.75}
+.cn-code{background:#1B2040;border:3px solid var(--ink);border-radius:16px;padding:10px 14px;color:#EAF0FF}
+.cn-lines{display:flex;flex-direction:column;gap:3px;font:700 17px/1.2 var(--f-mono)}
+.cn-ln{display:flex;gap:10px;padding:3px 8px;border-radius:8px;white-space:pre}
+.cn-ln i{font-style:normal;color:#6F7DB8;width:1.2em}
+.cn-ln.now{background:#FFC93C;color:var(--ink)}
+.cn-ln.now i{color:#8A6500}
+.cn-mem{background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:12px 14px 14px}
+.cn-wrap{position:relative;padding-top:40px}
+.cn-ptr{position:absolute;top:0;left:0;width:30px;text-align:center;transition:left .5s cubic-bezier(.3,1.2,.5,1);font:900 22px/1 var(--f-display);color:var(--cpu)}
+.cn-ptr small{position:absolute;left:50%;top:-16px;transform:translateX(-50%);white-space:nowrap;font:800 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase}
+.cn-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cn-card{position:relative;border:3px solid var(--ink);border-radius:14px;background:#EEF1FA;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;font:800 15px/1.15 var(--f-body);transition:background .25s}
+.cn-card.now{background:#FFE680;box-shadow:0 0 0 4px rgba(255,201,60,.5)}
+.cn-card .num{position:absolute;left:8px;top:6px;font:800 11px/1 var(--f-mono);color:var(--ink-soft)}
+.cn-card code{font:800 15px/1 var(--f-mono);color:var(--cpu)}
+.cn-card .bt-ico{width:36px;height:36px;border-radius:10px;background:#7A5CFA}
+.cn-left{margin-top:2px;display:inline-flex;gap:6px;align-items:center;background:var(--ink);color:#fff;border-radius:999px;padding:5px 11px;font:800 13px/1 var(--f-body)}
+.cn-left b{font:800 18px/1 var(--f-mono);color:#FFC93C}
+.cn-world{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink)}
+.cn-track{position:relative;display:flex;width:416px;height:64px}
+.cn-tile{flex:none;width:104px;height:64px;border:3px solid var(--ink);margin-left:-3px;background:#6FE3B8;box-shadow:inset 0 -8px 0 rgba(22,25,58,.18);position:relative}
+.cn-tile:first-child{margin-left:0;border-radius:12px 0 0 12px}
+.cn-tile:last-child{border-radius:0 12px 12px 0}
+.cn-chip{position:absolute;left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px;border:3px solid var(--ink);border-radius:8px;background:#39467A;color:#8794D6;display:grid;place-items:center;font:800 18px/1 var(--f-mono);transition:background .3s,color .3s,box-shadow .3s}
+.cn-chip.on{background:#FFD84D;color:var(--ink);box-shadow:0 0 16px #FFC93C}
+.cn-bit{position:absolute;top:50%;width:54px;margin-top:-80px;transition:left .45s cubic-bezier(.3,1.3,.5,1)}
+.cn-bit svg{display:block;width:100%}
+
+/* ---------- forever (endless loop) ---------- */
+.fv-scene{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:22px;background:radial-gradient(circle at 50% 30%,#2A3270,#171B40);color:#EAF0FF;cursor:pointer;touch-action:manipulation}
+.fv-code{align-self:stretch;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);border-radius:14px;padding:10px 14px;font:700 18px/1.35 var(--f-mono);white-space:pre}
+.fv-code b{color:#FFC93C}
+.fv-ask{font:800 22px/1.2 var(--f-display);text-align:center}
+.fv-ask.yes{color:#7CF5B5}
+.fv-count{font:800 40px/1 var(--f-mono);letter-spacing:-.02em;color:#FFC93C;text-align:center;word-break:break-all}
+.fv-unit{font:700 14px/1.3 var(--f-body);opacity:.8;text-align:center}
+.fv-tap{width:200px;height:200px;border-radius:50%;border:5px solid #fff;background:var(--race);color:#fff;font:800 28px/1.1 var(--f-display);box-shadow:0 10px 0 rgba(0,0,0,.35);pointer-events:none;display:grid;place-items:center;text-align:center;animation:fvPulse 1.2s ease-in-out infinite}
+.fv-scene.stopped .fv-tap{animation:none;opacity:.4}
+@keyframes fvPulse{50%{transform:scale(1.06)}}
+.fv-res{background:var(--paper);color:var(--ink);border:3px solid var(--ink);border-radius:16px;padding:10px 14px;text-align:center;font:800 17px/1.3 var(--f-body)}
+.fv-scene.stopped{cursor:default}
+
+/* ---------- quiz ---------- */
+.qz-scene{padding:22px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(#EAF9F6,#DDF2EE)}
+.qz-step{font:900 12px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.qz-code{background:#1B2040;border:3px solid var(--ink);border-radius:16px;padding:14px 16px;color:#EAF0FF;font:700 20px/1.45 var(--f-mono);white-space:pre}
+.qz-q{font:800 24px/1.25 var(--f-display)}
+.qz-ans{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:auto}
+.qz-ans button{border:3px solid var(--ink);border-radius:18px;background:var(--paper);box-shadow:0 5px 0 var(--ink);font:800 34px/1 var(--f-display);padding:22px 8px;cursor:pointer}
+.qz-ans button:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.qz-ans button.ok{background:#8EE6B0}
+.qz-ans button.no{background:#FFB3B3;animation:shake .45s}
+.qz-ans button:disabled{cursor:default}
 </style>
 
 <div class="app" id="app">
@@ -241,6 +299,82 @@
 <h3>А ти?</h3>
 <p>Ми вважаємо, що ти натискаєш приблизно 6 разів за секунду і не спиш і не їси. Мільярд натискань тоді забрав би кілька років.</p>
 <div class="fun"><b>Важливо</b>У циклу теж є число повторів, і воно займає трохи місця. Але це зовсім мало порівняно з мільярдом команд.</div></template>
+      </section>
+
+      <!-- counter -->
+      <section class="slide circuit" data-key="counter" data-title="Лічильник команд" data-ico="chip" style="--c:var(--cpu)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="chip"></span>Процесор</span>
+          <h2>Як процесор повторює?</h2>
+          <p class="lead">У процесора є <b>лічильник команд</b>: стрілка, що показує, яку команду брати зараз. Зазвичай вона йде вперед. А ще є команда «стрибок назад».</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="cnBubble">Тисни «Крок» і дивись за стрілкою.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>У процесора немає слова «повтори». Є лише стрибок назад і лічильник, що рахує повтори.</b></div>
+        </div>
+        <div class="scene cn-scene" data-noswipe>
+          <div class="cn-code"><div class="cn-h"><b>ПРОГРАМА МОВОЮ ЛЮДЕЙ</b></div>
+            <div class="cn-lines" id="cnLines"><div class="cn-ln"><i>1</i>повтори(3) {</div><div class="cn-ln"><i>2</i>    вперед()</div><div class="cn-ln"><i>3</i>}</div><div class="cn-ln"><i>4</i>увімкнути()</div></div></div>
+          <div class="cn-mem"><div class="cn-h"><b>ПАМ’ЯТЬ ПРОЦЕСОРА</b><small>так бачить її процесор</small></div>
+            <div class="cn-wrap" id="cnWrap"><div class="cn-ptr" id="cnPtr"><small>лічильник</small>▼</div>
+              <div class="cn-cards">
+                <div class="cn-card"><span class="num">1</span><span class="bt-ico" style="background:#2F80ED"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V5M5 11l7-7 7 7"/></svg></span>вперед<code>001</code></div>
+                <div class="cn-card"><span class="num">2</span><span class="bt-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>стрибок на 1<code>110</code><span class="cn-left">залишилось <b id="cnLeft">3</b></span></div>
+                <div class="cn-card"><span class="num">3</span><span class="bt-ico" style="background:#E0A100"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 14h6l-1 8 8-12h-6z"/></svg></span>увімкнути<code>101</code></div>
+              </div>
+            </div>
+          </div>
+          <div class="cn-world"><div class="cn-track" id="cnTrack"></div><span class="cn-bit" id="cnBit" data-bit></span></div>
+          <div class="mm-actions"><button class="btn" id="cnRun">▶ Пуск</button><button class="btn ghost" id="cnStep">⏭ Крок</button><button class="btn ghost" id="cnReset" aria-label="Спочатку">⟲</button></div>
+        </div>
+        <template class="theory"><h2>Як процесор «повторює»?</h2>
+<p>Справжній процесор не має команди «повтори». Він лише додає до лічильника команд одиницю й бере наступну команду. А коли зустрічає команду <b>«стрибок»</b>, то записує в лічильник інше число й іде назад.</p>
+<h3>Хто рахує повтори?</h3>
+<p>Окреме число (воно теж лежить у пам’яті) зменшується на одиницю щоразу, коли процесор стрибає назад. Коли воно доходить до нуля, стрибок не виконується, і програма йде далі.</p>
+<h3>Що буде далі?</h3>
+<p>Є й інші стрибки. Один дозволяє <b>вернутися</b> туди, звідки стрибнули: так працюють «процедури». Інший стрибає лише <b>якщо</b> щось правда: так працюють умови «якщо… то…». Про них поговоримо потім.</p>
+<div class="fun"><b>Код 110</b>У нашому навчальному прикладі стрибок має код 110. У справжніх процесорів коди довші, але ідея та сама.</div></template>
+      </section>
+
+      <!-- forever -->
+      <section class="slide circuit" data-key="forever" data-title="Нескінченний цикл" data-ico="infinity" style="--c:#C2410C">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="infinity"></span>Нескінченність</span>
+          <h2>iPad крутиться в циклі</h2>
+          <p class="lead">А якщо стрибок назад <b>ніколи</b> не закінчується? Це <b>нескінченний цикл</b>. Саме так твій iPad чекає на дотик!</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="fvBubble">Дивись на число й торкнись екрана, коли захочеш.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Нескінченний цикл — не завжди помилка. Операційна система весь час питає: «Чи є дотик?»</b></div>
+        </div>
+        <div class="scene fv-scene" id="fvScene" data-noswipe>
+          <div class="fv-code"><b>повторювати_завжди</b> {
+    чи_є_дотик()?
+}</div>
+          <div class="fv-ask" id="fvAsk">Чи є дотик? — ні</div>
+          <div class="fv-count" id="fvCount">0</div>
+          <div class="fv-unit">разів iPad уже спитав (приблизно)</div>
+          <div class="fv-tap">Торкнись<br>будь-де!</div>
+          <div class="fv-res" id="fvRes" hidden></div>
+          <button class="btn small" id="fvAgain" hidden>↺ Ще раз</button>
+        </div>
+        <template class="theory"><h2>Звідки число?</h2>
+<p>Процесор виконує приблизно мільярд простих команд за секунду. Одна перевірка «Чи є дотик?» — це кілька команд, тому в реальності вона трапляється трохи рідше. Ми порахували <b>приблизно</b>: один мільярд перевірок за секунду.</p>
+<h3>Навіщо iPad питає без кінця?</h3>
+<p>Він не знає, коли ти торкнешся. Тому він знову й знову перевіряє: «Є дотик? Є дотик? Є дотик?». Коли відповідь «так», він швидко робить те, що треба, і повертається до питання.</p>
+<div class="fun"><b>Цікаво</b>Коли програма «зависла», часто це цикл, який не вміє закінчитись. Тому іноді допомагає її закрити й запустити знову.</div></template>
+      </section>
+
+      <!-- quiz -->
+      <section class="slide circuit" data-key="quiz" data-title="Перевір себе" data-ico="quiz" style="--c:#12B5A4">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="quiz"></span>Перевір себе</span>
+          <h2>Скільки кроків?</h2>
+          <p class="lead">Прочитай програму й скажи, що зробить Біт. Помилка не страшна: можна спробувати ще.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="qzBubble">Рахуємо разом!</div></div>
+        </div>
+        <div class="scene qz-scene" data-noswipe>
+          <div class="qz-step" id="qzStep"></div>
+          <div class="qz-code" id="qzCode"></div>
+          <div class="qz-q" id="qzQ"></div>
+          <div class="qz-ans" id="qzAns"></div>
+        </div>
       </section>
 
       <!-- THEORY-SLIDES -->
@@ -559,12 +693,11 @@ H.billion = (function(){
     bit.getAnimations().forEach(a => a.cancel());
     const anim = bit.animate([{ transform: "translateX(0)" }, { transform: "translateX(" + room + "px)" }], { duration: dur, easing: "linear", fill: "forwards" });
     const t0 = performance.now(), count = $("#bzCount");
-    (function tick(){
-      if (mine !== token) return;
+    const timer = setInterval(() => {
       const k = Math.min(1, (performance.now() - t0) / dur);
-      count.textContent = group(n * k);
-      if (k < 1) requestAnimationFrame(tick);
-    })();
+      if (mine !== token || k >= 1) clearInterval(timer);
+      if (mine === token) count.textContent = group(n * k);
+    }, 40);
     if (loud) Sound.whoosh();
     D.say(el, n >= 1e9 ? "Без циклу це 375 мегабайтів команд! А з циклом усе так само: три комірки." :
                n >= 1e6 ? "Мільйон кроків без циклу вже не вміщається в нашу пам’ять. А з циклом знову три комірки." :
@@ -578,6 +711,127 @@ H.billion = (function(){
     },
     enter(){ pick(picked, false); },
     leave(){ token++; }
+  };
+})();
+
+/* counter: machine program «вперед · стрибок назад · увімкнути»; the jump takes the counter back to command 1 until «залишилось» is 0 */
+H.counter = (function(){
+  const PROG = ["forward", "jump", "light"], LINE = [1, 2, 3], TILE = 104 - 3;
+  let el, ptr = 0, left = 3, pos = 0, lit = false, done = false, busy = false, auto = false, token = 0;
+  function draw(){
+    $$(".cn-card", el).forEach((c, i) => c.classList.toggle("now", i === ptr && !done));
+    const card = $$(".cn-card", el)[ptr];
+    $("#cnPtr").style.left = (card.offsetLeft + card.offsetWidth / 2 - 15) + "px";
+    $("#cnLeft").textContent = left;
+    $$(".cn-ln", el).forEach((l, i) => l.classList.toggle("now", !done && i === LINE[ptr]));
+    $("#cnBit").style.left = "calc(50% - 208px + " + (pos * TILE + 52 - 27) + "px)";
+    $("#cnChip").classList.toggle("on", lit); $("#cnChip").textContent = lit ? "1" : "0";
+  }
+  function reset(){
+    token++; ptr = 0; left = 3; pos = 0; lit = false; done = false; busy = auto = false;
+    $("#cnRun").textContent = "▶ Пуск"; $("#cnRun").disabled = $("#cnStep").disabled = false;
+    draw(); D.say(el, "Тисни «Крок» і дивись за стрілкою.");
+  }
+  async function one(){
+    if (busy || done) return false;
+    busy = true; const my = token, k = PROG[ptr];
+    if (k === "forward"){
+      pos++; ptr = 1; Sound.click();
+      D.say(el, "Беру «вперед()». Біт іде. Лічильник команд пересунувся на 2.");
+    } else if (k === "jump"){
+      left--;
+      if (left > 0){ ptr = 0; Sound.whoosh(); D.say(el, "«Стрибок»: залишилось " + left + ". Більше нуля, тож лічильник команд стрибає назад на 1!"); }
+      else { ptr = 2; Sound.pop(); D.say(el, "«Стрибок»: залишилось 0. Назад стрибати вже не треба, іду далі."); }
+    } else {
+      lit = true; done = true; Sound.ding();
+      D.say(el, "«Увімкнути()»: транзистор світиться! Команду «вперед» виконано рівно тричі, хоча в пам’яті вона лише одна.");
+    }
+    draw(); await Deck.wait(850); if (my !== token) return false;
+    busy = false;
+    if (done){ $("#cnRun").textContent = "▶ Пуск"; $("#cnRun").disabled = $("#cnStep").disabled = true; auto = false; happy(el); stamp("counter"); return false; }
+    return true;
+  }
+  async function run(){
+    if (auto){ auto = false; $("#cnRun").textContent = "▶ Далі"; return; }
+    if (busy) return;
+    auto = true; $("#cnRun").textContent = "⏸ Пауза"; const my = token;
+    while (auto && my === token){ if (!(await one())) break; }
+    if (my === token && !done){ auto = false; $("#cnRun").textContent = "▶ Далі"; }
+  }
+  return {
+    init(s){
+      el = s;
+      $("#cnTrack").innerHTML = Array.from({ length: 4 }, (_, i) => '<div class="cn-tile">' + (i === 3 ? '<div class="cn-chip" id="cnChip">0</div>' : "") + "</div>").join("");
+      $("#cnRun").addEventListener("click", run);
+      $("#cnStep").addEventListener("click", () => { if (!auto) one(); });
+      $("#cnReset").addEventListener("click", () => { Sound.click(); reset(); });
+      reset();
+    },
+    enter(){ draw(); },
+    leave(){ reset(); }
+  };
+})();
+
+/* forever: the counter «Чи є дотик?» grows by a billion a second until the first tap */
+H.forever = (function(){
+  let el, t0 = 0, timer = 0, stopped = true;
+  const fmt = n => Math.round(n).toLocaleString("uk-UA").replace(/\s/g, " ");
+  const rough = n => n >= 1e9 ? "≈ " + (n / 1e9).toFixed(1).replace(".", ",") + " мільярда разів" : "≈ " + Math.max(1, Math.round(n / 1e6)) + " мільйонів разів";
+  function tick(){ if (!stopped) $("#fvCount").textContent = fmt((performance.now() - t0) / 1000 * 1e9); }
+  function start(){
+    stopped = false; clearInterval(timer);
+    $("#fvScene").classList.remove("stopped"); $("#fvAsk").className = "fv-ask"; $("#fvAsk").textContent = "Чи є дотик? — ні";
+    $("#fvRes").hidden = true; $("#fvAgain").hidden = true;
+    t0 = performance.now(); tick(); timer = setInterval(tick, 40);
+  }
+  function stop(){
+    if (stopped) return; stopped = true; clearInterval(timer);
+    const n = (performance.now() - t0) / 1000 * 1e9;
+    $("#fvCount").textContent = fmt(n); $("#fvScene").classList.add("stopped");
+    $("#fvAsk").className = "fv-ask yes"; $("#fvAsk").textContent = "Чи є дотик? — ТАК!";
+    $("#fvRes").hidden = false; $("#fvRes").textContent = "Поки ти думав, iPad спитав " + rough(n) + ": «Чи є дотик?»";
+    $("#fvAgain").hidden = false;
+    D.say(el, "Нескінченний цикл не страшний, якщо він чекає на тебе.");
+    Sound.ding(); happy(el); stamp("forever");
+  }
+  return {
+    init(s){
+      el = s;
+      $("#fvScene").addEventListener("pointerdown", e => { if (e.target.closest("button")) return; stop(); });
+      $("#fvAgain").addEventListener("click", () => { Sound.click(); start(); });
+    },
+    enter(){ start(); },
+    leave(){ stopped = true; clearInterval(timer); }
+  };
+})();
+
+/* quiz: three questions, the last one is a loop inside a loop */
+H.quiz = (function(){
+  const Q = [
+    { code: "повтори(3) {\n    вперед()\n    вперед()\n}", q: "Скільки разів Біт зробить «вперед()»?", a: [5, 6, 3], ok: 6 },
+    { code: "вперед()\nповтори(4) {\n    праворуч()\n}", q: "Скільки разів Біт повернеться праворуч?", a: [4, 5, 1], ok: 4 },
+    { code: "повтори(2) {\n    повтори(3) {\n        вперед()\n    }\n}", q: "Скільки разів Біт зробить «вперед()»?", a: [5, 6, 9], ok: 6 }
+  ];
+  let el, i = 0;
+  function show(){
+    const q = Q[i];
+    $("#qzStep").textContent = "Питання " + (i + 1) + " з " + Q.length;
+    $("#qzCode").textContent = q.code; $("#qzQ").textContent = q.q;
+    $("#qzAns").innerHTML = q.a.map(n => '<button data-n="' + n + '">' + n + "</button>").join("");
+    D.say(el, i === 2 ? "А тут цикл у циклі! Спершу порахуй внутрішній." : "Рахуємо разом!");
+  }
+  async function pick(b){
+    const q = Q[i], n = +b.dataset.n;
+    if (n !== q.ok){ b.classList.add("no"); b.disabled = true; Sound.buzz(); D.say(el, "Майже! Порахуй ще раз: спершу скільки команд у дужках, потім скільки кіл."); return; }
+    b.classList.add("ok"); $$("#qzAns button").forEach(x => x.disabled = true); Sound.ding();
+    D.say(el, "Так! Це " + q.ok + ".");
+    await Deck.wait(1000);
+    if (i < Q.length - 1){ i++; show(); }
+    else { D.say(el, "Усі відповіді вірні! Готовий до гри з циклом у циклі."); happy(el); stamp("quiz"); }
+  }
+  return {
+    init(s){ el = s; $("#qzAns").addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.disabled) pick(b); }); show(); },
+    enter(){ if (i >= Q.length - 1 && $$("#qzAns button.ok").length){ i = 0; show(); } }
   };
 })();
 
