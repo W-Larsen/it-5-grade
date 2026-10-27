@@ -38,15 +38,12 @@
 .reset-link{position:absolute;right:28px;top:16px;z-index:5}
 
 /* ---------- warm-up: «Що повторюється?» ---------- */
-.game-wrap.warm{bottom:144px}
-.finder{position:absolute;left:36px;right:36px;bottom:14px;height:118px;display:flex;align-items:center;gap:16px;background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:4px 4px 0 var(--ink);padding:10px 18px}
-.finder .bit-slot{width:64px;flex:none}
-.finder .bubble{flex:none;width:300px;max-width:300px;font-size:16px}
-.fstrip{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:8px 5px;align-content:center;align-items:center}
-.fchip{width:36px;height:36px}
-.fgroup{display:inline-flex;gap:4px;padding:4px;border:3px solid var(--fg);border-radius:13px;background:var(--fgbg)}
-.fgroup small{align-self:center;font:800 13px/1 var(--f-mono);color:var(--fg);margin:0 3px}
-.finder .btn{flex:none}
+.game-head.warm .game-tip{flex:1;font-size:16px}
+.fstrip{flex:none;display:flex;gap:5px;align-items:center}
+.fchip{width:32px;height:32px}
+.fchip svg{width:20px;height:20px}
+.fgroup{display:inline-flex;gap:3px;padding:3px;border:3px solid var(--fg);border-radius:12px;background:var(--fgbg)}
+.game-head .btn{flex:none}
 
 /* ---------- recap ---------- */
 .rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
@@ -215,17 +212,13 @@
 
       <!-- warm-up -->
       <section class="slide full circuit" data-key="warmup" data-title="Розминка" data-ico="list" style="--c:var(--prog)">
-        <div class="game-head">
+        <div class="game-head warm">
           <span class="kicker"><span class="k-ico" data-ri="list"></span>Розминка</span>
-          <span class="game-tip">Проведи Біта до транзистора, як на минулому уроці.</span>
+          <span class="game-tip" id="warmTip">Проведи Біта до транзистора. Потім я покажу тобі одну цікаву річ!</span>
+          <span class="fstrip" id="fstrip" data-noswipe></span>
+          <button class="btn small" id="findBtn" data-noswipe hidden>Що повторюється?</button>
         </div>
-        <div class="game-wrap warm" data-noswipe><bit-game levels="3-00"></bit-game></div>
-        <div class="finder" data-noswipe>
-          <span class="bit-slot" data-bit></span>
-          <div class="bubble" id="finderBubble">Пройди рівень. Потім я покажу тобі одну цікаву річ!</div>
-          <div class="fstrip" id="fstrip"></div>
-          <button class="btn" id="findBtn" hidden>Що повторюється?</button>
-        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="3-00"></bit-game></div>
         <template class="theory"><h2>Чому довгу програму незручно писати?</h2>
 <p>У твоїй програмі було багато команд, і деякі йшли <b>одна й та сама купка</b> кілька разів. Писати одне й те саме знову й знову довго, і легко помилитися.</p>
 <p>Програмісти не люблять повторювати себе. Для цього в мовах програмування є спеціальна команда: <b>цикл</b>. Ми з нею познайомимось уже зараз.</p>
@@ -587,9 +580,9 @@ H.warmup = (function(){
   }
   function show(){
     let cmds = prog.slice(), rep = BitGame.findRepeat(cmds), intro = "";
-    if (!rep){ cmds = BitGame.solve(BitGame.getLevel("3-00")); rep = BitGame.findRepeat(cmds); intro = "У твоєму шляху повтору немає. Подивись на мій. "; }
+    if (!rep){ cmds = BitGame.solve(BitGame.getLevel("3-00")); rep = BitGame.findRepeat(cmds); intro = "У твоєму шляху повторів немає, ось мій. "; }
     $("#fstrip").innerHTML = strip(cmds, rep);
-    $("#finderBubble").textContent = rep ? intro + "Я " + times(rep.times) + " робив одне й те саме! Ось ці команди: " + rep.len + " у кожній купці." : "Дивно, повторів не знайшов.";
+    $("#warmTip").textContent = rep ? intro + "Я " + times(rep.times) + " робив одне й те саме!" : "Дивно, повторів не знайшов.";
     $("#findBtn").hidden = true;
     Sound.ding(); happy(el); stamp("warmup");
   }
@@ -600,7 +593,7 @@ H.warmup = (function(){
         if (e.detail.id !== "3-00") return;
         prog = e.detail.program;
         $("#fstrip").innerHTML = ""; $("#findBtn").hidden = false;
-        $("#finderBubble").textContent = "Готово! Тепер глянь на свою програму: там щось повторюється…";
+        $("#warmTip").textContent = "Готово! Глянь на свою програму: там щось повторюється…";
       });
       $("#findBtn").addEventListener("click", show);
     },
