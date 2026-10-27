@@ -174,6 +174,29 @@
 .qz-ans button.ok{background:#8EE6B0}
 .qz-ans button.no{background:#FFB3B3;animation:shake .45s}
 .qz-ans button:disabled{cursor:default}
+
+/* ---------- deep dive into memory ---------- */
+.dm-scene{background:radial-gradient(circle at 50% 40%,#EEF7F1,#D6EBDD)}
+.crumbs{position:absolute;left:14px;right:14px;top:12px;display:flex;gap:6px;z-index:3;flex-wrap:wrap}
+.crumb{border:2px solid var(--ink);background:var(--paper);border-radius:999px;font:800 13px/1 var(--f-body);padding:7px 11px;cursor:pointer}
+.crumb.on{background:var(--sun)}
+.crumb:disabled{opacity:.45;cursor:default}
+.lv{position:absolute;left:20px;top:64px;width:560px;height:520px;transition:opacity .5s,transform .7s cubic-bezier(.2,.8,.2,1)}
+.lv svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lv[data-pos="before"]{opacity:0;transform:scale(.55);pointer-events:none}
+.lv[data-pos="after"]{opacity:0;transform:scale(1.7);pointer-events:none}
+.hot{position:absolute;border:4px dashed var(--ink);background:rgba(255,201,60,.22);cursor:pointer;padding:0;animation:hotPulse 1.2s ease-in-out infinite}
+@keyframes hotPulse{50%{opacity:.35}}
+.plabel{font:800 16px var(--f-body);fill:var(--ink)}
+.part{cursor:pointer}
+.bk{cursor:pointer}
+.bk .bucket{fill:#EEF1FA;stroke:var(--ink);stroke-width:4}
+.bk .water{fill:#4AA8E8;transition:y .35s,height .35s}
+.bk text{font:800 20px var(--f-mono);fill:var(--ink-soft);text-anchor:middle;pointer-events:none}
+.bk.on text{fill:var(--ink)}
+.dm-num{font:800 24px var(--f-mono);fill:var(--ink)}
+.dm-letter{font:800 40px var(--f-display);fill:#C2410C}
+.dm-actions{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:10px;z-index:3}
 </style>
 
 <div class="app" id="app">
@@ -244,6 +267,65 @@
 <h3>Скільки її буває?</h3>
 <p>У справжньому iPad пам’яті мільярди комірок, а в нашому містечку лише 8. Так програмісти вчаться економити: що менше місця займає програма, то краще.</p>
 <div class="fun"><b>Для порівняння</b>Перші домашні комп’ютери мали пам’яті менше, ніж у цьому абзаці букв. І все ж на них уже були ігри!</div></template>
+      </section>
+
+      <!-- deep dive: memory -->
+      <section class="slide circuit" data-key="deepmem" data-title="Подорож у пам’ять" data-ico="zoom" style="--c:#2BAA6B">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="zoom"></span>Що всередині пам’яті</span>
+          <h2>Подорож у пам’ять</h2>
+          <p class="lead">Біт зазирає в пам’ять iPad, дедалі глибше. Торкайся підсвічених місць і дійди до самих комірок.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="dmBubble">Де в iPad пам’ять? Торкнись, щоб зазирнути.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Пам’ять складається з мільярдів комірок. Кожна тримає один біт: 0 або 1. Вісім бітів — це байт.</b></div>
+        </div>
+        <div class="scene dm-scene" data-noswipe>
+          <div class="crumbs" id="dmCrumbs"></div>
+          <div class="lv" data-pos="on">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="140" y="40" width="280" height="420" rx="40" fill="#16193A"/>
+              <rect x="162" y="68" width="236" height="364" rx="16" fill="#BFE3FF"/>
+              <circle cx="280" cy="250" r="44" fill="#FF8A3D" stroke="#16193A" stroke-width="5"/><path d="M262 250h36M280 232v36" stroke="#16193A" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="280" cy="446" r="7" fill="#4E5584"/>
+            </svg>
+            <button class="hot" id="dmHot0" style="left:140px;top:40px;width:280px;height:420px;border-radius:40px" aria-label="Зазирнути всередину"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="40" y="60" width="480" height="400" rx="28" fill="#2BAA6B" stroke="#16193A" stroke-width="5"/>
+              <path d="M70 120h90l30 30h60M70 400h120l40-40h80M500 200h-70l-30 30M360 90v50l30 30h80" fill="none" stroke="#9BE3BE" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+              <g class="part" data-part="battery"><rect x="70" y="290" width="190" height="110" rx="16" fill="#FFD7B5" stroke="#16193A" stroke-width="5"/><rect x="262" y="325" width="16" height="40" rx="4" fill="#16193A"/><path d="M150 306l-22 32h30l-18 36 52-48h-32l20-20z" fill="#FFC93C" stroke="#16193A" stroke-width="3" stroke-linejoin="round"/><text x="165" y="424" text-anchor="middle" class="plabel">батарея</text></g>
+              <g class="part" data-part="wifi"><rect x="320" y="390" width="60" height="44" rx="8" fill="#12B5A4" stroke="#16193A" stroke-width="4"/><text x="350" y="450" text-anchor="middle" class="plabel">Wi-Fi</text></g>
+              <g class="part" data-part="cpu"><rect x="180" y="100" width="130" height="130" rx="16" fill="#7A5CFA" stroke="#16193A" stroke-width="5"/><rect x="205" y="125" width="80" height="80" rx="10" fill="#B7A6FF" stroke="#16193A" stroke-width="3"/><text x="245" y="171" text-anchor="middle" font-family="Unbounded,sans-serif" font-weight="800" font-size="18" fill="#16193A">CPU</text><text x="245" y="266" text-anchor="middle" class="plabel">процесор</text></g>
+              <rect x="320" y="270" width="74" height="74" rx="10" fill="#4E5584" stroke="#16193A" stroke-width="5"/><rect x="412" y="270" width="74" height="74" rx="10" fill="#4E5584" stroke="#16193A" stroke-width="5"/>
+              <g stroke="#9FB0E8" stroke-width="3" stroke-linecap="round"><path d="M335 290h44M335 307h44M335 324h44M427 290h44M427 307h44M427 324h44"/></g>
+              <text x="403" y="366" text-anchor="middle" class="plabel">пам’ять</text>
+            </svg>
+            <button class="hot" id="dmHot1" style="left:312px;top:262px;width:182px;height:90px;border-radius:16px" aria-label="Приблизити пам’ять"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" aria-hidden="true">
+              <rect x="90" y="50" width="380" height="380" rx="24" fill="#4E5584" stroke="#16193A" stroke-width="5"/>
+              <path d="M130 50v-24M180 50v-24M230 50v-24M280 50v-24M330 50v-24M380 50v-24M430 50v-24M130 430v24M180 430v24M230 430v24M280 430v24M330 430v24M380 430v24M430 430v24" stroke="#16193A" stroke-width="6" stroke-linecap="round"/>
+              <rect x="120" y="80" width="320" height="320" rx="12" fill="#CFEFD9" stroke="#16193A" stroke-width="4"/>
+              <g id="dmGrid"></g>
+              <text x="280" y="480" text-anchor="middle" class="plabel">чип пам’яті зблизька: таблиця комірок</text>
+            </svg>
+            <button class="hot" id="dmHot2" style="left:226px;top:186px;width:88px;height:88px;border-radius:12px" aria-label="Приблизити комірки"></button>
+          </div>
+          <div class="lv" data-pos="after">
+            <svg viewBox="0 0 560 520" id="dmBytes" aria-hidden="true"></svg>
+          </div>
+          <div class="dm-actions" id="dmActions" hidden><button class="btn small" id="dmBit">Напиши BIT</button><button class="btn small ghost" id="dmClear">Очистити</button></div>
+        </div>
+        <template class="theory"><h2>З чого зроблена пам’ять?</h2>
+<p>Пам’ять — це чипи на платі поруч із процесором. Усередині чипа величезна таблиця крихітних комірок, схожа на зошит у клітинку.</p>
+<h3>Одна комірка — один біт</h3>
+<p>У звичайній оперативній пам’яті комірка складається з одного перемикача (транзистора) і крихітного «відерця» для електричного заряду (конденсатора). Є заряд — це <b>1</b>, немає — <b>0</b>. Заряд поступово витікає, тому пам’ять постійно підзаряджають, багато разів за секунду. Вимкнеш живлення — вона «забуде» все.</p>
+<h3>Біт, байт, літера</h3>
+<p>Вісім бітів — це <b>байт</b>. Одна латинська літера займає один байт: наприклад, B — це 01000010 (число 66). Українські літери займають два байти.</p>
+<h3>Скільки там комірок?</h3>
+<p>В iPad кілька гігабайтів пам’яті. Один гігабайт — це вісім мільярдів бітів, тобто стільки ж «відерець».</p>
+<div class="fun"><b>Цікаво знати</b>Перші комп’ютери зберігали кожен біт у крихітному намагніченому кільці з дроту. Такі кільця нанизували на сітку з дротів майже вручну.</div></template>
       </section>
 
       <!-- loop (first block in the game) -->
@@ -472,7 +554,7 @@
     <div class="tools">
       <button class="tool" id="homeBtn" aria-label="На початок"><span data-ri="home"></span><span class="tl">Початок</span></button>
       <button class="tool" id="soundBtn" aria-label="Звук"></button>
-      <button class="tool" id="passBtn" aria-label="Посвідчення"><span data-ri="passport"></span><span class="tl">Посвідчення</span><span class="count" id="passCount">0/11</span></button>
+      <button class="tool" id="passBtn" aria-label="Посвідчення"><span data-ri="passport"></span><span class="tl">Посвідчення</span><span class="count" id="passCount">0/12</span></button>
       <button class="tool" id="fsBtn" aria-label="Повний екран"><span data-ri="full"></span></button>
     </div>
     <button class="nav-btn next" id="nextBtn">Далі →</button>
@@ -501,6 +583,7 @@ Object.assign(Deck.RI, {
   timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 3h5"/>',
   loop: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
   memory: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7.5 10v4M12 10v4M16.5 10v4"/>',
+  zoom: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21M8 10.5h5M10.5 8v5"/>',
   infinity: '<path d="M12 12c-2-3-3.5-4-5.5-4a4 4 0 0 0 0 8c2 0 3.5-1 5.5-4zm0 0c2 3 3.5 4 5.5 4a4 4 0 0 0 0-8c-2 0-3.5 1-5.5 4z"/>'
 });
 
@@ -511,6 +594,7 @@ const D = Deck.create({
     back:    { label: "ПОВТОР",     c: "#E2632A", ico: "back" },
     warmup:  { label: "РОЗМИНКА",   c: "#2F80ED", ico: "list" },
     memory:  { label: "ПАМ’ЯТЬ",    c: "#3C4A6B", ico: "memory" },
+    bytes:   { label: "БАЙТ",       c: "#2BAA6B", ico: "bin" },
     loop:    { label: "ЦИКЛ",       c: "#0E9C8D", ico: "loop" },
     billion: { label: "МІЛЬЯРД",    c: "#E5487B", ico: "timer" },
     counter: { label: "ЛІЧИЛЬНИК",  c: "#7A5CFA", ico: "chip" },
@@ -645,6 +729,96 @@ H.memory = (function(){
       $("#mmReset").addEventListener("click", () => { Sound.pop(); reset(); });
     },
     enter(){ draw(); }
+  };
+})();
+
+/* deepmem: iPad → board → memory chip → cells; the last level is a few bytes that can be written by tapping "buckets" */
+H.deepmem = (function(){
+  const NAMES = ["iPad", "плата", "чип пам’яті", "комірки"];
+  const MSG = ["Де в iPad пам’ять? Торкнись, щоб зазирнути.", "Це плата. Знайди пам’ять: два чипи праворуч!", "Це чип пам’яті зблизька: мільярди комірок. Торкнись підсвіченого місця.", "Кожна комірка — «відерце»: із зарядом це 1, порожнє — 0. Вісім відерець — байт. Спробуй написати літеру!"];
+  const PART_MSG = { battery: "Це батарея: вона дає енергію всім деталям.", cpu: "Це процесор. Він бере команди з пам’яті й виконує їх.", wifi: "Це чип Wi-Fi: через нього iPad «розмовляє» з роутером." };
+  const ROWS = 5, COLS = 8;
+  let el, lv = 0, bits = [], gotLetter = false, token = 0;
+  const val = r => bits[r].reduce((s, b, c) => s + (b << (COLS - 1 - c)), 0);
+  const letter = n => (n >= 65 && n <= 90) || (n >= 97 && n <= 122) ? String.fromCharCode(n) : "";
+  function setLevel(n){
+    lv = n;
+    $$(".lv", el).forEach((d, i) => { d.dataset.pos = i < n ? "before" : i > n ? "after" : "on"; });
+    $$(".crumb", el).forEach((b, i) => { b.disabled = i > n; b.classList.toggle("on", i === n); });
+    $("#dmActions").hidden = n !== 3;
+    D.say(el, MSG[n]);
+  }
+  function paint(){
+    for (let r = 0; r < ROWS; r++){
+      for (let c = 0; c < COLS; c++){
+        const g = $('.bk[data-r="' + r + '"][data-c="' + c + '"]', el), on = !!bits[r][c];
+        g.classList.toggle("on", on);
+        const w = $(".water", g); w.setAttribute("height", on ? 44 : 0); w.setAttribute("y", on ? 14 : 58);
+        $("text", g).textContent = on ? "1" : "0";
+      }
+      const n = val(r), L = letter(n);
+      $('.dm-num[data-r="' + r + '"]', el).textContent = "= " + n;
+      $('.dm-letter[data-r="' + r + '"]', el).textContent = L;
+    }
+  }
+  function found(r){
+    if (gotLetter) return;
+    gotLetter = true; Sound.win(); happy(el); stamp("bytes");
+    D.say(el, "Ти записав у пам’ять літеру «" + letter(val(r)) + "»! Вісім відерець, і це один байт.");
+  }
+  function toggle(r, c){
+    bits[r][c] = bits[r][c] ? 0 : 1; paint();
+    bits[r][c] ? Sound.ding() : Sound.dark();
+    if (letter(val(r))) found(r);
+  }
+  async function writeBit(){
+    const mine = ++token, word = [66, 73, 84];   // B I T
+    clearAll(true);
+    for (let r = 0; r < word.length; r++){
+      for (let c = 0; c < COLS; c++){
+        if (mine !== token) return;
+        if (word[r] & (1 << (COLS - 1 - c))){ bits[r][c] = 1; paint(); Sound.click(); await Deck.wait(160); }
+      }
+      Sound.ding(); await Deck.wait(220);
+    }
+    if (mine === token){ if (!gotLetter){ gotLetter = true; stamp("bytes"); } happy(el); D.say(el, "У трьох байтах записано слово BIT: літери B, I, T. Так комп’ютер зберігає текст."); }
+  }
+  function clearAll(silent){
+    token += silent ? 0 : 1;
+    bits = Array.from({ length: ROWS }, () => Array(COLS).fill(0)); paint();
+    if (!silent) Sound.pop();
+  }
+  return {
+    init(s){
+      el = s;
+      const cr = $("#dmCrumbs");
+      NAMES.forEach((nm, i) => {
+        const b = document.createElement("button"); b.className = "crumb"; b.textContent = (i ? "› " : "") + nm;
+        b.addEventListener("click", () => { if (i < lv){ Sound.whoosh(); setLevel(i); } });
+        cr.appendChild(b);
+      });
+      ["dmHot0", "dmHot1", "dmHot2"].forEach((id, i) => $("#" + id).addEventListener("click", () => { Sound.pop(); setLevel(i + 1); }));
+      $$(".part", el).forEach(pt => pt.addEventListener("click", () => { Sound.click(); D.say(el, PART_MSG[pt.dataset.part]); }));
+      /* memory chip: a table of small cells */
+      let g = "";
+      for (let r = 0; r < 12; r++) for (let c = 0; c < 12; c++) g += '<rect x="' + (128 + c * 26) + '" y="' + (88 + r * 26) + '" width="22" height="22" rx="4" fill="#fff" stroke="#16193A" stroke-width="2"/>';
+      $("#dmGrid").innerHTML = g;
+      /* five bytes made of buckets */
+      let h = "";
+      for (let r = 0; r < ROWS; r++){
+        for (let c = 0; c < COLS; c++){
+          h += '<g class="bk" data-r="' + r + '" data-c="' + c + '" transform="translate(' + (14 + c * 50) + " " + (28 + r * 88) + ')"><clipPath id="dmc' + r + "_" + c + '"><rect width="44" height="64" rx="10"/></clipPath><rect class="bucket" width="44" height="64" rx="10"/><rect class="water" x="0" y="58" width="44" height="0" clip-path="url(#dmc' + r + "_" + c + ')"/><text x="22" y="40">0</text></g>';
+        }
+        h += '<text class="dm-num" data-r="' + r + '" x="424" y="' + (72 + r * 88) + '">= 0</text><text class="dm-letter" data-r="' + r + '" x="520" y="' + (74 + r * 88) + '" text-anchor="middle"></text>';
+      }
+      $("#dmBytes").innerHTML = h;
+      bits = Array.from({ length: ROWS }, () => Array(COLS).fill(0)); paint();
+      $$(".bk", el).forEach(b => b.addEventListener("click", () => toggle(+b.dataset.r, +b.dataset.c)));
+      $("#dmBit").addEventListener("click", writeBit);
+      $("#dmClear").addEventListener("click", () => clearAll(false));
+      setLevel(0);
+    },
+    leave(){ token++; clearAll(true); setLevel(0); }
   };
 })();
 
