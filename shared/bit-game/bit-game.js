@@ -16,6 +16,12 @@ function shade(hex, k) {
   return "rgb(" + r + "," + g + "," + b + ")";
 }
 function iso(x, y, h) { return { x: (x - y) * HW, y: (x + y) * HH - h * HZ }; }
+/* The item (command or loop) at `path` of a program tree. */
+function itemAt(program, path) {
+  var it = { body: program };
+  path.forEach(function (i) { it = it.body[i]; });
+  return it;
+}
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 function el(tag, attrs, parent) {
   var n = document.createElementNS(NS, tag);
@@ -183,6 +189,11 @@ var CSS = [
 ".times{font:800 16px/1 var(--f-mono,monospace);min-width:52px;height:36px;border-radius:999px;border:3px solid var(--ink,#16193A);background:#fff;box-shadow:0 3px 0 var(--ink,#16193A);padding:0 10px}",
 ".times:active,.del:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
 ".lap{font:800 13px/1 var(--f-body,sans-serif);color:#0A6F63;flex:1;white-space:nowrap}",
+".loop{position:relative}",
+".loop.jump{animation:loopJump .7s ease-out}",
+".loop.jump::after{content:'⤴ назад';position:absolute;right:48px;top:-12px;background:#FFC93C;border:2px solid var(--ink,#16193A);border-radius:999px;padding:3px 9px;font:800 12px/1 var(--f-body,sans-serif);box-shadow:0 2px 0 var(--ink,#16193A);animation:jumpTag .7s ease-out forwards}",
+"@keyframes loopJump{0%{box-shadow:0 0 0 0 rgba(255,201,60,.9)}100%{box-shadow:0 0 0 14px rgba(255,201,60,0)}}",
+"@keyframes jumpTag{0%{transform:translateY(8px) scale(.8);opacity:0}25%{transform:none;opacity:1}100%{opacity:0}}",
 ".del{width:34px;height:34px;border-radius:50%;border:3px solid var(--ink,#16193A);background:#fff;box-shadow:0 3px 0 var(--ink,#16193A);font:900 14px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center;margin-left:auto}",
 ".loop-body{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:52px;border:2px dashed #9BD6CC;border-radius:10px;padding:4px}",
 ".caret{display:inline-grid;place-items:center;width:26px;height:42px;border-radius:8px;border:2px dashed #2F80ED;color:#2F80ED;font:900 18px/1 var(--f-mono,monospace);animation:blink 1.1s steps(2,jump-none) infinite;pointer-events:none}",
@@ -473,7 +484,7 @@ P.treeHTML = function (items, prefix) {
 };
 
 /* Redraws memory/slots, counter and code from this.program; `now` = index of the step being executed in this.steps. */
-P.renderProgram = function (now) {
+P.renderProgram = function (now, flash) {
   var lv = this.level, prog = this.program, st = now != null ? this.steps[now] : null, cells = B.size(prog);
   if (this.tree) {
     var cs = this.q(".mem").children;
@@ -487,6 +498,12 @@ P.renderProgram = function (now) {
       st.laps.forEach(function (l) {
         var lap = box.querySelector('.loop[data-path="' + l.path.join(".") + '"] > .loop-head .lap');
         if (lap) lap.textContent = "коло " + l.lap + "/" + l.of;
+      });
+      /* the loops that jumped back right before this step flash «⤴ назад» */
+      var before = flash && now > 0 ? this.steps[now - 1].jumps : [];
+      before.forEach(function (path) {
+        var fr = box.querySelector('.loop[data-path="' + path.join(".") + '"]');
+        if (fr) fr.classList.add("jump");
       });
     }
   } else {
@@ -577,8 +594,7 @@ P.removeAt = function (path) {
 /* Tap on ×N: 2 → 3 → … → 9 → 2. */
 P.cycleTimes = function (path) {
   if (this.locked()) return;
-  var it = { body: this.program };
-  path.forEach(function (i) { it = it.body[i]; });
+  var it = itemAt(this.program, path);
   Sound.click();
   this.program = B.setRepeat(this.program, path, it.repeat + 1 > B.MAX_REPEAT ? B.MIN_REPEAT : it.repeat + 1);
   this.edited();
@@ -620,7 +636,8 @@ var BUMP_TEXT = {
 P.execOne = async function (i) {
   var id = this.runId, lv = this.level, cmd = this.steps[i].cmd;
   var r = B.step(lv, this.state, cmd), from = this.state, to = r.state, ev = r.event;
-  this.renderProgram(i);
+  this.renderProgram(i, true);
+  if (i > 0 && this.steps[i - 1].jumps.length) Sound.pop();
   if (ev === "move" || ev === "jump") {
     await this.tween(from, to, ev === "jump" ? STEP_MS + 80 : STEP_MS, ev === "jump" ? 34 : 0);
   } else if (ev === "turn") {
@@ -676,6 +693,7 @@ P.run = async function () {
   if (!this.steps.length) return this.say("У циклі нічого повторювати");
   Sound.unlock();
   this.resetRun(false);
+  if (B.hasEmptyLoop(this.program)) this.say("У циклі нічого повторювати");
   var id = this.runId;
   this.running = true;
   this.syncUI();
@@ -693,7 +711,10 @@ P.stepOnce = async function () {
   if (this.locked() || !B.size(this.program)) return;
   if (!this.steps.length) return this.say("У циклі нічого повторювати");
   Sound.unlock();
-  if (this.stepIdx < 0 || this.stepIdx >= this.steps.length) { this.resetRun(false); this.stepIdx = 0; }
+  if (this.stepIdx < 0 || this.stepIdx >= this.steps.length) {
+    this.resetRun(false); this.stepIdx = 0;
+    if (B.hasEmptyLoop(this.program)) this.say("У циклі нічого повторювати");
+  }
   var id = this.runId, i = this.stepIdx;
   this.busy = true;
   this.syncUI();
@@ -730,7 +751,8 @@ P.win = function () {
   card.className = "win";
   card.innerHTML = '<div class="win-card"><button class="win-x" data-act="close" type="button" aria-label="Закрити">✕</button><h3>Чип ожив! 🎉</h3><div class="win-stars">' +
     [1, 2, 3].map(function (k) { return k <= stars ? "★" : '<span class="off">★</span>'; }).join("") + "</div><p>" +
-    "Команд: " + n + (n > lv.best ? ". Можна коротше: " + lv.best + "." : ". Найкоротший шлях!") + "</p>" +
+    (this.tree ? "Комірок: " + n + (n > lv.best ? ". Можна коротше: " + lv.best + "." : ". Найкоротша програма!")
+               : "Команд: " + n + (n > lv.best ? ". Можна коротше: " + lv.best + "." : ". Найкоротший шлях!")) + "</p>" +
     '<button class="btn ghost" data-act="again" type="button">↺ Ще раз</button>' +
     '<button class="btn ghost" data-act="close" type="button">Закрити</button>' +
     (next ? '<button class="btn" data-act="next" type="button">Наступний рівень →</button>' : "") + "</div>";
@@ -738,7 +760,7 @@ P.win = function () {
   setTimeout(function () { if (self.won && self.runId === id) self.q(".field").appendChild(card); }, 900);
   this.renderTabs();
   this.syncUI();
-  this.dispatchEvent(new CustomEvent("bitgame:win", { bubbles: true, composed: true, detail: { id: lv.id, stars: stars, best: best } }));
+  this.dispatchEvent(new CustomEvent("bitgame:win", { bubbles: true, composed: true, detail: { id: lv.id, stars: stars, best: best, program: JSON.parse(JSON.stringify(this.program)) } }));
   if (this.ids.every(function (x) { return B.progress.get(x) >= 1; })) {
     this.dispatchEvent(new CustomEvent("bitgame:solved-set", { bubbles: true, composed: true, detail: { ids: this.ids.slice() } }));
   }
@@ -771,6 +793,14 @@ P.removeWin = function () {
 };
 
 P.showHint = function () {
+  var lv = this.level;
+  if (lv.solution) {   // loops: the first lines of the reference solution
+    var first = B.codeLines(lv.solution, this.codeLang).slice(0, 2).map(function (l) {
+      var ico = l.kind === "open" ? "repeat" : itemAt(lv.solution, l.path);
+      return '<span class="hint-chip">' + icon(ico, 14) + " " + esc(l.text) + "</span>";
+    }).join(" ");
+    return this.say("Почни так: " + first + " …а далі сам!", true);
+  }
   var sol = this.hintCache || (this.hintCache = B.solve(this.level) || []), code = B.CODE[this.codeLang];
   var first = sol.slice(0, 2).map(function (c) {
     return '<span class="hint-chip">' + icon(c, 14) + " " + esc(code[c]) + "</span>";
