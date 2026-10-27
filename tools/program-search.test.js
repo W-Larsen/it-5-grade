@@ -43,3 +43,10 @@ test("a ring search with maxSize 8 finishes within 20 seconds", () => {
   shortestProgram(lv("t", ring7, { nest: 1 }), { maxSize: 8, nest: 1 });
   assert.ok(Date.now() - t0 < 20000);
 });
+
+test("switching on at every step is a valid shortcut and the search sees it", () => {
+  const level = lv("w", ["1 1 1t 1 1t"]);   // transistors on every second tile: the extra switch-ons are harmless
+  const p = shortestProgram(level, { maxSize: 5, nest: 1 });
+  assert.equal(BitGame.size(p), 3);
+  assert.equal(BitGame.run(level, p).won, true);
+});

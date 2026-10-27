@@ -4,10 +4,10 @@
    Dijkstra over board states: an edge is one top-level item — a single command (cost 1) or a loop (cost 1 + body size,
    N = 2..9) — so every state is expanded once, at the cheapest program that reaches it. Loop bodies are generated
    depth-first while they are simulated, and a body whose first lap bumps into a wall or a flat tile is dropped; the same
-   goes for a nested loop that bumps on any lap. Those programs only waste cells, so the optimum is not affected in practice. */
+   goes for a nested loop that bumps on any lap. Those programs are contrived, so the optimum is not affected in practice. */
 const BitGame = require("../shared/bit-game/engine.js");
 
-const isBump = (ev) => ev.indexOf("bump") === 0 || ev === "no-target";
+const isBump = (ev) => ev.indexOf("bump") === 0;   // a switch-on on a plain tile is harmless and a real shortcut, so it is not skipped
 
 function shortestProgram(level, opts) {
   const maxSize = opts.maxSize;
