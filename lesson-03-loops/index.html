@@ -68,6 +68,57 @@
 .stars-line .big{font:800 24px/1 var(--f-display);color:#B07A00}
 .rank{align-self:center;font:800 14px/1 var(--f-display);letter-spacing:-.01em;background:var(--loop);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:8px 16px;box-shadow:0 3px 0 var(--ink)}
 .rank.off{background:#E3E8F3;color:var(--ink-soft)}
+
+/* ---------- memory (tight) ---------- */
+.mem-scene{padding:20px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(#EEF3FF,#E3EBF8)}
+.mm-mem{background:#1B2040;border:3px solid var(--ink);border-radius:18px;padding:12px 14px;color:#EAF0FF}
+.mm-h{display:flex;justify-content:space-between;align-items:baseline;font:800 13px/1 var(--f-display);letter-spacing:.5px;margin-bottom:10px}
+.mm-h small{font:800 15px/1 var(--f-mono);opacity:.85}
+.mm-cells{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.mm-cell{aspect-ratio:3/4;border:2px dashed #4A5694;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font:800 11px/1 var(--f-mono);color:#8794D6}
+.mm-cell.full{border:2px solid #EAF0FF;background:rgba(255,255,255,.08);color:#fff}
+.mm-cell .bt-ico{width:28px;height:28px;border-radius:8px}
+.mm-cell .bt-ico svg{width:18px;height:18px}
+.mm-cell.pop{animation:pop .35s cubic-bezier(.3,1.6,.5,1)}
+.mm-mem.shake{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.mm-road{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink)}
+.mm-track{position:relative;display:flex;gap:0;width:520px;height:64px}
+.mm-tile{flex:none;width:52px;height:64px;border:3px solid var(--ink);margin-left:-3px;background:#6FE3B8;box-shadow:inset 0 -8px 0 rgba(22,25,58,.18);position:relative}
+.mm-tile:first-child{margin-left:0;border-radius:12px 0 0 12px}
+.mm-tile:last-child{border-radius:0 12px 12px 0}
+.mm-chip{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border:3px solid var(--ink);border-radius:8px;background:#39467A;color:#8794D6;display:grid;place-items:center;font:800 17px/1 var(--f-mono)}
+.mm-bit{position:absolute;top:50%;width:56px;margin-top:-86px;transition:left .35s cubic-bezier(.3,1.3,.5,1)}
+.mm-bit svg{display:block;width:100%}
+.mm-actions{display:flex;gap:10px;justify-content:center}
+
+/* ---------- billion steps ---------- */
+.bz-scene{padding:18px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(#FFF1F5,#FFE3EA)}
+.bz-pick{display:flex;gap:10px;justify-content:center}
+.bz-pick button{min-width:104px;border:3px solid var(--ink);border-radius:16px;background:var(--paper);box-shadow:0 4px 0 var(--ink);font:800 20px/1 var(--f-display);padding:14px 10px;cursor:pointer}
+.bz-pick button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.bz-pick button.on{background:var(--race);color:#fff}
+.bz-road{position:relative;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 4px 0 var(--ink);padding:10px 16px 12px;display:flex;flex-direction:column;gap:6px}
+.bz-count{font:800 15px/1 var(--f-body);color:var(--ink-soft);text-align:center}
+.bz-count b{font:800 22px/1 var(--f-mono);color:var(--ink)}
+.bz-track{position:relative;height:56px;border-radius:12px;background:repeating-linear-gradient(90deg,#CFE8DF 0 24px,#BEDFD3 24px 48px);border:3px solid var(--ink);overflow:hidden}
+.bz-bit{position:absolute;left:0;top:-4px;width:52px;transform:translateX(0);will-change:transform}
+.bz-bit svg{display:block;width:100%}
+.bz-track.fast .bz-bit svg{filter:blur(2px)}
+.bz-track.warp .bz-bit svg{filter:blur(5px)}
+.bz-goal{position:absolute;right:8px;top:50%;margin-top:-17px;width:34px;height:34px;border:3px solid var(--ink);border-radius:8px;background:#39467A;color:#FFD84D;display:grid;place-items:center;font:800 15px/1 var(--f-mono)}
+.bz-bars{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bz-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;background:var(--paper);border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:10px 8px;min-height:0}
+.bz-col small{font:900 12px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+.bz-col b{font:800 17px/1.15 var(--f-display);text-align:center}
+.bz-barbox{flex:1;width:70px;min-height:0;display:flex;align-items:flex-end}
+.bz-bar{width:100%;border:3px solid var(--ink);border-radius:10px 10px 0 0;background:#E5487B;transition:height .8s cubic-bezier(.2,.8,.2,1);min-height:6px}
+.bz-bar.good{background:#0E9C8D}
+.bz-time{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bz-time div{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:8px 10px;text-align:center;box-shadow:0 3px 0 var(--ink)}
+.bz-time small{display:block;font:900 11px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+.bz-time b{font:800 17px/1.15 var(--f-display)}
+.bz-time .cpu b{color:var(--cpu)}
 </style>
 
 <div class="app" id="app">
@@ -121,6 +172,75 @@
 <p>У твоїй програмі було багато команд, і деякі йшли <b>одна й та сама купка</b> кілька разів. Писати одне й те саме знову й знову довго, і легко помилитися.</p>
 <p>Програмісти не люблять повторювати себе. Для цього в мовах програмування є спеціальна команда: <b>цикл</b>. Ми з нею познайомимось уже зараз.</p>
 <div class="fun"><b>Для допитливих</b>Є навіть жарт: «Лінивий програміст — хороший програміст». Він шукає, як зробити менше роботи, і придумує цикли.</div></template>
+      </section>
+
+      <!-- memory -->
+      <section class="slide circuit" data-key="memory" data-title="Пам’ять тісна" data-ico="memory" style="--c:var(--mem)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="memory"></span>Пам’ять</span>
+          <h2>Пам’ять тісна</h2>
+          <p class="lead">У пам’яті лише <b>8 комірок</b>. Кожна команда займає одну. Проведи Біта до транзистора!</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="memBubble">Тисни «вперед()» і дивись, що буде з пам’яттю.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Кожна команда займає місце в пам’яті. Довга програма може просто не влізти.</b></div>
+        </div>
+        <div class="scene mem-scene" data-noswipe>
+          <div class="mm-mem" id="mmMem"><div class="mm-h"><b>ПАМ’ЯТЬ</b><small id="mmCount">0 / 8</small></div><div class="mm-cells" id="mmCells"></div></div>
+          <div class="mm-road"><div class="mm-track" id="mmTrack"></div><span class="mm-bit" id="mmBit" data-bit></span></div>
+          <div class="mm-actions"><button class="btn" id="mmFwd">вперед()</button><button class="btn ghost" id="mmLight">увімкнути()</button><button class="btn ghost" id="mmReset" aria-label="Спочатку">⟲</button></div>
+        </div>
+        <template class="theory"><h2>Що таке пам’ять?</h2>
+<p>Програма десь зберігається, поки комп’ютер її виконує. Це місце називається <b>пам’ять</b>. Вона поділена на крихітні комірки, і в кожній лежить одна команда.</p>
+<h3>Скільки її буває?</h3>
+<p>У справжньому iPad пам’яті мільярди комірок, а в нашому містечку лише 8. Так програмісти вчаться економити: що менше місця займає програма, то краще.</p>
+<div class="fun"><b>Для порівняння</b>Перші домашні комп’ютери мали пам’яті менше, ніж у цьому абзаці букв. І все ж на них уже були ігри!</div></template>
+      </section>
+
+      <!-- loop (first block in the game) -->
+      <section class="slide full circuit" data-key="loop" data-title="Цикл" data-ico="loop" style="--c:var(--loop)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="loop"></span>Цикл</span>
+          <span class="game-tip">Той самий коридор, але пам’яті мало. Тисни «цикл», потім «вперед()». Число «×» можна змінити торканням.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="3-i1"></bit-game></div>
+        <template class="theory"><h2>Як записується цикл?</h2>
+<p>Блок «цикл» займає <b>одну комірку</b> пам’яті, а команди всередині — ще по одній. Зате вони виконуються стільки разів, скільки вказано в «×».</p>
+<p>У коді це виглядає так: <code>повтори(9) { вперед() }</code>, а англійською <code>repeat(9) { forward() }</code>.</p>
+<div class="fun"><b>Цікаво</b>Без циклу цей коридор у пам’ять не влізе. З циклом він займає лише три комірки: «цикл», «вперед()» і «увімкнути()».</div></template>
+      </section>
+
+      <!-- billion -->
+      <section class="slide circuit" data-key="billion" data-title="Мільярд кроків" data-ico="timer" style="--c:var(--race)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="timer"></span>Масштаб</span>
+          <h2>Мільярд кроків</h2>
+          <p class="lead">Скільки кроків має пройти Біт? Вибери число й порівняй: програма <b>без циклу</b> та <b>з циклом</b>.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="bzBubble">Торкнись числа! Почни з найменшого.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Цикл економить пам’ять: кілька комірок замість мільярда. А процесор повторює дуже швидко.</b></div>
+        </div>
+        <div class="scene bz-scene" data-noswipe>
+          <div class="bz-pick" id="bzPick">
+            <button data-n="12" class="on">12</button><button data-n="100">100</button><button data-n="1000000">1 млн</button><button data-n="1000000000">1 млрд</button>
+          </div>
+          <div class="bz-road">
+            <div class="bz-count">Біт робить кроків: <b id="bzCount">0</b></div>
+            <div class="bz-track" id="bzTrack"><span class="bz-bit" id="bzBit" data-bit></span><span class="bz-goal">0</span></div>
+          </div>
+          <div class="bz-bars">
+            <div class="bz-col"><div class="bz-barbox"><div class="bz-bar" id="bzBadBar"></div></div><b id="bzBadVal"></b><small>Без циклу</small></div>
+            <div class="bz-col"><div class="bz-barbox"><div class="bz-bar good" id="bzGoodBar"></div></div><b>3 комірки</b><small>З циклом</small></div>
+          </div>
+          <div class="bz-time">
+            <div class="cpu"><small>Процесор виконає за</small><b id="bzCpu"></b></div>
+            <div><small>Ти натискав би</small><b id="bzYou"></b></div>
+          </div>
+        </div>
+        <template class="theory"><h2>Звідки ці числа?</h2>
+<p>Кожна команда в нашій грі — це <b>3 біти</b> (пам’ятаєш коди 001, 101?). Мільярд команд — це 3 мільярди бітів, тобто приблизно <b>375 мегабайтів</b>. Це як майже сто пісень у телефоні, лише заповнені одними «вперед()».</p>
+<h3>Скільки команд за секунду?</h3>
+<p>Сучасний процесор виконує близько мільярда простих команд за секунду. Ми беремо це число <b>приблизно</b>: насправді воно залежить від процесора й команд.</p>
+<h3>А ти?</h3>
+<p>Ми вважаємо, що ти натискаєш приблизно 6 разів за секунду і не спиш і не їси. Мільярд натискань тоді забрав би кілька років.</p>
+<div class="fun"><b>Важливо</b>У циклу теж є число повторів, і воно займає трохи місця. Але це зовсім мало порівняно з мільярдом команд.</div></template>
       </section>
 
       <!-- THEORY-SLIDES -->
@@ -351,6 +471,113 @@ H.warmup = (function(){
       $("#findBtn").addEventListener("click", show);
     },
     leave(s){ const g = $("bit-game", s); if (g && g.stop) g.stop(); }
+  };
+})();
+
+/* memory: eight cells, a corridor of ten tiles; the ninth tap finds the memory full */
+H.memory = (function(){
+  const CELLS = 8, TILES = 10, CODE = { forward: "001", light: "101" }, TILE_W = 52 - 3;
+  let el, used = [], pos = 0, over = false;
+  const steps = n => n + (n % 10 === 1 && n % 100 !== 11 ? " крок" : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? " кроки" : " кроків");
+  function draw(){
+    $("#mmCells").innerHTML = Array.from({ length: CELLS }, (_, i) => {
+      const k = used[i];
+      return '<div class="mm-cell' + (k ? " full" : "") + '">' + (k ? cmdIco(k) + CODE[k] : "") + "</div>";
+    }).join("");
+    $("#mmCount").textContent = used.length + " / " + CELLS;
+    $("#mmBit").style.left = "calc(50% - 260px + " + (pos * TILE_W + 26 - 28) + "px)";
+  }
+  function build(){
+    $("#mmTrack").innerHTML = Array.from({ length: TILES }, (_, i) => '<div class="mm-tile">' + (i === TILES - 1 ? '<div class="mm-chip">0</div>' : "") + "</div>").join("");
+  }
+  function reset(){
+    used = []; pos = 0; over = false; draw();
+    D.say(el, "Тисни «вперед()» і дивись, що буде з пам’яттю.");
+  }
+  function tap(k){
+    if (used.length >= CELLS){
+      const m = $("#mmMem"); m.classList.remove("shake"); void m.offsetWidth; m.classList.add("shake");
+      Sound.buzz();
+      D.say(el, "Пам’ять переповнена! До транзистора ще " + steps(TILES - 1 - pos) + ", а комірок немає.");
+      if (!over){ over = true; stamp("memory"); }
+      return;
+    }
+    used.push(k); Sound.click();
+    if (k === "forward" && pos < TILES - 1) pos++;
+    draw();
+    const cell = $("#mmCells").children[used.length - 1]; cell.classList.add("pop");
+    if (k === "light") D.say(el, "Тут немає транзистора. Комірка пропала даремно!");
+    else if (used.length === CELLS) D.say(el, "Усі комірки зайняті, а до транзистора ще " + steps(TILES - 1 - pos) + ". Натисни ще раз!");
+    else D.say(el, "Зайнято комірок: " + used.length + " з " + CELLS + ".");
+  }
+  return {
+    init(s){
+      el = s; build(); draw();
+      $("#mmFwd").addEventListener("click", () => tap("forward"));
+      $("#mmLight").addEventListener("click", () => tap("light"));
+      $("#mmReset").addEventListener("click", () => { Sound.pop(); reset(); });
+    },
+    enter(){ draw(); }
+  };
+})();
+
+/* loop: the first loop in the game */
+H.loop = {
+  init(el){ el.addEventListener("bitgame:win", e => { if (e.detail.id === "3-i1"){ happy(el); stamp("loop"); } }); },
+  leave(el){ const g = $("bit-game", el); if (g && g.stop) g.stop(); }
+};
+
+/* billion: the same corridor for N steps. Sizes and times are formulas, nothing runs a billion times. */
+H.billion = (function(){
+  let el, token = 0, picked = 12;
+  const BITS_PER_CMD = 3, CPU_PER_SEC = 1e9, TAPS_PER_SEC = 6;
+  const plural = (n, f) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? f[0] : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? f[1] : f[2]; };
+  const group = n => Math.round(n).toLocaleString("uk-UA").replace(/\s/g, " ");
+  function size(bits){
+    const bytes = bits / 8;
+    if (bytes < 1000) return "≈ " + Math.max(1, Math.round(bytes)) + " " + plural(Math.max(1, Math.round(bytes)), ["байт", "байти", "байтів"]);
+    if (bytes < 1e6) return "≈ " + Math.round(bytes / 1e3) + " КБ";
+    return "≈ " + Math.round(bytes / 1e6) + " МБ";
+  }
+  function time(sec){
+    const T = [[365 * 86400, ["рік", "роки", "років"]], [86400, ["доба", "доби", "діб"]], [3600, ["година", "години", "годин"]], [60, ["хвилина", "хвилини", "хвилин"]],
+               [1, ["секунда", "секунди", "секунд"]], [1e-3, ["мілісекунда", "мілісекунди", "мілісекунд"]], [1e-6, ["мікросекунда", "мікросекунди", "мікросекунд"]], [1e-9, ["наносекунда", "наносекунди", "наносекунд"]]];
+    const u = T.find(x => sec >= x[0] * 0.95) || T[T.length - 1], v = Math.max(1, Math.round(sec / u[0]));
+    return "≈ " + group(v) + " " + plural(v, u[1]);
+  }
+  async function pick(n, loud){
+    picked = n; const mine = ++token;
+    $$("#bzPick button", el).forEach(b => b.classList.toggle("on", +b.dataset.n === n));
+    const cmds = n + 1, bits = cmds * BITS_PER_CMD;
+    $("#bzBadVal").textContent = size(bits);
+    const h = v => Math.max(6, Math.min(100, 100 * Math.log10(v + 1) / 10)) + "%";
+    $("#bzBadBar").style.height = h(bits); $("#bzGoodBar").style.height = h(3 * BITS_PER_CMD);
+    $("#bzCpu").textContent = time(cmds / CPU_PER_SEC); $("#bzYou").textContent = time(cmds / TAPS_PER_SEC);
+    const track = $("#bzTrack"), bit = $("#bzBit"), dur = n <= 12 ? 2600 : n <= 100 ? 2000 : n <= 1e6 ? 1100 : 600;
+    track.classList.toggle("fast", n >= 1e6 && n < 1e9); track.classList.toggle("warp", n >= 1e9);
+    const room = track.clientWidth - 52 - 46;
+    bit.getAnimations().forEach(a => a.cancel());
+    const anim = bit.animate([{ transform: "translateX(0)" }, { transform: "translateX(" + room + "px)" }], { duration: dur, easing: "linear", fill: "forwards" });
+    const t0 = performance.now(), count = $("#bzCount");
+    (function tick(){
+      if (mine !== token) return;
+      const k = Math.min(1, (performance.now() - t0) / dur);
+      count.textContent = group(n * k);
+      if (k < 1) requestAnimationFrame(tick);
+    })();
+    if (loud) Sound.whoosh();
+    D.say(el, n >= 1e9 ? "Без циклу це 375 мегабайтів команд! А з циклом усе так само: три комірки." :
+               n >= 1e6 ? "Мільйон кроків без циклу вже не вміщається в нашу пам’ять. А з циклом знову три комірки." :
+               n >= 100 ? "Сто натискань уже втомлюють. Цикл так само займає три комірки!" : "Дванадцять кроків ще можна натиснути руками.");
+    if (n >= 1e9){ await Deck.wait(dur + 100); if (mine === token){ Sound.win(); happy(el); stamp("billion"); } }
+  }
+  return {
+    init(s){
+      el = s;
+      $$("#bzPick button", el).forEach(b => b.addEventListener("click", () => { Sound.click(); pick(+b.dataset.n, true); }));
+    },
+    enter(){ pick(picked, false); },
+    leave(){ token++; }
   };
 })();
 
