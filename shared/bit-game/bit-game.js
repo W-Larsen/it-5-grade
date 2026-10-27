@@ -16,6 +16,12 @@ function shade(hex, k) {
   return "rgb(" + r + "," + g + "," + b + ")";
 }
 function iso(x, y, h) { return { x: (x - y) * HW, y: (x + y) * HH - h * HZ }; }
+/* The item (command or loop) at `path` of a program tree. */
+function itemAt(program, path) {
+  var it = { body: program };
+  path.forEach(function (i) { it = it.body[i]; });
+  return it;
+}
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 function el(tag, attrs, parent) {
   var n = document.createElementNS(NS, tag);
@@ -75,10 +81,11 @@ var ICONS = {
   left: '<path d="M9 4L4 9l5 5"/><path d="M4 9h9a6 6 0 0 1 0 12h-3"/>',
   right: '<path d="M15 4l5 5-5 5"/><path d="M20 9h-9a6 6 0 0 0 0 12h3"/>',
   jump: '<path d="M3 19C5 7 14 5 18 12"/><path d="M13 12h6v-6"/>',
-  light: '<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>'
+  light: '<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+  repeat: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>'
 };
-var LABELS = { forward: "вперед", left: "ліворуч", right: "праворуч", jump: "стрибок", light: "увімкнути" };
-var CMD_COLORS = { forward: "#2F80ED", left: "#7A5CFA", right: "#7A5CFA", jump: "#E5487B", light: "#FFC93C" };
+var LABELS = { forward: "вперед", left: "ліворуч", right: "праворуч", jump: "стрибок", light: "увімкнути", repeat: "цикл" };
+var CMD_COLORS = { forward: "#2F80ED", left: "#7A5CFA", right: "#7A5CFA", jump: "#E5487B", light: "#FFC93C", repeat: "#0E9C8D" };
 function icon(cmd, size) {
   return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[cmd] + '</svg>';
 }
@@ -167,7 +174,39 @@ var CSS = [
 ".ln{display:flex;gap:10px;padding:0 6px;border-radius:8px}",
 ".ln i{font-style:normal;color:#6F7DB8;width:1.4em;text-align:right;flex:none}",
 ".ln.now{background:#FFC93C;color:#16193A}.ln.now i{color:#8A6500}",
+".ln span{white-space:pre}",
 ".ln.empty{color:#6F7DB8}",
+".mem{flex:1;display:flex;gap:3px;margin:0 10px}",
+".cell{flex:1;height:12px;border-radius:4px;border:2px solid var(--ink,#16193A);background:#F4F7FD}",
+".cell.full{background:#0E9C8D}",
+".prog{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start;min-height:60px;overflow:auto;padding:2px}",
+".side.tree .prog-panel{flex:0 0 61%;display:flex;flex-direction:column;padding:8px 10px}",
+".side.tree .prog{flex:1 1 0;min-height:0}",
+".side.tree .code{flex:1 1 0;min-height:0;padding:6px 10px}",
+".side.tree .code-head{margin-bottom:2px}",
+".side.tree .code-head .btn.small{min-height:26px;padding:0 10px;font-size:12px;box-shadow:0 2px 0 var(--ink,#16193A)}",
+".side.tree .code-body{font-size:13px;line-height:1.35}",
+".chip{width:34px;height:34px;border-radius:12px;border:3px solid var(--ink,#16193A);box-shadow:0 3px 0 var(--ink,#16193A);display:grid;place-items:center;padding:0}",
+".chip.now{outline:4px solid #FFC93C;outline-offset:2px}",
+".chip:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
+".loop{flex:1 1 100%;border:3px solid #0E9C8D;border-radius:14px;background:#E8F7F4;padding:5px;box-shadow:0 3px 0 #0E9C8D}",
+".loop-head{display:flex;align-items:center;gap:8px;color:#0E9C8D;margin-bottom:2px}",
+".loop-head svg{flex:none}",
+".times{font:800 15px/1 var(--f-mono,monospace);min-width:48px;height:32px;border-radius:999px;border:3px solid var(--ink,#16193A);background:#fff;box-shadow:0 3px 0 var(--ink,#16193A);padding:0 10px}",
+".times:active,.del:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
+".lap{font:800 13px/1 var(--f-body,sans-serif);color:#0A6F63;flex:1;white-space:nowrap}",
+".loop{position:relative}",
+".loop.jump{animation:loopJump .7s ease-out}",
+".loop.jump > .loop-head .lap{animation:lapFlash .7s ease-out}",
+".loop.jump > .loop-head .lap::before{content:'⤴ '}",
+"@keyframes loopJump{0%{box-shadow:inset 0 0 0 5px rgba(255,201,60,.95),0 3px 0 #0E9C8D}100%{box-shadow:inset 0 0 0 5px rgba(255,201,60,0),0 3px 0 #0E9C8D}}",
+"@keyframes lapFlash{0%,60%{background:#FFC93C;border-radius:999px;padding:3px 8px;margin:-3px -8px}100%{background:transparent;padding:3px 8px;margin:-3px -8px}}",
+".del{width:30px;height:30px;border-radius:50%;border:3px solid var(--ink,#16193A);background:#fff;box-shadow:0 3px 0 var(--ink,#16193A);font:900 14px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center;margin-left:auto}",
+".loop-body{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:44px;border:2px dashed #9BD6CC;border-radius:10px;padding:3px}",
+".tail{flex:1 1 100%;min-height:26px;display:flex;align-items:center;border:2px dashed #B9C6E0;border-radius:10px;padding:2px 3px}",
+".tail .caret{height:20px}",
+".caret{display:inline-grid;place-items:center;width:24px;height:38px;border-radius:8px;border:2px dashed #2F80ED;color:#2F80ED;font:900 18px/1 var(--f-mono,monospace);animation:blink 1.1s steps(2,jump-none) infinite;pointer-events:none}",
+"@keyframes blink{50%{opacity:.25}}",
 ".deck{grid-column:1/-1;grid-row:3;display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;padding-bottom:6px}",
 ".cmds{display:flex;gap:10px;flex-wrap:wrap}",
 ".ctl{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}",
@@ -240,7 +279,7 @@ P.build = function () {
     '<div class="tabs"></div>' +
     '<div class="field"><svg class="board" aria-hidden="true"></svg><div class="bubble"></div><button class="rot-btn" type="button" data-act="rotate" aria-label="Повернути поле" title="Повернути поле">⟳</button></div>' +
     '<aside class="side">' +
-      '<div class="panel"><div class="prog-head"><span>ПРОГРАМА</span><span class="count"></span></div><div class="slots"></div></div>' +
+      '<div class="panel prog-panel"><div class="prog-head"><span class="prog-title">ПРОГРАМА</span><div class="mem" hidden></div><span class="count"></span></div><div class="slots"></div><div class="prog" hidden></div></div>' +
       '<div class="panel code"><div class="code-head"><span>КОД</span><button class="btn small ghost lang" type="button"></button></div><div class="code-body"></div></div>' +
     '</aside>' +
     '<div class="deck"><div class="cmds"></div><div class="ctl">' +
@@ -281,10 +320,15 @@ P.loadLevel = function (i) {
   this.index = i;
   this.level = B.getLevel(this.ids[i]);
   this.program = [];
+  this.cursor = [];
+  this.steps = [];
+  this.curStep = -1;
+  this.tree = this.level.commands.indexOf("repeat") >= 0;
   this.fails = 0;
   this.hintCache = null;
   this.running = this.busy = this.won = false;
   this.stepIdx = -1;
+  this.curStep = -1;
   this.state = B.initialState(this.level);
   this.removeWin();
   this.rot = B.bestRotation(this.level);   // start from the side that hides the fewest tiles
@@ -411,38 +455,92 @@ P.zPlace = function (sum) {
 
 /* ----- side panel, code and deck ----- */
 P.renderSide = function () {
-  var lv = this.level, slots = this.q(".slots");
-  slots.innerHTML = "";
+  var lv = this.level, slots = this.q(".slots"), mem = this.q(".mem");
+  slots.innerHTML = mem.innerHTML = "";
+  slots.hidden = this.tree;
+  mem.hidden = this.q(".prog").hidden = !this.tree;
+  this.q(".side").classList.toggle("tree", this.tree);
+  this.q(".prog-title").textContent = this.tree ? "ПАМ'ЯТЬ" : "ПРОГРАМА";
   for (var i = 0; i < lv.slots; i++) {
-    var d = document.createElement("button");
-    d.className = "slot"; d.type = "button"; d.dataset.i = i;
-    slots.appendChild(d);
+    if (this.tree) {
+      var c = document.createElement("span");
+      c.className = "cell";
+      mem.appendChild(c);
+    } else {
+      var d = document.createElement("button");
+      d.className = "slot"; d.type = "button"; d.dataset.i = i;
+      slots.appendChild(d);
+    }
   }
   this.q(".lang").textContent = this.codeLang === "uk" ? "EN" : "УКР";
   this.renderProgram();
 };
 
-/* Redraws slots, counter and code from this.program; `now` = index of the command being executed. */
-P.renderProgram = function (now) {
-  var lv = this.level, prog = this.program, slots = this.q(".slots").children;
-  for (var i = 0; i < slots.length; i++) {
-    var d = slots[i], c = prog[i];
-    d.className = "slot" + (c ? " full" : "") + (i === now ? " now" : "");
-    d.style.background = c ? CMD_COLORS[c] : "";
-    d.style.color = c === "light" ? "#16193A" : "#fff";
-    d.innerHTML = c ? icon(c, 26) + '<span class="n">' + (i + 1) + "</span>" : "";
-    d.setAttribute("aria-label", c ? "Команда " + (i + 1) + ": " + LABELS[c] + " (прибрати)" : "Порожня клітинка " + (i + 1));
+/* The program as blocks (memory mode): commands are chips, a loop is a frame; the caret sits at the end of the container new commands go into. */
+P.treeHTML = function (items, prefix) {
+  var self = this, html = "";
+  items.forEach(function (it, i) {
+    var path = prefix.concat(i), key = path.join(".");
+    if (typeof it === "string") {
+      html += '<button class="chip" type="button" data-path="' + key + '" style="background:' + CMD_COLORS[it] + ";color:" + (it === "light" ? "#16193A" : "#fff") +
+        '" aria-label="' + LABELS[it] + ' (прибрати)">' + icon(it, 22) + "</button>";
+    } else {
+      html += '<div class="loop" data-path="' + key + '"><div class="loop-head">' + icon("repeat", 20) +
+        '<button class="times" type="button" data-path="' + key + '" aria-label="Скільки разів повторити">×' + it.repeat + "</button>" +
+        '<span class="lap"></span><button class="del" type="button" data-path="' + key + '" aria-label="Прибрати цикл">✕</button></div>' +
+        '<div class="loop-body">' + self.treeHTML(it.body, path) + "</div></div>";
+    }
+  });
+  var caret = prefix.join(".") === this.cursor.join(".") ? '<span class="caret">+</span>' : "";
+  if (prefix.length) return html + caret;   // inside a loop the caret closes the body
+  return html + '<div class="tail" aria-label="Додати після усього">' + caret + "</div>";
+};
+
+/* Redraws memory/slots, counter and code from this.program; `now` = index of the step being executed in this.steps. */
+P.renderProgram = function (now, flash) {
+  var lv = this.level, prog = this.program, st = now != null ? this.steps[now] : null, cells = B.size(prog);
+  if (this.tree) {
+    var cs = this.q(".mem").children;
+    for (var k = 0; k < cs.length; k++) cs[k].classList.toggle("full", k < cells);
+    var box = this.q(".prog"), lk = this.locked();
+    box.innerHTML = this.treeHTML(prog, []);
+    [].forEach.call(box.querySelectorAll("button"), function (b) { b.disabled = lk; });
+    if (st) {
+      var chip = box.querySelector('.chip[data-path="' + st.path.join(".") + '"]');
+      if (chip) chip.classList.add("now");
+      st.laps.forEach(function (l) {
+        var lap = box.querySelector('.loop[data-path="' + l.path.join(".") + '"] > .loop-head .lap');
+        if (lap) lap.textContent = "коло " + l.lap + "/" + l.of;
+      });
+      /* the loops that jumped back right before this step flash «⤴ назад» */
+      var before = flash && now > 0 ? this.steps[now - 1].jumps : [];
+      before.forEach(function (path) {
+        var fr = box.querySelector('.loop[data-path="' + path.join(".") + '"]');
+        if (fr) { fr.classList.add("jump"); setTimeout(function () { fr.classList.remove("jump"); }, 700); }
+      });
+    }
+  } else {
+    var slots = this.q(".slots").children;
+    for (var i = 0; i < slots.length; i++) {
+      var d = slots[i], c = prog[i];
+      d.className = "slot" + (c ? " full" : "") + (st && st.path[0] === i ? " now" : "");
+      d.style.background = c ? CMD_COLORS[c] : "";
+      d.style.color = c === "light" ? "#16193A" : "#fff";
+      d.innerHTML = c ? icon(c, 26) + '<span class="n">' + (i + 1) + "</span>" : "";
+      d.setAttribute("aria-label", c ? "Команда " + (i + 1) + ": " + LABELS[c] + " (прибрати)" : "Порожня клітинка " + (i + 1));
+    }
   }
-  this.q(".count").textContent = prog.length + "/" + lv.slots;
-  var code = B.CODE[this.codeLang], body = this.q(".code-body");
-  if (!prog.length) {
+  this.q(".count").textContent = cells + "/" + lv.slots;
+  var lines = B.codeLines(prog, this.codeLang), body = this.q(".code-body");
+  if (!lines.length) {
     body.innerHTML = '<div class="ln empty">' + (this.codeLang === "uk" ? "# натискай команди внизу" : "# tap commands below") + "</div>";
   } else {
-    body.innerHTML = prog.map(function (c, k) {
-      return '<div class="ln' + (k === now ? " now" : "") + '"><i>' + (k + 1) + "</i><span>" + esc(code[c]) + "</span></div>";
+    body.innerHTML = lines.map(function (l, n) {
+      var cur = st && l.kind === "cmd" && l.path.join(".") === st.path.join(".");
+      return '<div class="ln' + (cur ? " now" : "") + '"><i>' + (n + 1) + "</i><span>" + esc(new Array(l.depth * 4 + 1).join(" ") + l.text) + "</span></div>";
     }).join("");
-    var cur = body.querySelector(".now");
-    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: "nearest" });
+    var cur_ = body.querySelector(".now");
+    if (cur_ && cur_.scrollIntoView) cur_.scrollIntoView({ block: "nearest" });
   }
 };
 
@@ -463,35 +561,63 @@ P.locked = function () { return this.running || this.busy || !!this.won; };
 
 /* Buttons are inert while the program runs; ⟲ always works. */
 P.syncUI = function () {
-  var locked = this.locked();
-  [].forEach.call(this.root.querySelectorAll(".cmd,.slot,.tab"), function (b) { b.disabled = locked; });
-  this.q('[data-act="run"]').disabled = locked || !this.program.length;
-  this.q('[data-act="step"]').disabled = locked || !this.program.length;
+  var locked = this.locked(), empty = !B.size(this.program);
+  [].forEach.call(this.root.querySelectorAll(".cmd,.slot,.tab,.chip,.times,.del"), function (b) { b.disabled = locked; });
+  var rep = this.q('.cmd[data-cmd="repeat"]');
+  if (rep && this.cursor.length >= this.level.nest) rep.disabled = true;   // loops nest only so deep
+  this.q('[data-act="run"]').disabled = locked || empty;
+  this.q('[data-act="step"]').disabled = locked || empty;
 };
 
 /* ----- editing: any change to the program behaves like ⟲ ----- */
 P.edited = function () {
+  this.steps = B.expand(this.program);
   this.resetRun(true);
 };
 
+/* Appends a command (or an empty loop, which then holds the cursor) to the container the cursor is in. */
 P.addCmd = function (c) {
   if (this.locked()) return;
-  if (this.program.length >= this.level.slots) {
+  var lv = this.level;
+  if (B.size(this.program) >= lv.slots) {
     var cnt = this.q(".count");
     cnt.classList.remove("shake"); void cnt.offsetWidth; cnt.classList.add("shake");
     Sound.buzz();
+    if (this.tree) this.say("Пам'ять заповнена!");
     return;
   }
+  if (c === "repeat" && this.cursor.length >= lv.nest) return;
   Sound.click();
-  this.program.push(c);
+  var list = this.program;
+  this.cursor.forEach(function (i) { list = list[i].body; });
+  var idx = list.length;
+  this.program = B.addItem(this.program, this.cursor, c === "repeat" ? { repeat: B.MIN_REPEAT, body: [] } : c);
+  if (c === "repeat") this.cursor = this.cursor.concat(idx);
   this.edited();
 };
 
-P.removeCmd = function (i) {
-  if (this.locked() || i >= this.program.length) return;
+P.removeAt = function (path) {
+  if (this.locked() || !B.hasItem(this.program, path)) return;
   Sound.click();
-  this.program.splice(i, 1);
+  this.program = B.removeItem(this.program, path);
+  this.cursor = B.fixCursor(this.program, B.shiftCursor(this.cursor, path));
   this.edited();
+};
+
+/* Tap on ×N: 2 → 3 → … → 9 → 2. */
+P.cycleTimes = function (path) {
+  if (this.locked()) return;
+  var it = itemAt(this.program, path);
+  Sound.click();
+  this.program = B.setRepeat(this.program, path, it.repeat + 1 > B.MAX_REPEAT ? B.MIN_REPEAT : it.repeat + 1);
+  this.edited();
+};
+
+P.setCursor = function (path) {
+  if (this.locked()) return;
+  this.cursor = path;
+  this.renderProgram(this.curStep >= 0 ? this.curStep : undefined);
+  this.syncUI();
 };
 
 /* ----- running ----- */
@@ -521,9 +647,11 @@ var BUMP_TEXT = {
 
 /* Executes one command with animation; resolves false if the run was cancelled meanwhile. */
 P.execOne = async function (i) {
-  var id = this.runId, lv = this.level, cmd = this.program[i];
+  var id = this.runId, lv = this.level, cmd = this.steps[i].cmd;
   var r = B.step(lv, this.state, cmd), from = this.state, to = r.state, ev = r.event;
-  this.renderProgram(i);
+  this.curStep = i;
+  this.renderProgram(i, true);
+  if (i > 0 && this.steps[i - 1].jumps.length) Sound.pop();
   if (ev === "move" || ev === "jump") {
     await this.tween(from, to, ev === "jump" ? STEP_MS + 80 : STEP_MS, ev === "jump" ? 34 : 0);
   } else if (ev === "turn") {
@@ -534,6 +662,10 @@ P.execOne = async function (i) {
     this.state = to; this.renderLit();
     if (ev === "on") Sound.ding(); else Sound.dark();
     await sleep(STEP_MS * 0.85);
+  } else if (ev === "no-target" && this.tree) {
+    Sound.click();
+    this.say("Тут немає транзистора. Іду далі.");
+    await sleep(STEP_MS * 0.45);
   } else {
     Sound.buzz();
     this.say(BUMP_TEXT[ev]);
@@ -575,13 +707,15 @@ P.shakeBit = function (st) {
 };
 
 P.run = async function () {
-  if (this.locked() || !this.program.length) return;
+  if (this.locked() || !B.size(this.program)) return;
+  if (!this.steps.length) return this.say("У циклі нічого повторювати");
   Sound.unlock();
   this.resetRun(false);
+  if (B.hasEmptyLoop(this.program)) this.say("У циклі нічого повторювати");
   var id = this.runId;
   this.running = true;
   this.syncUI();
-  for (var i = 0; i < this.program.length; i++) {
+  for (var i = 0; i < this.steps.length; i++) {
     if (!(await this.execOne(i)) || id !== this.runId) return;
     if (B.isWon(this.level, this.state)) { this.running = false; return this.win(); }
     await sleep(80);
@@ -592,9 +726,13 @@ P.run = async function () {
 };
 
 P.stepOnce = async function () {
-  if (this.locked() || !this.program.length) return;
+  if (this.locked() || !B.size(this.program)) return;
+  if (!this.steps.length) return this.say("У циклі нічого повторювати");
   Sound.unlock();
-  if (this.stepIdx < 0 || this.stepIdx >= this.program.length) { this.resetRun(false); this.stepIdx = 0; }
+  if (this.stepIdx < 0 || this.stepIdx >= this.steps.length) {
+    this.resetRun(false); this.stepIdx = 0;
+    if (B.hasEmptyLoop(this.program)) this.say("У циклі нічого повторювати");
+  }
   var id = this.runId, i = this.stepIdx;
   this.busy = true;
   this.syncUI();
@@ -604,11 +742,12 @@ P.stepOnce = async function () {
   this.stepIdx = i + 1;
   this.syncUI();
   if (B.isWon(this.level, this.state)) return this.win();
-  if (this.stepIdx >= this.program.length) { this.stepIdx = -1; this.lose(); }
+  if (this.stepIdx >= this.steps.length) { this.stepIdx = -1; this.lose(); }
 };
 
 P.lose = function () {
   this.fails++;
+  this.curStep = -1;
   this.renderProgram();
   var left = this.level.targets.length - this.state.lit.length;
   this.say(left > 0 ? B.remainingText(left) : "Усі транзистори вже горять!");
@@ -617,9 +756,10 @@ P.lose = function () {
 };
 
 P.win = function () {
-  var self = this, lv = this.level, n = this.program.length;
+  var self = this, lv = this.level, n = B.size(this.program);
   this.running = this.busy = false;
   this.won = true;
+  this.curStep = -1;
   this.renderProgram();
   var stars = B.stars(lv, n, true), best = B.progress.record(lv.id, stars);
   Sound.win();
@@ -631,7 +771,8 @@ P.win = function () {
   card.className = "win";
   card.innerHTML = '<div class="win-card"><button class="win-x" data-act="close" type="button" aria-label="Закрити">✕</button><h3>Чип ожив! 🎉</h3><div class="win-stars">' +
     [1, 2, 3].map(function (k) { return k <= stars ? "★" : '<span class="off">★</span>'; }).join("") + "</div><p>" +
-    "Команд: " + n + (n > lv.best ? ". Можна коротше: " + lv.best + "." : ". Найкоротший шлях!") + "</p>" +
+    (this.tree ? "Комірок: " + n + (n > lv.best ? ". Можна коротше: " + lv.best + "." : ". Найкоротша програма!")
+               : "Команд: " + n + (n > lv.best ? ". Можна коротше: " + lv.best + "." : ". Найкоротший шлях!")) + "</p>" +
     '<button class="btn ghost" data-act="again" type="button">↺ Ще раз</button>' +
     '<button class="btn ghost" data-act="close" type="button">Закрити</button>' +
     (next ? '<button class="btn" data-act="next" type="button">Наступний рівень →</button>' : "") + "</div>";
@@ -639,7 +780,7 @@ P.win = function () {
   setTimeout(function () { if (self.won && self.runId === id) self.q(".field").appendChild(card); }, 900);
   this.renderTabs();
   this.syncUI();
-  this.dispatchEvent(new CustomEvent("bitgame:win", { bubbles: true, composed: true, detail: { id: lv.id, stars: stars, best: best } }));
+  this.dispatchEvent(new CustomEvent("bitgame:win", { bubbles: true, composed: true, detail: { id: lv.id, stars: stars, best: best, program: JSON.parse(JSON.stringify(this.program)) } }));
   if (this.ids.every(function (x) { return B.progress.get(x) >= 1; })) {
     this.dispatchEvent(new CustomEvent("bitgame:solved-set", { bubbles: true, composed: true, detail: { ids: this.ids.slice() } }));
   }
@@ -672,6 +813,14 @@ P.removeWin = function () {
 };
 
 P.showHint = function () {
+  var lv = this.level;
+  if (lv.solution) {   // loops: the first lines of the reference solution
+    var first = B.codeLines(lv.solution, this.codeLang).slice(0, 2).map(function (l) {
+      var ico = l.kind === "open" ? "repeat" : itemAt(lv.solution, l.path);
+      return '<span class="hint-chip">' + icon(ico, 14) + " " + esc(l.text) + "</span>";
+    }).join(" ");
+    return this.say("Почни так: " + first + " …а далі сам!", true);
+  }
   var sol = this.hintCache || (this.hintCache = B.solve(this.level) || []), code = B.CODE[this.codeLang];
   var first = sol.slice(0, 2).map(function (c) {
     return '<span class="hint-chip">' + icon(c, 14) + " " + esc(code[c]) + "</span>";
@@ -685,16 +834,25 @@ P.wire = function () {
   this.root.addEventListener("click", function (e) {
     if (e.target.classList && e.target.classList.contains("win")) return self.closeWin();   // tap on the dimmed backdrop
     var t = e.target.closest("button");
-    if (!t || !self.root.contains(t) || t.disabled) return;
+    if (!t) {   // a tap on a loop frame or on empty space of the program moves the caret there
+      if (self.tree && !self.locked() && e.target.closest(".prog")) {
+        var frame = e.target.closest(".loop");
+        self.setCursor(frame ? frame.dataset.path.split(".").map(Number) : []);
+      }
+      return;
+    }
+    if (!self.root.contains(t) || t.disabled) return;
     Sound.unlock();
     if (t.dataset.cmd) return self.addCmd(t.dataset.cmd);
-    if (t.classList.contains("slot")) return self.removeCmd(+t.dataset.i);
+    if (t.classList.contains("slot")) return self.removeAt([+t.dataset.i]);
+    if (t.classList.contains("chip") || t.classList.contains("del")) return self.removeAt(t.dataset.path.split(".").map(Number));
+    if (t.classList.contains("times")) return self.cycleTimes(t.dataset.path.split(".").map(Number));
     if (t.classList.contains("tab")) { Sound.pop(); return self.loadLevel(+t.dataset.i); }
     if (t.classList.contains("lang")) {
       self.codeLang = self.codeLang === "uk" ? "en" : "uk";
       store.set("lang", self.codeLang);
       t.textContent = self.codeLang === "uk" ? "EN" : "УКР";
-      return self.renderProgram(self.stepIdx > 0 ? self.stepIdx - 1 : undefined);
+      return self.renderProgram(self.curStep >= 0 ? self.curStep : undefined);
     }
     switch (t.dataset.act) {
       case "run": return self.run();
@@ -709,9 +867,12 @@ P.wire = function () {
 };
 
 P.onKey = function (e) {
-  if (e.key === "Backspace" && this.program && !this.locked() && this.program.length) {
+  if (e.key === "Backspace" && this.program && !this.locked() && B.size(this.program)) {
     e.preventDefault();
-    this.removeCmd(this.program.length - 1);
+    var list = this.program;
+    this.cursor.forEach(function (i) { list = list[i].body; });
+    if (list.length) this.removeAt(this.cursor.concat(list.length - 1));
+    else if (this.cursor.length) this.removeAt(this.cursor);   // an empty loop: Backspace takes the loop itself
   }
 };
 

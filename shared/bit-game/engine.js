@@ -7,11 +7,14 @@ var DX = { N: 0, E: 1, S: 0, W: -1 };
 var DY = { N: -1, E: 0, S: 1, W: 0 };
 var COMMANDS = ["forward", "left", "right", "jump", "light"];
 var MAX_SLOTS = 12;
+var LOOP_MAX_SLOTS = 8;
 var MAX_HEIGHT = 4;
+var MIN_REPEAT = 2;
+var MAX_REPEAT = 9;
 
 var CODE = {
-  uk: { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()" },
-  en: { forward: "forward()", left: "turn_left()", right: "turn_right()", jump: "jump()", light: "switch_on()" }
+  uk: { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()", repeat: "повтори" },
+  en: { forward: "forward()", left: "turn_left()", right: "turn_right()", jump: "jump()", light: "switch_on()", repeat: "repeat" }
 };
 
 var registry = {};
@@ -44,7 +47,19 @@ function parseLevel(id, def) {
 
   var cmds = def.commands;
   if (!Array.isArray(cmds) || !cmds.length) fail(id, "commands must be a non-empty array");
-  cmds.forEach(function (c) { if (COMMANDS.indexOf(c) < 0) fail(id, "unknown command '" + c + "'"); });
+  cmds.forEach(function (c) { if (COMMANDS.indexOf(c) < 0 && c !== "repeat") fail(id, "unknown command '" + c + "'"); });
+
+  var loops = cmds.indexOf("repeat") >= 0, nest = 1, solution = null;
+  if (loops) {
+    nest = def.nest == null ? 1 : def.nest;
+    if (nest !== 1 && nest !== 2) fail(id, "nest must be 1 or 2");
+    if (!Array.isArray(def.solution)) fail(id, "a level with 'repeat' needs a solution");
+    try { validateProgram(def.solution, nest, cmds); } catch (e) { fail(id, "solution: " + e.message); }
+    solution = clone(def.solution);
+    if (def.slots > LOOP_MAX_SLOTS) fail(id, "slots must be at most " + LOOP_MAX_SLOTS + " with loops");
+  } else if (def.nest != null || def.solution != null) {
+    fail(id, "nest and solution need 'repeat' in commands");
+  }
 
   if (!(def.slots >= 1 && def.slots <= MAX_SLOTS)) fail(id, "slots must be 1.." + MAX_SLOTS);
   if (!(def.best >= 1)) fail(id, "best must be >= 1");
@@ -54,7 +69,8 @@ function parseLevel(id, def) {
     id: id, title: def.title || "", say: def.say || "",
     w: w, h: rows.length, cells: cells,
     start: { x: s.x, y: s.y, dir: s.dir },
-    commands: cmds.slice(), slots: def.slots, best: def.best, targets: targets
+    commands: cmds.slice(), slots: def.slots, best: def.best, targets: targets,
+    nest: nest, solution: solution
   };
 }
 
@@ -110,11 +126,11 @@ function isWon(lv, st) {
 }
 
 function run(lv, program) {
-  var st = initialState(lv), trace = [];
-  for (var i = 0; i < program.length; i++) {
-    var r = step(lv, st, program[i]);
+  var st = initialState(lv), trace = [], steps = expand(program);
+  for (var i = 0; i < steps.length; i++) {
+    var r = step(lv, st, steps[i].cmd);
     st = r.state;
-    trace.push({ cmd: program[i], event: r.event, state: st });
+    trace.push({ cmd: steps[i].cmd, event: r.event, state: st, path: steps[i].path, laps: steps[i].laps });
     if (isWon(lv, st)) break;
   }
   return { won: isWon(lv, st), trace: trace };
@@ -137,7 +153,9 @@ function solve(lv) {
   for (var head = 0; head < queue.length; head++) {
     var cur = queue[head];
     for (var i = 0; i < lv.commands.length; i++) {
-      var c = lv.commands[i], r = step(lv, cur.st, c), k = stateKey(r.state);
+      var c = lv.commands[i];
+      if (c === "repeat") continue;   // the breadth-first search only knows single commands
+      var r = step(lv, cur.st, c), k = stateKey(r.state);
       if (seen[k]) continue;
       seen[k] = true;
       var path = cur.path.concat(c);
@@ -251,6 +269,150 @@ function bestRotation(lv) {
   return best;
 }
 
+/* ---------- programs with loops ----------
+   Program = Item[]; Item = command string | { repeat: N, body: Program }.
+   Path = indices from the top; a cursor is the path of the container new items go into ([] = top level, [i] = body of loop i). */
+function isLoop(item) { return !!item && typeof item === "object" && !Array.isArray(item); }
+
+function size(program) {
+  return program.reduce(function (sum, it) { return sum + (isLoop(it) ? 1 + size(it.body) : 1); }, 0);
+}
+
+function depth(program) {
+  return program.reduce(function (d, it) { return Math.max(d, isLoop(it) ? 1 + depth(it.body) : 0); }, 0);
+}
+
+function hasEmptyLoop(program) {
+  return program.some(function (it) { return isLoop(it) && (!it.body.length || hasEmptyLoop(it.body)); });
+}
+
+/* Unrolls loops into the flat list of steps the game animates.
+   laps: every loop around the step with its current lap; jumps: loops that jump back to their first command right after it. */
+function expand(program) {
+  var out = [];
+  (function walk(items, prefix, laps) {
+    items.forEach(function (it, i) {
+      var path = prefix.concat(i);
+      if (!isLoop(it)) { out.push({ cmd: it, path: path, laps: laps, jumps: [] }); return; }
+      for (var lap = 1; lap <= it.repeat; lap++) {
+        var before = out.length;
+        walk(it.body, path, laps.concat({ path: path, lap: lap, of: it.repeat }));
+        if (lap < it.repeat && out.length > before) out[out.length - 1].jumps.push(path);
+      }
+    });
+  })(program, [], []);
+  return out;
+}
+
+function codeLines(program, lang) {
+  var code = CODE[lang], lines = [];
+  (function walk(items, prefix, d) {
+    items.forEach(function (it, i) {
+      var path = prefix.concat(i);
+      if (!isLoop(it)) { lines.push({ text: code[it], depth: d, path: path, kind: "cmd" }); return; }
+      lines.push({ text: code.repeat + "(" + it.repeat + ") {", depth: d, path: path, kind: "open" });
+      walk(it.body, path, d + 1);
+      lines.push({ text: "}", depth: d, path: path, kind: "close" });
+    });
+  })(program, [], 0);
+  return lines;
+}
+
+function validateProgram(program, nest, commands) {
+  (function walk(items, d) {
+    if (!Array.isArray(items)) throw new Error("program must be an array");
+    items.forEach(function (it) {
+      if (!isLoop(it)) {
+        if (COMMANDS.indexOf(it) < 0 || commands.indexOf(it) < 0) throw new Error("command '" + it + "' is not allowed here");
+        return;
+      }
+      if (commands.indexOf("repeat") < 0) throw new Error("loops are not allowed here");
+      if (!(it.repeat % 1 === 0 && it.repeat >= MIN_REPEAT && it.repeat <= MAX_REPEAT)) throw new Error("repeat must be " + MIN_REPEAT + ".." + MAX_REPEAT);
+      if (d + 1 > nest) throw new Error("loops nested deeper than " + nest);
+      walk(it.body, d + 1);
+    });
+  })(program, 0);
+}
+
+function clone(program) { return JSON.parse(JSON.stringify(program)); }
+function containerAt(program, path) {
+  var list = program;
+  path.forEach(function (i) { list = list[i].body; });
+  return list;
+}
+
+function addItem(program, cursor, item) {
+  var next = clone(program);
+  containerAt(next, cursor).push(item);
+  return next;
+}
+
+function hasItem(program, path) {
+  var list = program;
+  for (var k = 0; k < path.length; k++) {
+    var it = list[path[k]];
+    if (it === undefined) return false;
+    if (k === path.length - 1) return true;
+    if (!isLoop(it)) return false;
+    list = it.body;
+  }
+  return false;
+}
+
+function removeItem(program, path) {
+  var next = clone(program);
+  containerAt(next, path.slice(0, -1)).splice(path[path.length - 1], 1);
+  return next;
+}
+
+function setRepeat(program, path, n) {
+  var next = clone(program);
+  containerAt(next, path.slice(0, -1))[path[path.length - 1]].repeat = n;
+  return next;
+}
+
+/* The longest part of the cursor that still leads to a loop (after something was removed). */
+function fixCursor(program, cursor) {
+  var list = program, fixed = [];
+  for (var k = 0; k < cursor.length; k++) {
+    var it = list[cursor[k]];
+    if (!isLoop(it)) break;
+    fixed.push(cursor[k]);
+    list = it.body;
+  }
+  return fixed;
+}
+
+/* Where the cursor goes when the item at `removed` is taken out: still the same container, or its parent if that is gone. */
+function shiftCursor(cursor, removed) {
+  var d = removed.length - 1, last = removed[d];
+  if (cursor.length <= d) return cursor.slice();
+  for (var k = 0; k < d; k++) if (cursor[k] !== removed[k]) return cursor.slice();
+  if (cursor[d] === last) return removed.slice(0, d);
+  var next = cursor.slice();
+  if (cursor[d] > last) next[d]--;
+  return next;
+}
+
+/* A stretch of ≥ 2 commands that repeats ≥ 2 times in a row: most covered, then longest, then earliest. */
+function findRepeat(cmds) {
+  var best = null, bestCover = 0;
+  for (var len = 2; len * 2 <= cmds.length; len++) {
+    for (var start = 0; start + len * 2 <= cmds.length; start++) {
+      var times = 1;
+      while (start + (times + 1) * len <= cmds.length && same(start, start + times * len, len)) times++;
+      if (times < 2) continue;
+      var cover = len * times;
+      if (cover > bestCover || (cover === bestCover && len > best.len)) { best = { start: start, len: len, times: times }; bestCover = cover; }
+    }
+  }
+  return best;
+  function same(a, b, n) {
+    for (var i = 0; i < n; i++) if (cmds[a + i] !== cmds[b + i]) return false;
+    return true;
+  }
+}
+
 var BitGame = root.BitGame || {};
 BitGame.ISO = ISO;
 BitGame.viewPos = viewPos;
@@ -262,6 +424,22 @@ BitGame.bestRotation = bestRotation;
 BitGame.keyOf = key;
 BitGame.createProgress = createProgress;
 BitGame.progress = createProgress(browserStorage());
+BitGame.LOOP_MAX_SLOTS = LOOP_MAX_SLOTS;
+BitGame.MIN_REPEAT = MIN_REPEAT;
+BitGame.MAX_REPEAT = MAX_REPEAT;
+BitGame.size = size;
+BitGame.depth = depth;
+BitGame.hasEmptyLoop = hasEmptyLoop;
+BitGame.expand = expand;
+BitGame.codeLines = codeLines;
+BitGame.validateProgram = validateProgram;
+BitGame.addItem = addItem;
+BitGame.hasItem = hasItem;
+BitGame.removeItem = removeItem;
+BitGame.setRepeat = setRepeat;
+BitGame.fixCursor = fixCursor;
+BitGame.shiftCursor = shiftCursor;
+BitGame.findRepeat = findRepeat;
 BitGame.COMMANDS = COMMANDS;
 BitGame.CODE = CODE;
 BitGame.level = level;
@@ -274,6 +452,7 @@ BitGame.isWon = isWon;
 BitGame.run = run;
 BitGame.stars = stars;
 BitGame.solve = solve;
+BitGame.stateKey = stateKey;
 BitGame.remainingText = remainingText;
 root.BitGame = BitGame;
 if (typeof module !== "undefined" && module.exports) module.exports = BitGame;

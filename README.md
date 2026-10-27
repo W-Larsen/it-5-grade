@@ -10,6 +10,7 @@
 |---|---|---|---|
 | 1 | Подорож Біта: як працює інтернет | [`lesson-01-internet/`](lesson-01-internet/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-01-internet/) | [конспект](lesson-01-internet/teacher-notes.md) · теорія `.docx` |
 | 2 | Біт у процесорі | [`lesson-02-processor/`](lesson-02-processor/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-02-processor/) | [конспект](lesson-02-processor/teacher-notes.md) · теорія `.docx` |
+| 3 | Біт у циклі | [`lesson-03-loops/`](lesson-03-loops/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-03-loops/) | [конспект](lesson-03-loops/teacher-notes.md) · [теорія `.docx`](lesson-03-loops/Урок-3-теорія-для-вчителя.docx) |
 | — | Біт-програміст · Всі рівні | [`game/`](game/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/game/) | — |
 
 ## Структура
@@ -39,3 +40,4 @@ CLAUDE.md                правила проєкту
 - [План курсу](course-plan.md)
 - [Spec: курс + урок 1](docs/specs/2026-10-13-course-and-lesson-01-internet.md)
 - [Spec: урок 2 + гра «Біт-програміст»](docs/specs/2026-10-20-lesson-02-bit-processor.md) · [план реалізації](docs/plans/2026-10-20-lesson-02-bit-processor.md)
+- [Spec: урок 3 «Біт у циклі»](docs/specs/2026-10-27-lesson-03-loops.md) · [план реалізації](docs/plans/2026-10-27-lesson-03-loops.md)
