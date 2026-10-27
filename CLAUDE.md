@@ -37,7 +37,7 @@
 - **Vanilla HTML/CSS/JS, без збірки й фреймворків.** Ілюстрації — inline SVG.
 - `lesson-*/index.html` і `game/index.html` пишуться **як тіло сторінки без `<!doctype>`/`<head>`**: обгортку додає `tools/build-site.py` (його викликає `.github/workflows/pages.yml`). На початку файлу тримати `<meta charset="utf-8">`, щоб сирий файл відкривався й без обгортки.
 - Уроки 2+ підключають спільний каркас `shared/deck/` (`deck.css` + `Deck.create(...)` у `deck.js`); урок 1 має власну копію й не змінюється.
-- Перед пушем: `node --test tools/engine.test.js tools/check-levels.test.js` і `node tools/check-levels.js`.
+- Перед пушем: `node --test tools/engine.test.js tools/check-levels.test.js tools/program-search.test.js` і `node tools/check-levels.js`.
 - Жодних даних учня: без акаунтів і аналітики. `localStorage` лише для прогресу (штампи, зірки) і завжди в `try/catch`. Сторінка мусить працювати й без нього.
 - Перевіряти в Safari на iPad (дотики, масштаб, звук після першого дотику).
 
