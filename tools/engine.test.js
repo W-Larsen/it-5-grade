@@ -250,7 +250,8 @@ test("every shipped level has a view in which transistors stay in sight", () => 
   globalThis.BitGame = BitGame;
   require("../shared/bit-game/levels-02.js");
   require("../shared/bit-game/levels-03.js");
-  BitGame.levelIds().filter((id) => /^[23]-/.test(id)).forEach((id) => {
+  require("../shared/bit-game/levels-04.js");
+  BitGame.levelIds().filter((id) => /^[234]-/.test(id)).forEach((id) => {
     const lv = BitGame.getLevel(id);
     assert.ok(BitGame.hiddenTargets(lv, BitGame.bestRotation(lv)) <= 2, id + " hides a transistor");
   });
@@ -494,6 +495,7 @@ test("walk equals expand on every lesson 2–3 solution", () => {
   globalThis.BitGame = BitGame;
   require("../shared/bit-game/levels-02.js");
   require("../shared/bit-game/levels-03.js");
+  require("../shared/bit-game/levels-04.js");
   for (const id of BitGame.levelIds().filter((x) => /^[23]-/.test(x))) {
     const lv = BitGame.getLevel(id), prog = lv.solution || BitGame.solve(lv);
     const a = BitGame.expand(prog), b = BitGame.walk(lv, prog).steps;

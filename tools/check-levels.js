@@ -11,7 +11,7 @@ const { shortestProgram } = require("./program-search.js");
 
 /* Extra slots above `best`: easy levels are forgiving, exams tight, bonus levels exact. */
 function marginFor(id) {
-  if (/^2-0[1-6]$/.test(id) || /^3-0[1-3]$/.test(id) || /^3-i\d$/.test(id) || /^4-0[0-3]$/.test(id) || /^4-i\d$/.test(id)) return 2;
+  if (/^2-0[1-6]$/.test(id) || /^3-0[1-3]$/.test(id) || /^3-i\d$/.test(id) || /^4-0[013]$/.test(id) || /^4-i\d$/.test(id)) return 2;
   if (/-b\d+$/.test(id) || id === "3-00") return 0;
   return 1;
 }

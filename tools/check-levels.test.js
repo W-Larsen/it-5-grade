@@ -120,7 +120,8 @@ test("a solution that switches a transistor off again is reported", () => {
 });
 test("margins for lesson 4 ids", () => {
   assert.equal(marginFor("4-i1"), 2);
-  assert.equal(marginFor("4-02"), 2);
+  assert.equal(marginFor("4-03"), 2);
+  assert.equal(marginFor("4-02"), 1);
   assert.equal(marginFor("4-05"), 1);
   assert.equal(marginFor("4-b1"), 0);
 });
