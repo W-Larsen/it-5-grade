@@ -1,0 +1,798 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Біт на роздоріжжі</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Nunito:wght@600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="../shared/deck/deck.css">
+<style>
+/* Lesson 4 — colours and slide-specific bits; the chassis (stage, route, drawer, stamps) is shared/deck/deck.css. */
+:root{
+  --cond:#E8590C; --loop:#0E9C8D; --prog:#2F80ED; --mem:#3C4A6B; --cpu:#7A5CFA; --race:#E5487B; --play:#FF8A3D; --exam:#E5484D; --yes:#0A7A3C;
+}
+
+/* ---------- back (cover) ---------- */
+.q-card .front h3{font-size:24px;line-height:1.2}
+.q-card .front .big-ico{width:96px;height:96px}
+.q-card .front .big-ico svg{width:52px;height:52px}
+.q-card .back p{font-size:20px}
+.q-card .back p b{color:var(--prog)}
+.back-bottom{display:flex;align-items:center;gap:22px;background:var(--ink);color:#fff;border-radius:22px;padding:14px 24px;font:800 20px/1.35 var(--f-body)}
+.back-bottom .bit-slot{width:70px;flex:none}
+.back-bottom .btn{margin-left:auto;flex:none}
+
+/* ---------- circuit-board backdrop, as in lessons 2–3 ---------- */
+.circuit::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180' fill='none' stroke='%23C9D5EC' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M0 44h54l22 22h70M90 0v54l34 34h56M0 134h44l22-22h46l22 22h46'/><circle cx='54' cy='44' r='5' fill='%23C9D5EC'/><circle cx='146' cy='66' r='5' fill='%23C9D5EC'/><circle cx='124' cy='88' r='5' fill='%23C9D5EC'/><circle cx='44' cy='134' r='5' fill='%23C9D5EC'/></svg>")}
+.circuit > *{position:relative}
+
+/* ---------- command icons ---------- */
+.bt-ico{flex:none;width:34px;height:34px;border-radius:9px;border:2px solid var(--ink);display:grid;place-items:center;color:#fff}
+.bt-ico svg{width:22px;height:22px}
+
+/* ---------- game slides ---------- */
+.game-head{position:absolute;left:36px;right:36px;top:16px;height:54px;display:flex;align-items:center;gap:18px}
+.game-head .kick-row{flex:none}
+.game-tip{font:700 17px/1.35 var(--f-body);color:var(--ink-soft);min-width:0}
+.game-wrap{position:absolute;left:36px;right:36px;top:78px;bottom:14px}
+.reset-link{position:absolute;right:28px;top:16px;z-index:5}
+
+/* ---------- recap ---------- */
+.rules3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.rule{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.rule .num{width:38px;height:38px;border-radius:50%;background:var(--rc);border:3px solid var(--ink);color:#fff;display:grid;place-items:center;font:800 18px/1 var(--f-display)}
+.rule b{font:800 20px/1.25 var(--f-display);letter-spacing:-.01em}
+.rule span{font:700 17px/1.4 var(--f-body);color:var(--ink-soft)}
+.sites-h{margin:4px 0 0;font:900 13px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.sites{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.site{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);background:var(--paper);border:3px solid var(--ink);border-radius:18px;padding:12px 14px;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.site:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.site b{font:800 17px/1.2 var(--f-body)}
+.site small{font:700 14px/1.3 var(--f-body);color:var(--ink-soft)}
+.site em{align-self:flex-start;font:800 11px/1 var(--f-body);font-style:normal;letter-spacing:.08em;text-transform:uppercase;background:var(--sun);border:2px solid var(--ink);border-radius:999px;padding:4px 8px;margin-top:2px}
+
+/* ---------- badge ---------- */
+.stamps{grid-template-columns:repeat(6,1fr)}
+.stars-line{display:flex;align-items:center;gap:12px;font:800 18px/1 var(--f-body)}
+.stars-line .big{font:800 24px/1 var(--f-display);color:#B07A00}
+.rank{align-self:center;font:800 14px/1 var(--f-display);letter-spacing:-.01em;background:var(--cond);color:#fff;border:3px solid var(--ink);border-radius:999px;padding:8px 16px;box-shadow:0 3px 0 var(--ink)}
+.rank.off{background:#E3E8F3;color:var(--ink-soft)}
+
+/* ---------- shared bits for the theory scenes ---------- */
+.code-box{background:#1B2040;border:3px solid var(--ink);border-radius:16px;padding:8px 12px;color:#EAF0FF}
+.code-ln{display:flex;gap:10px;padding:3px 8px;border-radius:8px;white-space:pre;font:700 16px/1.25 var(--f-mono);transition:background .2s}
+.code-ln.on{background:#FFC93C;color:var(--ink)}
+.mm-actions{display:flex;gap:10px;justify-content:center}
+
+/* ---------- «Тапай, якщо зелене!» ---------- */
+.tg-scene{padding:18px 22px;display:flex;flex-direction:column;align-items:center;gap:14px;background:linear-gradient(#FFF6EC,#FFE9D6);touch-action:manipulation}
+.tg-scene .code-box{align-self:stretch}
+.tg-lamp{width:250px;height:250px;border-radius:50%;border:6px solid var(--ink);box-shadow:0 10px 0 var(--ink);background:#D5DAE8;color:#fff;font:800 28px/1.1 var(--f-display);display:grid;place-items:center;cursor:pointer;touch-action:manipulation;transition:background .1s}
+.tg-lamp:active{transform:translateY(6px);box-shadow:0 4px 0 var(--ink)}
+.tg-lamp.green{background:#2EC46D}
+.tg-lamp.red{background:#E5484D}
+.tg-lamp.yellow{background:#FFC93C;color:var(--ink)}
+.tg-stat{display:flex;gap:18px;font:800 17px/1 var(--f-body);color:var(--ink-soft)}
+.tg-stat b{font:800 22px/1 var(--f-mono);color:var(--ink)}
+.tg-res{background:var(--paper);border:3px solid var(--ink);border-radius:16px;padding:10px 14px;text-align:center;font:800 17px/1.3 var(--f-body)}
+
+/* ---------- sensors ---------- */
+.sn-scene{padding:16px 22px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(#EEF3FF,#E3EBF8)}
+.sn-pad{align-self:center;width:340px;height:196px;border:5px solid var(--ink);border-radius:22px;background:#1B2040;padding:10px;position:relative;box-shadow:0 6px 0 var(--ink)}
+.sn-screen{position:relative;width:100%;height:100%;border-radius:12px;background:linear-gradient(#7CC4FF,#B9E3FF);overflow:hidden;display:grid;place-items:center}
+.sn-content{font:800 26px/1.1 var(--f-display);color:var(--ink);text-align:center;transition:transform .5s cubic-bezier(.3,1.4,.5,1);padding:0 8px}
+.sn-content small{display:block;font:800 14px/1.2 var(--f-body);margin-top:6px;color:#1B3A66}
+.sn-dim{position:absolute;inset:0;background:#0A0F2A;opacity:0;transition:opacity .25s;pointer-events:none}
+.sn-banner{position:absolute;left:10px;right:10px;top:-60px;background:#fff;color:var(--ink);border:3px solid var(--ink);border-radius:12px;padding:6px 10px;font:800 14px/1.2 var(--f-body);transition:top .3s cubic-bezier(.3,1.4,.5,1);z-index:2}
+.sn-banner.show{top:8px}
+.sn-row{display:grid;grid-template-columns:1fr;gap:4px;background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:0 3px 0 var(--ink);padding:8px 12px}
+.sn-row label{display:flex;justify-content:space-between;font:800 15px/1 var(--f-body)}
+.sn-row label b{font:800 16px/1 var(--f-mono)}
+.sn-row input[type=range]{width:100%;height:30px;accent-color:var(--cond);touch-action:none}
+.sn-row .code-ln{background:#1B2040;color:#8794D6;border-radius:8px}
+.sn-row.yes .code-ln{background:#FFC93C;color:var(--ink)}
+
+/* ---------- rails (conditional jump) ---------- */
+.rl-scene{padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(#F7F3FF,#EAEFFF)}
+.rl-top{display:flex;align-items:center;gap:12px;background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:0 3px 0 var(--ink);padding:8px 12px}
+.rl-top label{font:800 15px/1 var(--f-body);flex:none}
+.rl-top input{flex:1;height:30px;accent-color:var(--cpu);touch-action:none}
+.rl-top b{font:800 20px/1 var(--f-mono);width:56px;text-align:right}
+.rl-flag{flex:none;display:flex;align-items:center;gap:6px;font:800 12px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.rl-lamp{width:26px;height:26px;border-radius:50%;border:3px solid var(--ink);background:#D5DAE8;transition:background .2s,box-shadow .2s}
+.rl-lamp.on{background:#2EC46D;box-shadow:0 0 14px #2EC46D}
+.rl-lamp.off{background:#E5484D;box-shadow:0 0 14px #E5484D}
+.rl-mem{background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink);padding:10px 10px 12px}
+.rl-h{display:flex;justify-content:space-between;align-items:baseline;font:800 12px/1 var(--f-display);letter-spacing:.5px;margin-bottom:6px}
+.rl-h small{font:700 12px var(--f-body);opacity:.75}
+.rl-wrap{position:relative;padding-top:42px}
+.rl-ptr{position:absolute;top:10px;left:0;width:30px;text-align:center;transition:left .5s cubic-bezier(.3,1.2,.5,1);font:900 22px/1 var(--f-display);color:var(--cpu)}
+.rl-ptr small{position:absolute;left:50%;top:-16px;transform:translateX(-50%);white-space:nowrap;font:800 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase}
+.rl-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.rl-card{position:relative;border:3px solid var(--ink);border-radius:12px;background:#EEF1FA;padding:16px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;font:800 13px/1.15 var(--f-body);transition:background .25s;min-height:112px}
+.rl-card.now{background:#FFE680;box-shadow:0 0 0 4px rgba(255,201,60,.5)}
+.rl-card .num{position:absolute;left:6px;top:4px;font:800 11px/1 var(--f-mono);color:var(--ink-soft)}
+.rl-card code{font:800 14px/1 var(--f-mono);color:var(--cpu)}
+.rl-card .bt-ico{width:30px;height:30px;border-radius:9px}
+.rl-card.fork{background:#FFEBDD}
+.rl-world{position:relative;flex:1;min-height:104px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:0 4px 0 var(--ink)}
+.rl-track{position:relative;display:flex;width:508px;height:60px}
+.rl-tile{flex:none;width:104px;height:60px;border:3px solid var(--ink);margin-left:-3px;background:#6FE3B8;box-shadow:inset 0 -8px 0 rgba(22,25,58,.18);position:relative;display:grid;place-items:center;font:800 22px/1 var(--f-display);color:#fff}
+.rl-tile:first-child{margin-left:0;border-radius:12px 0 0 12px}
+.rl-tile:last-child{border-radius:0 12px 12px 0}
+.rl-tile.warn{background:#FFC9C9}
+.rl-tile.warn.on{background:#E5484D}
+.rl-bit{position:absolute;bottom:36px;width:50px;transition:left .45s cubic-bezier(.3,1.3,.5,1)}
+.rl-bit svg{display:block;width:100%}
+
+/* ---------- guess the number ---------- */
+.gs-scene{padding:22px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(#EAF9F6,#DDF2EE)}
+.gs-q{font:800 26px/1.25 var(--f-display);min-height:96px;display:flex;align-items:center}
+.gs-bar{position:relative;height:46px;border:3px solid var(--ink);border-radius:14px;background:#C9D5EC;overflow:hidden}
+.gs-in{position:absolute;top:0;bottom:0;background:#12B5A4;transition:left .4s,width .4s}
+.gs-ends{display:flex;justify-content:space-between;font:800 15px/1 var(--f-mono);color:var(--ink-soft)}
+.gs-stats{display:flex;gap:14px}
+.gs-stats div{flex:1;background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:8px 10px;text-align:center;box-shadow:0 3px 0 var(--ink)}
+.gs-stats small{display:block;font:900 11px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+.gs-stats b{font:800 22px/1.1 var(--f-mono)}
+.gs-ans{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:auto}
+.gs-ans button{border:3px solid var(--ink);border-radius:18px;background:var(--paper);box-shadow:0 5px 0 var(--ink);font:800 34px/1 var(--f-display);padding:24px 8px;cursor:pointer}
+.gs-ans button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.gs-ans .yes{background:#8EE6B0}
+.gs-ans .no{background:#FFC9C9}
+.gs-res{background:var(--paper);border:3px solid var(--ink);border-radius:16px;padding:12px 14px;text-align:center;font:800 18px/1.35 var(--f-body)}
+
+/* ---------- game full of ifs ---------- */
+.fg-scene{padding:14px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(#EAF0FF,#DCE6FB)}
+.fg-area{position:relative;flex:1;min-height:0;border:3px solid var(--ink);border-radius:16px;background:#1B2040;overflow:hidden;touch-action:none;cursor:none}
+.fg-byte{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border:3px solid var(--ink);border-radius:9px;background:#FFC93C;color:var(--ink);display:grid;place-items:center;font:800 17px/1 var(--f-mono)}
+.fg-basket{position:absolute;bottom:8px;width:96px;height:34px;margin-left:-48px;border:3px solid var(--ink);border-radius:6px 6px 16px 16px;background:#E5487B}
+.fg-hud{position:absolute;left:10px;right:10px;top:8px;display:flex;justify-content:space-between;font:800 16px/1 var(--f-body);color:#EAF0FF;pointer-events:none}
+.fg-over[hidden]{display:none}
+.fg-over{position:absolute;inset:0;display:grid;place-items:center;background:rgba(27,32,64,.82);color:#fff;text-align:center;font:800 20px/1.35 var(--f-body);padding:20px;cursor:default}
+.fg-code{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px}
+.fg-code .code-ln{font-size:13px;padding:3px 6px}
+.fg-checks{font:800 15px/1.2 var(--f-body);text-align:center}
+.fg-checks b{font:800 20px/1 var(--f-mono);color:var(--cond)}
+</style>
+
+<div class="app" id="app">
+  <header class="topbar">
+    <a class="home-link" href="../" aria-label="Усі уроки">←<span>Усі уроки</span></a>
+    <button class="brand" id="brandBtn" aria-label="На початок"><span class="brand-bit" data-bit></span><span>Біт на роздоріжжі</span></button>
+    <nav class="route" id="route" aria-label="Маршрут уроку"><div class="route-fill" id="routeFill"></div></nav>
+  </header>
+
+  <main class="viewport" id="viewport">
+    <div class="deck" id="deck">
+
+      <!-- 0 · BACK -->
+      <section class="slide stack" data-key="back" data-title="Повтор" data-ico="back" style="--c:var(--bit)">
+        <button class="btn small ghost reset-link" id="resetTop" hidden data-noswipe>↺ Скинути прогрес</button>
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="back"></span>Урок 4 · Біт на роздоріжжі</span>
+          <h2>Біт повернувся!</h2>
+        </div>
+        <div class="cards3" data-noswipe>
+          <button class="fcard q-card" style="--fc:#FFE9A8"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="loop"></span><h3>Навіщо потрібен цикл?</h3><small>торкнись</small></div>
+            <div class="face back"><p>Щоб <b>не повторювати</b> команди. Кілька комірок пам’яті замість мільярда.</p></div>
+          </div></button>
+          <button class="fcard q-card" style="--fc:#BFE3FF"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="chip"></span><h3>Що робить лічильник команд?</h3><small>торкнись</small></div>
+            <div class="face back"><p>Показує, яку команду брати <b>зараз</b>. Стрибок змінює його число.</p></div>
+          </div></button>
+          <button class="fcard q-card" style="--fc:#C8F2D9"><div class="tile-in">
+            <div class="face front"><span class="big-ico" data-ri="list"></span><h3>Скільки разів «вперед()»?<br><code>повтори(3) { вперед() вперед() }</code></h3><small>торкнись</small></div>
+            <div class="face back"><p><b>Шість!</b> У дужках дві команди, і так три рази.</p></div>
+          </div></button>
+        </div>
+        <div class="back-bottom"><span class="bit-slot" data-bit></span><span>Цикл повторює команди. А сьогодні Біт навчиться <b>вибирати</b>: робити щось лише тоді, коли треба.</span><button class="btn big" data-next data-noswipe>Почнемо →</button></div>
+      </section>
+
+      <!-- warm-up -->
+      <section class="slide full circuit" data-key="warmup" data-title="Розминка" data-ico="list" style="--c:var(--prog)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="list"></span>Розминка</span>
+          <span class="game-tip">Згадай цикл після канікул: що тут повторюється? Пам’яті мало.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="4-00"></bit-game></div>
+        <template class="theory"><h2>Чому розминка з циклом?</h2>
+<p>Сьогодні ми додамо до циклу ще одну здатність: <b>вирішувати</b>. А для цього треба добре пам’ятати, як працює цикл: команди в рамці повторюються ×N разів.</p>
+<div class="fun"><b>Для допитливих</b>У цьому рівні можна «увімкнути» на кожному кроці: на звичайній плитці нічого не станеться. На наступних рівнях так уже не вийде: там помилка зупинить Біта.</div></template>
+      </section>
+
+      <!-- tap on green -->
+      <section class="slide circuit" data-key="tapgreen" data-title="Тапай, якщо зелене" data-ico="star" style="--c:var(--cond)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="star"></span>Живе «якщо»</span>
+          <h2>Тапай, якщо зелене!</h2>
+          <p class="lead">Правило таке: <b>якщо зелене — тапни</b>. На червоне й жовте не тапай. Спалахи будуть дедалі швидші.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="tgBubble">Натисни «Старт» і лови зелене!</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>«Якщо» — це питання з відповіддю «так» або «ні». Від відповіді залежить, що робити далі.</b></div>
+        </div>
+        <div class="scene tg-scene" data-noswipe>
+          <div class="code-box"><div class="code-ln" id="tgLn1">якщо (колір == зелений) {</div><div class="code-ln" id="tgLn2">    тап()</div><div class="code-ln">}</div></div>
+          <button class="tg-lamp" id="tgLamp" type="button">ТАП</button>
+          <div class="tg-stat"><span>Правильно <b id="tgOk">0</b></span><span>Помилок <b id="tgBad">0</b></span><span>Спалах <b id="tgN">0</b>/15</span></div>
+          <div class="tg-res" id="tgRes" hidden></div>
+          <button class="btn" id="tgStart" type="button">▶ Старт</button>
+        </div>
+      </section>
+
+      <!-- sensors -->
+      <section class="slide circuit" data-key="sensors" data-title="iPad вирішує" data-ico="bolt" style="--c:var(--prog)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="bolt"></span>Датчики</span>
+          <h2>iPad вирішує сам</h2>
+          <p class="lead">В iPad є <b>датчики</b>: світла, заряду, нахилу. Рухай повзунки й знайди момент, коли «якщо» спрацьовує.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="snBubble">Тягни повзунки! Яка межа, де відповідь міняється?</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Датчик дає факти, а «якщо» перевіряє їх. Умова спрацьовує рівно на межі.</b></div>
+        </div>
+        <div class="scene sn-scene" data-noswipe>
+          <div class="sn-pad"><div class="sn-screen">
+            <div class="sn-content" id="snContent">Привіт!<small id="snNote">екран як завжди</small></div>
+            <div class="sn-dim" id="snDim"></div>
+            <div class="sn-banner" id="snBanner">🔋 Низький заряд: залишилось менше 20%</div>
+          </div></div>
+          <div class="sn-row" id="snRow0"><label><span>☀ Світло</span><b id="snV0">70</b></label><input type="range" min="0" max="100" value="70" id="snR0" aria-label="Світло"><div class="code-ln">якщо (світло &lt; 30) { тьмяніше() }</div></div>
+          <div class="sn-row" id="snRow1"><label><span>🔋 Заряд</span><b id="snV1">60</b></label><input type="range" min="0" max="100" value="60" id="snR1" aria-label="Заряд"><div class="code-ln">якщо (заряд &lt; 20) { попередити() }</div></div>
+          <div class="sn-row" id="snRow2"><label><span>⟲ Нахил</span><b id="snV2">0°</b></label><input type="range" min="0" max="90" value="0" id="snR2" aria-label="Нахил"><div class="code-ln">якщо (нахил &gt; 45) { повернути_екран() }</div></div>
+        </div>
+        <template class="theory"><h2>Що таке датчик?</h2>
+<p><b>Датчик</b> — маленька деталь, яка вимірює щось у світі й віддає програмі <b>число</b>. Датчик світла вимірює, наскільки яскраво навколо. Гіроскоп і акселерометр відчувають нахил і рух. Батарея повідомляє заряд.</p>
+<p>Програма питає: «число менше за 30?» Відповідь «так» або «ні» називається <b>умовою</b>.</p>
+<div class="fun"><b>Тут і зараз</b>У цьому слайді датчики намальовані повзунками. Справжні датчики iPad Safari без дозволу не віддає, тож тут усе придумане.</div></template>
+      </section>
+
+      <!-- rails -->
+      <section class="slide circuit" data-key="rails" data-title="Стрілка на коліях" data-ico="chip" style="--c:var(--cpu)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="chip"></span>Процесор</span>
+          <h2>Стрілка на коліях</h2>
+          <p class="lead">Лічильник команд вміє не лише стрибати завжди. Є стрибок, який виконується <b>лише якщо</b> прапорець горить.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="rlBubble">Тисни «Крок». Потім зміни заряд і спробуй ще раз.</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Цикл — стрибок завжди. Умова — стрибок, лише якщо.</b></div>
+        </div>
+        <div class="scene rl-scene" data-noswipe>
+          <div class="rl-top"><label for="rlCharge">Заряд</label><input type="range" min="0" max="100" value="60" id="rlCharge"><b id="rlVal">60%</b><span class="rl-flag">прапорець<i class="rl-lamp" id="rlLamp"></i></span></div>
+          <div class="rl-mem"><div class="rl-h"><b>ПАМ’ЯТЬ ПРОЦЕСОРА</b><small>5 команд</small></div>
+            <div class="rl-wrap" id="rlWrap"><div class="rl-ptr" id="rlPtr"><small>лічильник</small>▼</div>
+              <div class="rl-cards">
+                <div class="rl-card"><span class="num">1</span><span class="bt-ico" style="background:#2F80ED"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L5 14h6l-1 8 8-12h-6z"/></svg></span>виміряти заряд</div>
+                <div class="rl-card"><span class="num">2</span><span class="bt-ico" style="background:#0E9C8D"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14M5 15h14"/></svg></span>порівняти з 20</div>
+                <div class="rl-card fork"><span class="num">3</span><span class="bt-ico" style="background:#E8590C"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></span>стрибни, якщо не менше<code>111</code></div>
+                <div class="rl-card"><span class="num">4</span><span class="bt-ico" style="background:#E5484D"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v9M12 19h.01"/></svg></span>показати попередження</div>
+                <div class="rl-card"><span class="num">5</span><span class="bt-ico" style="background:#2BAA6B"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>далі</div>
+              </div>
+            </div>
+          </div>
+          <div class="rl-world"><div class="rl-track" id="rlTrack"></div><span class="rl-bit" id="rlBit" data-bit></span></div>
+          <div class="mm-actions"><button class="btn" id="rlRun">▶ Пуск</button><button class="btn ghost" id="rlStep">⏭ Крок</button><button class="btn ghost" id="rlReset" aria-label="Спочатку">⟲</button></div>
+        </div>
+        <template class="theory"><h2>Як процесор «вирішує»?</h2>
+<p>У процесора немає слова «якщо». Є <b>прапорець</b>: маленька лампочка, що горить або ні. Команда «порівняти» запалює її, коли число більше за інше. А команда «стрибни, якщо…» дивиться на лампочку: горить — переставляє лічильник, не горить — іде далі.</p>
+<h3>Транзистор — найменше «якщо»</h3>
+<p>Усередині чипа лежать мільярди крихітних перемикачів, <b>транзисторів</b>. Транзистор пропускає струм лише <b>якщо</b> на його керуючу ніжку подали струм. Це й є найпростіша умова.</p>
+<h3>«І» та «АБО»</h3>
+<p>Два транзистори <b>один за одним</b> пропустять струм, лише якщо ввімкнені обидва: це «<b>І</b>». Два транзистори <b>поруч</b> пропустять, якщо ввімкнено хоч один: це «<b>АБО</b>».</p>
+<div class="fun"><b>Код 111</b>У нашому прикладі «стрибни, якщо» має код 111. Усі вісім трибітових кодів тепер зайняті!</div></template>
+      </section>
+
+      <!-- if in the game -->
+      <section class="slide full circuit" data-key="ifgame" data-title="«Якщо» в грі" data-ico="question" style="--c:var(--cond)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="question"></span>Нова команда</span>
+          <span class="game-tip">Транзистори стоять нерівно. Спершу спробуй цикл «вперед + увімкнути»: що станеться? Потім додай ❓ «якщо».</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="4-i1"></bit-game></div>
+        <template class="theory"><h2>Як працює блок «якщо»?</h2>
+<p>Усередині рамки «якщо» стоять команди, які виконаються, <b>лише коли умова правдива</b>. Біт дивиться під ноги й відповідає: «✓ так» або «✗ ні».</p>
+<p>Справжні програмісти пишуть так: <code>if (on_transistor()) { … }</code>. Кнопка <b>EN</b> покаже це на екрані.</p>
+<div class="fun"><b>Чому помилка зупиняє Біта?</b>Якщо «увімкнути» там, де немає транзистора, станеться іскра. Тому програма має перевіряти, перш ніж діяти.</div></template>
+      </section>
+
+      <!-- guess the number -->
+      <section class="slide circuit" data-key="guess" data-title="Біт вгадує число" data-ico="bin" style="--c:#12B5A4">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="bin"></span>Біт</span>
+          <h2>Біт вгадує число</h2>
+          <p class="lead">Загадай число від 1 до 100 і нікому не кажи. Біт питатиме лише «так» чи «ні».</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="gsBubble">Загадав? Тоді почнемо!</div></div>
+          <div class="memo"><small>Запам’ятай</small><b>Одна відповідь «так/ні» — це 1 біт. Так Біт отримав своє ім’я.</b></div>
+        </div>
+        <div class="scene gs-scene" data-noswipe>
+          <div class="gs-q" id="gsQ"></div>
+          <div class="gs-bar"><div class="gs-in" id="gsIn"></div></div>
+          <div class="gs-ends"><span>1</span><span>100</span></div>
+          <div class="gs-stats"><div><small>Питань</small><b id="gsCount">0</b></div><div><small>Лишилось чисел</small><b id="gsLeft">100</b></div></div>
+          <div class="gs-res" id="gsRes" hidden></div>
+          <div class="gs-ans" id="gsAns"></div>
+        </div>
+        <template class="theory"><h2>Чому вистачає семи питань?</h2>
+<p>Щоразу Біт питає про <b>середину</b>, і чисел залишається вдвічі менше: 100 → 50 → 25 → 13 → 7 → 4 → 2 → 1. Це сім відповідей, тобто <b>7 бітів</b>.</p>
+<p>7 бітів — це 128 різних чисел. Тож будь-яке число до 100 можна вгадати за сім питань.</p>
+<div class="fun"><b>Біт і біт</b>У комп’ютері <b>біт</b> — це 0 або 1. Одна відповідь «так/ні» несе рівно один біт. Тому нашого героя звати Біт!</div></template>
+      </section>
+
+      <!-- game full of ifs -->
+      <section class="slide circuit" data-key="fun" data-title="Гра, повна «якщо»" data-ico="game" style="--c:var(--race)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="game"></span>Необов’язково</span>
+          <h2>Гра, повна «якщо»</h2>
+          <p class="lead">Лови байти кошиком. <b>Рухай мишею або пальцем</b>: кошик їде за ним. Через 30 секунд подивимось, скільки умов перевірив комп’ютер.</p>
+          <div class="say"><span class="bit-slot" data-bit></span><div class="bubble" id="fgBubble">Торкнись поля, щоб почати.</div></div>
+        </div>
+        <div class="scene fg-scene" data-noswipe>
+          <div class="fg-area" id="fgArea"><div class="fg-hud"><span>Піймано <b id="fgScore">0</b></span><span id="fgTime">30 с</span><span id="fgLives">♥♥♥</span></div><div class="fg-basket" id="fgBasket"></div>
+            <div class="fg-over" id="fgOver">Торкнись, щоб почати</div></div>
+          <div class="code-box fg-code"><div class="code-ln" id="fgL0">якщо (піймав) { рахунок + 1 }</div><div class="code-ln" id="fgL1">якщо (впав) { життя − 1 }</div><div class="code-ln" id="fgL2">якщо (палець ліворуч) { ліворуч() }</div><div class="code-ln" id="fgL3">якщо (життя == 0) { кінець() }</div></div>
+          <div class="fg-checks">Перевірено умов: <b id="fgChecks">0</b></div>
+        </div>
+      </section>
+
+      <!-- game 1 -->
+      <section class="slide full circuit" data-key="game1" data-title="Ліхтарі" data-ico="game" style="--c:var(--play)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="game"></span>Гра · Ліхтарі</span>
+          <span class="game-tip">Транзистори стоять нерівно. Постав «якщо» всередину циклу: умова «тут транзистор».</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="4-01,4-02,4-03"></bit-game></div>
+      </section>
+
+      <!-- game 2 -->
+      <section class="slide full circuit" data-key="game2" data-title="Нерівні сходи" data-ico="bolt" style="--c:var(--exam)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="bolt"></span>Гра · Нерівні сходи</span>
+          <span class="game-tip">Сходинка — стрибай, рівно — іди. Торкнись «+ інакше», щоб додати другу гілку.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="4-04,4-05,4-06"></bit-game></div>
+        <template class="theory"><h2>Що таке «інакше»?</h2>
+<p>У блоці «якщо» можна додати другу гілку: <b>«інакше»</b>. Вона виконується, коли відповідь «ні». Так Біт завжди робить рівно одну з двох речей.</p>
+<p>У коді: <code>if (step_ahead()) { jump() } else { forward() }</code>.</p></template>
+      </section>
+
+      <!-- game 3 -->
+      <section class="slide full circuit" data-key="game3" data-title="Все разом" data-ico="shield" style="--c:#C2410C">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="shield"></span>Гра · Все разом</span>
+          <span class="game-tip">Тепер у циклі два питання: «сходинка?» і «транзистор?». Умову в шапці можна перемкнути торканням.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="4-07,4-08,4-09"></bit-game></div>
+      </section>
+
+      <!-- bonus -->
+      <section class="slide full circuit" data-key="bonus" data-title="Бонус" data-ico="star" style="--c:var(--sun-deep)">
+        <div class="game-head">
+          <span class="kicker"><span class="k-ico" data-ri="star"></span>Бонус · для сміливих</span>
+          <span class="game-tip">Пам’яті рівно стільки, скільки треба. Можна пропустити.</span>
+        </div>
+        <div class="game-wrap" data-noswipe><bit-game levels="4-b1,4-b2"></bit-game></div>
+      </section>
+
+      <!-- recap -->
+      <section class="slide stack" data-key="recap" data-title="Запам’ятай" data-ico="star" style="--c:var(--sun-deep)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="star"></span>Запам’ятай</span>
+          <h2>Три правила про умови</h2>
+        </div>
+        <div class="rules3">
+          <div class="rule" style="--rc:var(--cond)"><span class="num">1</span><b>Умова</b><span>Питання з відповіддю «так» або «ні». Якщо «так» — виконуємо, якщо «ні» — пропускаємо або робимо «інакше».</span></div>
+          <div class="rule" style="--rc:#12B5A4"><span class="num">2</span><b>Біт</b><span>Одна відповідь «так/ні» — це 1 біт. З них складається вся інформація в комп’ютері.</span></div>
+          <div class="rule" style="--rc:var(--cpu)"><span class="num">3</span><b>Процесор</b><span>Слова «якщо» він не знає. Є прапорець і стрибок, який виконується лише якщо прапорець горить.</span></div>
+        </div>
+        <div class="sites-h">Цікаві сайти: дослідити вдома або з дорослими</div>
+        <div class="sites" data-noswipe>
+          <a class="site" href="https://blockly.games/maze?lang=uk" target="_blank" rel="noopener"><b>Blockly Games: Лабіринт</b><small>Програмуй блоками, схоже на нашу гру</small><em>мову обери в меню</em></a>
+          <a class="site" href="https://lightbot.com/" target="_blank" rel="noopener"><b>Lightbot</b><small>Гра про програмування з командами-іконками</small><em>англійською</em></a>
+          <a class="site" href="https://scratch.mit.edu/" target="_blank" rel="noopener"><b>Scratch</b><small>Програмування блоками. Скоро з ним зустрінемось</small><em>краще на комп’ютері</em></a>
+        </div>
+      </section>
+
+      <!-- badge -->
+      <section class="slide stack" data-key="badge" data-title="Посвідчення" data-ico="passport" style="--c:var(--bit)">
+        <div class="copy">
+          <span class="kicker"><span class="k-ico" data-ri="passport"></span>Фініш</span>
+          <h2>Твоє посвідчення</h2>
+        </div>
+        <div class="book2" data-noswipe>
+          <div class="pp-left">
+            <h3>Посвідчення програміста</h3>
+            <div class="pp-photo" data-bit></div>
+            <div class="rank off" id="rank">Майстер умов</div>
+            <div class="pp-field"><label for="ppName">Ім’я програміста</label><input id="ppName" type="text" maxlength="24" placeholder="Напиши своє ім’я"></div>
+            <div class="pp-field"><small>Дата</small><b id="ppDate"></b></div>
+          </div>
+          <div class="pp-right">
+            <div class="pp-right-head"><b>Бейджі уроку</b><span id="ppCount"></span></div>
+            <div class="stamps" id="stamps"></div>
+            <div class="stars-line"><span>Зірки в грі</span><span class="big" id="ppStars"></span></div>
+            <div class="pp-actions"><span class="hint" id="ppHint"></span><button class="btn small ghost" id="resetBtn">Почати знову</button></div>
+          </div>
+        </div>
+        <template class="theory"><h2>Словничок програміста</h2>
+<dl>
+<dt>Умова</dt><dd>Питання, на яке можна відповісти «так» або «ні». Наприклад: «заряд менше за 20?»</dd>
+<dt>«Якщо»</dt><dd>Команда, яка виконує щось лише тоді, коли умова правдива.</dd>
+<dt>«Інакше»</dt><dd>Друга гілка «якщо»: вона виконується, коли відповідь «ні».</dd>
+<dt>Датчик</dt><dd>Деталь, яка вимірює щось у світі й віддає програмі число.</dd>
+<dt>Прапорець</dt><dd>Лампочка в процесорі: горить («так») або ні («ні»). Від неї залежить умовний стрибок.</dd>
+<dt>Біт</dt><dd>Найменша порція даних: 0 або 1, відповідь «ні» або «так».</dd>
+<dt>Транзистор</dt><dd>Крихітний перемикач у чипі. Найменше «якщо» в комп’ютері.</dd>
+</dl></template>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="bottombar">
+    <button class="nav-btn" id="prevBtn">← Назад</button>
+    <div class="where"><span id="whereNum">1 / 3</span><b id="whereTitle">Повтор</b></div>
+    <div class="tools">
+      <button class="tool" id="homeBtn" aria-label="На початок"><span data-ri="home"></span><span class="tl">Початок</span></button>
+      <button class="tool" id="soundBtn" aria-label="Звук"></button>
+      <button class="tool" id="passBtn" aria-label="Посвідчення"><span data-ri="passport"></span><span class="tl">Посвідчення</span><span class="count" id="passCount">0/11</span></button>
+      <button class="tool" id="fsBtn" aria-label="Повний екран"><span data-ri="full"></span></button>
+    </div>
+    <button class="nav-btn next" id="nextBtn">Далі →</button>
+  </footer>
+
+  <div class="th-backdrop" id="thBack"></div>
+  <aside class="th-drawer" id="thDrawer" role="dialog" aria-modal="true" aria-label="Детальніше" aria-hidden="true">
+    <div class="th-head"><span class="th-label"><span data-ri="book"></span>Для допитливих</span><button class="th-close" id="thClose" aria-label="Закрити">✕</button></div>
+    <div class="th-body" id="thBody"></div>
+  </aside>
+  <div class="stampfx" id="stampFx" aria-live="polite"></div>
+</div>
+
+<script src="../shared/bit-game/engine.js"></script>
+<script src="../shared/bit-game/levels-04.js"></script>
+<script src="../shared/bit-game/bit-game.js"></script>
+<script src="../shared/deck/deck.js"></script>
+<script>
+(function(){
+"use strict";
+const { $, $$, ri } = Deck;
+
+Object.assign(Deck.RI, {
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/>',
+  chip: '<rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/>',
+  loop: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>'
+});
+
+const D = Deck.create({
+  prefix: "bit-if:",
+  passport: "badge",
+  stamps: {
+    back:     { label: "ПОВТОР",     c: "#E2632A", ico: "back" },
+    warmup:   { label: "РОЗМИНКА",   c: "#2F80ED", ico: "list" },
+    tapgreen: { label: "ЗЕЛЕНЕ",     c: "#2EC46D", ico: "star" },
+    sensors:  { label: "ДАТЧИКИ",    c: "#2F80ED", ico: "bolt" },
+    rails:    { label: "КОЛІЇ",      c: "#7A5CFA", ico: "chip" },
+    ifgame:   { label: "ЯКЩО",       c: "#E8590C", ico: "question" },
+    guess:    { label: "БІТ",        c: "#12B5A4", ico: "bin" },
+    fun:      { label: "ГРА",        c: "#E5487B", ico: "game" },
+    game1:    { label: "ЛІХТАРІ",    c: "#D9701A", ico: "game" },
+    game2:    { label: "СХОДИ",      c: "#C2410C", ico: "bolt" },
+    game3:    { label: "РАЗОМ",      c: "#E04848", ico: "shield" }
+  },
+  onSoundChange: on => { BitGame.muted = !on; }
+});
+const { H, Sound, store, stamp, happy } = D;
+const LEVEL_IDS = BitGame.levelIds();
+const fmt = n => Math.round(n).toLocaleString("uk-UA").replace(/\s/g, " ");
+
+/* Clears stamps, name and game stars; both reset buttons ask for a second tap first. */
+function armReset(btn, label){
+  let armed = false;
+  btn.addEventListener("click", () => {
+    if (!armed){ armed = true; btn.textContent = "Точно? Натисни ще раз"; setTimeout(() => { armed = false; btn.textContent = label; }, 3000); return; }
+    armed = false; btn.textContent = label;
+    D.clearStamps(); BitGame.progress.clear(LEVEL_IDS); store.set("name", ""); const n = $("#ppName"); if (n) n.value = "";
+    try { location.hash = ""; } catch(_){}
+    location.reload();
+  });
+}
+const hasProgress = () => D.stampCount() > 0 || BitGame.progress.total(LEVEL_IDS) > 0 || !!store.get("name", "");
+
+/* back: three question cards */
+H.back = { enter(){ $("#resetTop").hidden = !hasProgress(); }, init(el){
+  armReset($("#resetTop"), "↺ Скинути прогрес");
+  const cards = $$(".fcard", el);
+  cards.forEach(c => c.addEventListener("click", () => {
+    c.classList.toggle("flipped"); Sound.pop();
+    c.dataset.seen = "1";
+    if (cards.every(x => x.dataset.seen)){ happy(el); stamp("back"); $("#resetTop").hidden = false; }
+  }));
+}};
+
+/* warm-up: a stamp when the level is won */
+H.warmup = {
+  init(el){ el.addEventListener("bitgame:win", e => { if (e.detail.id === "4-00"){ happy(el); stamp("warmup"); } }); },
+  leave(el){ const g = $("bit-game", el); if (g && g.stop) g.stop(); }
+};
+
+/* «Тапай, якщо зелене!»: 15 flashes, faster and faster; a tap counts only on green */
+H.tapgreen = (function(){
+  const N = 15;
+  let el, token = 0, running = false, cur = "", tapped = false, ok = 0, bad = 0, greens = 0;
+  const LABEL = { green: "ЗЕЛЕНЕ!", red: "червоне", yellow: "жовте" };
+  function stat(n){ $("#tgOk").textContent = ok; $("#tgBad").textContent = bad; $("#tgN").textContent = n; }
+  function lamp(c){ const l = $("#tgLamp"); l.className = "tg-lamp" + (c ? " " + c : ""); l.textContent = c ? LABEL[c] : "ТАП"; }
+  function plan(){
+    const a = []; for (let i = 0; i < N; i++) a.push(i < 6 ? "green" : i % 2 ? "red" : "yellow");
+    for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  async function play(){
+    const my = ++token; running = true; ok = bad = 0; greens = 0; stat(0);
+    $("#tgRes").hidden = true; $("#tgStart").hidden = true;
+    D.say(el, "Поїхали! Якщо зелене — тапни.");
+    const seq = plan();
+    for (let i = 0; i < N; i++){
+      cur = seq[i]; tapped = false; if (cur === "green") greens++;
+      lamp(cur); stat(i + 1);
+      $("#tgLn1").classList.add("on"); setTimeout(() => $("#tgLn1").classList.remove("on"), 160);
+      await Deck.wait(Math.max(520, 1300 - i * 55));
+      if (my !== token) return;
+    }
+    running = false; cur = ""; lamp("");
+    $("#tgRes").hidden = false;
+    $("#tgRes").textContent = "Зелених було " + greens + ", ти спіймав " + ok + (bad ? ", а зайвих тапів було " + bad : "") + ". Ти щойно 15 разів виконав умову!";
+    $("#tgStart").hidden = false; $("#tgStart").textContent = "↺ Ще раз";
+    D.say(el, "Кожен спалах — одне «якщо»: зелене? Так — тап. Ні — нічого.");
+    Sound.ding(); happy(el); stamp("tapgreen");
+  }
+  function tap(){
+    if (!running || tapped || !cur) return;
+    tapped = true;
+    if (cur === "green"){ ok++; Sound.ding(); $("#tgLn2").classList.add("on"); setTimeout(() => $("#tgLn2").classList.remove("on"), 200); }
+    else { bad++; Sound.buzz(); }
+    stat($("#tgN").textContent);
+  }
+  return {
+    init(s){
+      el = s;
+      $("#tgStart").addEventListener("click", () => { Sound.click(); play(); });
+      $("#tgLamp").addEventListener("pointerdown", e => { e.preventDefault(); tap(); });
+    },
+    leave(){ token++; running = false; cur = ""; lamp(""); $("#tgStart").hidden = false; $("#tgStart").textContent = "▶ Старт"; }
+  };
+})();
+
+/* sensors: three sliders, three conditions; a stamp once each condition has been true */
+H.sensors = (function(){
+  const seen = [false, false, false];
+  let el;
+  function update(){
+    const light = +$("#snR0").value, charge = +$("#snR1").value, tilt = +$("#snR2").value;
+    const yes = [light < 30, charge < 20, tilt > 45];
+    $("#snV0").textContent = light; $("#snV1").textContent = charge; $("#snV2").textContent = tilt + "°";
+    $("#snDim").style.opacity = yes[0] ? .6 : 0;
+    $("#snBanner").classList.toggle("show", yes[1]);
+    $("#snContent").style.transform = yes[2] ? "rotate(90deg) scale(.6)" : "none";
+    $("#snNote").textContent = yes[2] ? "екран повернувся" : yes[0] ? "стало темно" : "екран як завжди";
+    yes.forEach((y, i) => { $("#snRow" + i).classList.toggle("yes", y); if (y) seen[i] = true; });
+    if (seen.every(Boolean) && !D.hasStamp("sensors")){ Sound.ding(); happy(el); stamp("sensors"); D.say(el, "Усі три «якщо» спрацювали! Датчик дав число, а умова вирішила."); }
+  }
+  return {
+    init(s){ el = s; ["#snR0", "#snR1", "#snR2"].forEach(id => $(id).addEventListener("input", update)); update(); },
+    leave(){ $("#snR0").value = 70; $("#snR1").value = 60; $("#snR2").value = 0; update(); }
+  };
+})();
+
+/* rails: the processor compares, the flag lights up, a conditional jump skips the warning */
+H.rails = (function(){
+  const TILE = 104 - 3;
+  const TEXT = ["Міряю заряд.", "Порівнюю з 20: лампочка-прапорець", "", "", ""];
+  let el, ptr = 0, pos = 0, flag = null, done = false, busy = false, auto = false, token = 0, warned = false;
+  const seen = { high: false, low: false };
+  const charge = () => +$("#rlCharge").value;
+  function draw(){
+    $$(".rl-card", el).forEach((c, i) => c.classList.toggle("now", i === ptr && !done));
+    const card = $$(".rl-card", el)[ptr];
+    $("#rlPtr").style.left = (card.offsetLeft + card.offsetWidth / 2 - 15) + "px";
+    $("#rlBit").style.left = "calc(50% - 254px + " + (pos * TILE + 52 - 25) + "px)";
+    $("#rlLamp").className = "rl-lamp" + (flag === true ? " on" : flag === false ? " off" : "");
+    $("#rlVal").textContent = charge() + "%";
+    const w = $$(".rl-tile", el)[3]; if (w) w.classList.toggle("on", warned);
+  }
+  function reset(){
+    token++; ptr = 0; pos = 0; flag = null; done = false; busy = auto = false; warned = false;
+    $("#rlRun").textContent = "▶ Пуск"; $("#rlRun").disabled = $("#rlStep").disabled = false;
+    draw(); D.say(el, "Тисни «Крок». Потім зміни заряд і спробуй ще раз.");
+  }
+  async function one(){
+    if (busy || done) return false;
+    busy = true; const my = token, c = charge();
+    if (ptr === 0){ ptr = 1; pos = 0; Sound.click(); D.say(el, "Міряю заряд: " + c + "%. Лічильник пересунувся на 2."); }
+    else if (ptr === 1){
+      flag = c >= 20; ptr = 2; pos = 1; Sound.pop();
+      D.say(el, flag ? "Порівняв: " + c + " не менше за 20. Прапорець горить зеленим." : "Порівняв: " + c + " менше за 20. Прапорець горить червоним.");
+    } else if (ptr === 2){
+      pos = 2;
+      if (flag){ ptr = 4; pos = 4; Sound.whoosh(); D.say(el, "Стрибок: прапорець зелений, тож лічильник стрибає на 5 і пропускає попередження!"); }
+      else { ptr = 3; pos = 3; Sound.pop(); D.say(el, "Стрибок: прапорець червоний, тож стрибка немає. Іду далі: до попередження."); }
+    } else if (ptr === 3){
+      warned = true; ptr = 4; pos = 4; Sound.buzz(); D.say(el, "Показую попередження: «Низький заряд!»");
+    } else {
+      done = true; Sound.ding(); seen[flag ? "high" : "low"] = true;
+      D.say(el, "Готово! " + (seen.high && seen.low ? "Ти бачив обидві дороги: це й є «якщо»." : "Тепер зміни заряд так, щоб прапорець став іншого кольору."));
+    }
+    draw(); await Deck.wait(850); if (my !== token) return false;
+    busy = false;
+    if (done){
+      $("#rlRun").textContent = "▶ Пуск"; $("#rlRun").disabled = $("#rlStep").disabled = true; auto = false;
+      if (seen.high && seen.low){ happy(el); stamp("rails"); }
+      return false;
+    }
+    return true;
+  }
+  async function run(){
+    if (auto){ auto = false; $("#rlRun").textContent = "▶ Далі"; return; }
+    if (busy) return;
+    auto = true; $("#rlRun").textContent = "⏸ Пауза"; const my = token;
+    while (auto && my === token){ if (!(await one())) break; }
+    if (my === token && !done){ auto = false; $("#rlRun").textContent = "▶ Далі"; }
+  }
+  return {
+    init(s){
+      el = s;
+      $("#rlTrack").innerHTML = ["1", "2", "?", "!", "→"].map((t, i) => '<div class="rl-tile' + (i === 3 ? " warn" : "") + '">' + (i === 3 ? "!" : "") + "</div>").join("");
+      $("#rlRun").addEventListener("click", run);
+      $("#rlStep").addEventListener("click", () => { if (!auto) one(); });
+      $("#rlReset").addEventListener("click", () => { Sound.click(); reset(); });
+      $("#rlCharge").addEventListener("input", () => reset());
+      reset();
+    },
+    enter(){ draw(); },
+    leave(){ reset(); }
+  };
+})();
+
+/* if in the game: stamp when 4-i1 is won */
+H.ifgame = {
+  init(el){ el.addEventListener("bitgame:win", e => { if (e.detail.id === "4-i1"){ happy(el); stamp("ifgame"); } }); },
+  leave(el){ const g = $("bit-game", el); if (g && g.stop) g.stop(); }
+};
+
+/* guess the number: Bit halves the range with yes/no questions */
+H.guess = (function(){
+  let el, lo = 1, hi = 100, asked = 0, mid = 50, started = false;
+  const qs = n => n + (n % 10 === 1 && n % 100 !== 11 ? " питання" : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? " питання" : " питань");
+  function paint(){
+    $("#gsIn").style.left = ((lo - 1) / 100 * 100) + "%"; $("#gsIn").style.width = ((hi - lo + 1) / 100 * 100) + "%";
+    $("#gsCount").textContent = asked; $("#gsLeft").textContent = hi - lo + 1;
+  }
+  function intro(){
+    started = false; lo = 1; hi = 100; asked = 0; paint();
+    $("#gsQ").textContent = "Загадай число від 1 до 100. Не кажи його вголос!";
+    $("#gsRes").hidden = true;
+    $("#gsAns").innerHTML = '<button class="yes" style="grid-column:1/3" data-a="go">Загадав!</button>';
+    D.say(el, "Загадав? Тоді почнемо!");
+  }
+  function ask(){
+    if (lo === hi){
+      $("#gsQ").textContent = "Це " + lo + "!";
+      $("#gsRes").hidden = false;
+      $("#gsRes").textContent = "Я вгадав за " + qs(asked) + ". Кожна відповідь «так/ні» — це 1 біт, тож це " + asked + " біт" + (asked === 1 ? "" : "ів") + ".";
+      $("#gsAns").innerHTML = '<button class="yes" style="grid-column:1/3" data-a="again">↺ Ще раз</button>';
+      Sound.win(); happy(el); stamp("guess");
+      D.say(el, "Семи питань вистачає на будь-яке число до 128. Тому мене й звуть Біт!");
+      paint(); return;
+    }
+    mid = Math.floor((lo + hi) / 2);
+    $("#gsQ").textContent = "Твоє число більше за " + mid + "?";
+    $("#gsAns").innerHTML = '<button class="yes" data-a="yes">Так</button><button class="no" data-a="no">Ні</button>';
+    paint();
+  }
+  return {
+    init(s){
+      el = s; intro();
+      $("#gsAns").addEventListener("click", e => {
+        const b = e.target.closest("button"); if (!b) return;
+        Sound.click();
+        const a = b.dataset.a;
+        if (a === "go" || a === "again"){ lo = 1; hi = 100; asked = 0; started = true; ask(); return; }
+        asked++; if (a === "yes") lo = mid + 1; else hi = mid;
+        ask();
+      });
+    },
+    leave(){ intro(); }
+  };
+})();
+
+/* game full of ifs: 30 seconds, falling bytes, four conditions asked every frame */
+H.fun = (function(){
+  const W = 560, SECS = 30;
+  let el, timer = 0, running = false, bytes = [], bx = 280, tx = 280, score = 0, lives = 3, t0 = 0, last = 0, spawn = 0, checks = 0, fired = [0, 0, 0, 0];
+  const flash = i => { const l = $("#fgL" + i); l.classList.add("on"); setTimeout(() => l.classList.remove("on"), 140); };
+  function areaW(){ return $("#fgArea").clientWidth || W; }
+  function hud(left){
+    $("#fgScore").textContent = score; $("#fgTime").textContent = Math.max(0, Math.ceil(left)) + " с";
+    $("#fgLives").textContent = "♥".repeat(Math.max(0, lives)) + "♡".repeat(Math.max(0, 3 - lives));
+    $("#fgChecks").textContent = fmt(checks);
+  }
+  function draw(){
+    const area = $("#fgArea");
+    bytes.forEach(b => { if (!b.el){ b.el = document.createElement("div"); b.el.className = "fg-byte"; b.el.textContent = b.v; area.appendChild(b.el); } b.el.style.left = b.x + "px"; b.el.style.top = b.y + "px"; });
+    $("#fgBasket").style.left = bx + "px";
+  }
+  function stop(msg){
+    clearInterval(timer); running = false;
+    const o = $("#fgOver"); o.hidden = false;
+    o.innerHTML = msg + "<br><br>Піймано: " + score + "<br>Комп’ютер перевірив ≈ " + fmt(checks) + " умов.<br><small>Торкнись, щоб зіграти ще</small>";
+    D.say(el, "Ось скільки «якщо» ховається у простій грі. І це лише 30 секунд!");
+    Sound.ding(); happy(el); stamp("fun");
+  }
+  function tick(){
+    if (!running) return;
+    const now = Date.now(), dt = Math.min(0.06, (now - last) / 1000), left = SECS - (now - t0) / 1000; last = now;
+    const w = areaW(), H_ = $("#fgArea").clientHeight || 330, speed = 150 + (SECS - left) * 6;
+    bx += (tx - bx) * Math.min(1, dt * 14); bx = Math.max(48, Math.min(w - 48, bx));
+    spawn -= dt; if (spawn <= 0){ bytes.push({ x: 24 + Math.random() * (w - 48), y: -20, v: Math.random() < .5 ? 0 : 1, el: null }); spawn = .55 + Math.random() * .3; }
+    bytes.forEach(b => { b.y += speed * dt; checks += 3; });
+    checks += 1;
+    const basketTop = H_ - 8 - 34;
+    bytes = bytes.filter(b => {
+      if (b.y + 17 >= basketTop && b.y <= basketTop + 34 && Math.abs(b.x - bx) < 62){ score++; flash(0); Sound.click(); b.el && b.el.remove(); return false; }
+      if (b.y > H_ + 10){ lives--; flash(1); Sound.buzz(); b.el && b.el.remove(); return false; }
+      return true;
+    });
+    if (tx < bx - 4) flash(2);
+    checks += 4;
+    draw(); hud(left);
+    if (lives <= 0){ flash(3); return stop("Життя закінчились!"); }
+    if (left <= 0) stop("Час вийшов!");
+  }
+  function start(){
+    bytes.forEach(b => b.el && b.el.remove()); bytes = []; score = 0; lives = 3; checks = 0; spawn = .3;
+    bx = tx = areaW() / 2; t0 = last = Date.now(); running = true;
+    $("#fgOver").hidden = true; D.say(el, "Лови байти! Рухай кошик пальцем або мишею.");
+    clearInterval(timer); timer = setInterval(tick, 30); draw(); hud(SECS);
+  }
+  return {
+    init(s){
+      el = s;
+      const area = $("#fgArea"), move = e => { const r = area.getBoundingClientRect(); tx = (e.clientX - r.left) * (areaW() / (r.width || areaW())); };
+      area.addEventListener("pointermove", move);
+      area.addEventListener("pointerdown", e => { move(e); });
+      $("#fgOver").addEventListener("pointerup", () => { Sound.unlock && Sound.unlock(); start(); });
+    },
+    leave(){ clearInterval(timer); running = false; bytes.forEach(b => b.el && b.el.remove()); bytes = []; const o = $("#fgOver"); o.hidden = false; o.textContent = "Торкнись, щоб почати"; }
+  };
+})();
+
+/* game slides: a stamp once every level of the set has at least one star (bonus has none); leaving a slide stops a running program */
+["game1", "game2", "game3", "bonus"].forEach(key => {
+  H[key] = {
+    init(el){ el.addEventListener("bitgame:solved-set", () => { happy(el); if (key !== "bonus") stamp(key); }); },
+    leave(el){ const g = $("bit-game", el); if (g && g.stop) g.stop(); }
+  };
+});
+
+/* badge: stamps, game stars, name, reset */
+H.badge = (function(){
+  function render(){
+    const rot = k => ((k.charCodeAt(0) * 7 + k.length * 13) % 24) - 12;
+    $("#stamps").innerHTML = D.stampKeys.map(k => '<div class="st">' + (D.hasStamp(k) ? D.stampSVG(k, rot(k)) : '<div class="empty">' + D.stampLabel(k) + "</div>") + "</div>").join("");
+    $("#ppCount").textContent = D.stampCount() + " з " + D.stampKeys.length;
+    $("#ppStars").textContent = BitGame.progress.total(LEVEL_IDS) + " / " + LEVEL_IDS.length * 3;
+    $("#ppHint").textContent = D.stampCount() === D.stampKeys.length ? "Усі бейджі зібрано. Ти справжній програміст!" : "Порожні кружечки: де ще є бейдж.";
+    const master = D.hasStamp("game1") && D.hasStamp("game2") && D.hasStamp("game3");   // «Майстер умов» after all three level sets
+    $("#rank").classList.toggle("off", !master);
+  }
+  return {
+    init(){
+      $("#ppDate").textContent = new Date().toLocaleDateString("uk-UA");
+      const name = $("#ppName"); name.value = store.get("name", "");
+      name.addEventListener("input", () => store.set("name", name.value));
+      armReset($("#resetBtn"), "Почати знову");
+    },
+    enter(){ render(); }
+  };
+})();
+
+D.start();
+})();
+</script>
