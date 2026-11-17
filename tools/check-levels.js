@@ -11,7 +11,7 @@ const { shortestProgram } = require("./program-search.js");
 
 /* Extra slots above `best`: easy levels are forgiving, exams tight, bonus levels exact. */
 function marginFor(id) {
-  if (/^2-0[1-6]$/.test(id) || /^3-0[1-3]$/.test(id) || /^3-i\d$/.test(id)) return 2;
+  if (/^2-0[1-6]$/.test(id) || /^3-0[1-3]$/.test(id) || /^3-i\d$/.test(id) || /^4-0[0-3]$/.test(id) || /^4-i\d$/.test(id)) return 2;
   if (/-b\d+$/.test(id) || id === "3-00") return 0;
   return 1;
 }
@@ -23,6 +23,7 @@ function checkLevel(lv, seen) {
   const problems = [];
   const sol = BitGame.solve(lv);
   if (!sol) return ["unsolvable"];
+  if (lv.commands.indexOf("if") >= 0) return checkIfLevel(lv, seen, sol.length);
   if (lv.commands.indexOf("repeat") >= 0) return checkLoopLevel(lv, seen, sol.length);
   if (sol.length !== lv.best) {
     problems.push("best " + lv.best + " but the real optimum is " + sol.length + " (" + sol.join(" ") + ")");
@@ -63,6 +64,36 @@ function checkLoopLevel(lv, seen, flatLength) {
     if (seen.indexOf(c) < 0 && used.indexOf(c) < 0) {
       problems.push("command '" + c + "' is introduced here but the solution never uses it");
     }
+  });
+  return problems;
+}
+
+/* Stairs levels where the else branch is the point: without it the level must not fit in the memory. */
+const ELSE_REQUIRED = /^4-0[4-6]$/;
+
+/* Levels with the if command (strict mode): `solution` is the reference. */
+function checkIfLevel(lv, seen, flatLength) {
+  const problems = [], sol = lv.solution;
+  const w = BitGame.walk(lv, sol);
+  if (!w.won) return ["solution does not win" + (w.error ? " (" + w.error + ")" : "") + ": " + show(sol)];
+  if (w.steps.some((t) => t.event === "off")) problems.push("the solution switches a transistor off again (twice on one tile): " + show(sol));
+  const cells = BitGame.size(sol);
+  if (cells !== lv.best) problems.push("best " + lv.best + " but the solution takes " + cells + " cells (" + show(sol) + ")");
+  const shorter = lv.best > 1 ? shortestProgram(lv, { maxSize: lv.best - 1, nest: lv.nest }) : null;
+  if (shorter) problems.push("best " + lv.best + " but a shorter program exists: " + show(shorter));
+  const noIf = shortestProgram(lv, { maxSize: lv.slots, nest: lv.nest, noIf: true });
+  if (noIf) problems.push("solvable without an if in " + BitGame.size(noIf) + " cells (slots " + lv.slots + "): " + show(noIf));
+  if (flatLength <= lv.slots) problems.push("solvable without any block in " + flatLength + " cells (slots " + lv.slots + ")");
+  if (ELSE_REQUIRED.test(lv.id)) {
+    const noElse = shortestProgram(lv, { maxSize: lv.slots, nest: lv.nest, noElse: true });
+    if (noElse) problems.push("solvable without else: " + show(noElse));
+  }
+  const margin = marginFor(lv.id);
+  if (lv.slots < lv.best + margin) problems.push("slots " + lv.slots + " < best + " + margin + " = " + (lv.best + margin));
+  const used = w.steps.filter((t) => t.kind === "cmd").map((t) => t.cmd).concat("if");
+  if (JSON.stringify(sol).indexOf('"repeat"') >= 0) used.push("repeat");
+  lv.commands.forEach((c) => {
+    if (seen.indexOf(c) < 0 && used.indexOf(c) < 0) problems.push("command '" + c + "' is introduced here but the solution never uses it");
   });
   return problems;
 }

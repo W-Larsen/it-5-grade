@@ -87,3 +87,40 @@ test("a reference solution that bumps into walls is reported", () => {
   assert.equal(BitGame.run(lv, lv.solution).won, true);
   assert.match(checkLevel(lv, ALL).join("\n"), /bump/);
 });
+
+/* ---------- levels with conditions ---------- */
+const IFS = ALL.concat("repeat", "if");
+const LAMP_SOL = [{ repeat: 7, body: ["forward", { if: "transistor", then: ["light"] }] }];
+const mkIf = (id, over) => BitGame.parseLevel(id, Object.assign({
+  title: "T", map: ["1 1t 1 1t 1t 1 1 1t"], start: { x: 0, y: 0, dir: "E" }, commands: IFS, conditions: ["transistor"],
+  nest: 2, slots: 5, best: 4, solution: LAMP_SOL
+}, over));
+const STAIRS_MAP = ["1 2 2 3 2 3 4 4 3t"];
+const STAIRS_SOL = [{ repeat: 8, body: [{ if: "step", then: ["jump"], else: ["forward"] }] }, "light"];
+const mkStairs = (id, over) => mkIf(id, Object.assign({ map: STAIRS_MAP, conditions: ["step"], else: true, solution: STAIRS_SOL, best: 5, slots: 6 }, over));
+
+test("a correct if level has no problems", () => {
+  assert.deepEqual(checkLevel(mkIf("4-07"), IFS.filter((c) => c !== "if")), []);
+  assert.deepEqual(checkLevel(mkStairs("4-05"), IFS), []);
+});
+test("an if level with a wrong best is reported", () => {
+  assert.match(checkLevel(mkIf("4-02", { best: 5, slots: 6 }), ALL.concat("repeat")).join("\n"), /best 5/);
+});
+test("an if level solvable without an if is reported", () => {
+  const lv = mkIf("4-02", { map: ["1 1t 1t 1t 1t"], solution: [{ repeat: 4, body: ["forward", { if: "transistor", then: ["light"] }] }] });
+  assert.match(checkLevel(lv, ALL.concat("repeat")).join("\n"), /without an if/);
+});
+test("a stairs level that needs no else is reported", () => {
+  const lv = mkStairs("4-05", { map: ["1 2 2 3 3t"], solution: [{ repeat: 4, body: [{ if: "step", then: ["jump"], else: ["forward"] }] }, "light"] });
+  assert.match(checkLevel(lv, IFS).join("\n"), /without else/);
+});
+test("a solution that switches a transistor off again is reported", () => {
+  const lv = mkIf("4-03", { map: ["1t 1t"], commands: IFS, best: 5, slots: 7, solution: ["light", "light", "light", "forward", { if: "transistor", then: ["light"] }] });
+  assert.match(checkLevel(lv, ALL.concat("repeat")).join("\n"), /twice|off/);
+});
+test("margins for lesson 4 ids", () => {
+  assert.equal(marginFor("4-i1"), 2);
+  assert.equal(marginFor("4-02"), 2);
+  assert.equal(marginFor("4-05"), 1);
+  assert.equal(marginFor("4-b1"), 0);
+});

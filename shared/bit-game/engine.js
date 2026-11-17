@@ -203,7 +203,7 @@ function solve(lv) {
     var cur = queue[head];
     for (var i = 0; i < lv.commands.length; i++) {
       var c = lv.commands[i];
-      if (c === "repeat") continue;   // the breadth-first search only knows single commands
+      if (c === "repeat" || c === "if") continue;   // the breadth-first search only knows single commands
       var r = step(lv, cur.st, c), k = stateKey(r.state);
       if (seen[k]) continue;
       seen[k] = true;
