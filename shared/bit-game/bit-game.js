@@ -211,6 +211,8 @@ var CSS = [
 ".cond{flex:1 1 100%;position:relative;border:3px solid #E8590C;border-radius:14px;background:#FFF1E6;padding:3px 5px 5px;box-shadow:0 3px 0 #E8590C}",
 ".cond-head{display:flex;align-items:center;gap:6px;color:#C2410C;margin-bottom:3px;border-radius:8px}",
 ".cond-head.now{outline:4px solid #FFC93C;outline-offset:2px}",
+".kw-head{font:900 15px/1 var(--f-body,sans-serif);color:#C2410C;flex:none}",
+".cmd .kw{font:900 20px/1 var(--f-body,sans-serif);letter-spacing:.01em}",
 ".cond-head svg{flex:none}",
 ".which{display:inline-flex;align-items:center;gap:4px;font:800 14px/1 var(--f-body,sans-serif);height:26px;border-radius:999px;border:3px solid var(--ink,#16193A);background:#fff;color:var(--ink,#16193A);box-shadow:0 3px 0 var(--ink,#16193A);padding:0 9px;white-space:nowrap}",
 ".which:active,.add-else:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
@@ -512,7 +514,7 @@ P.treeHTML = function (items, prefix) {
       var which = lv.conditions.length > 1
         ? '<button class="which" type="button" data-path="' + key + '" aria-label="Змінити умову">' + lbl + " ⇄</button>"
         : '<span class="which static">' + lbl + "</span>";
-      html += '<div class="cond" data-path="' + key + '"><div class="cond-head">' + icon("if", 18) + which + '<span class="mark"></span>' +
+      html += '<div class="cond" data-path="' + key + '"><div class="cond-head"><b class="kw-head">якщо</b>' + which + '<span class="mark"></span>' +
         '<button class="del" type="button" data-path="' + key + '" aria-label="Прибрати «якщо»">✕</button></div>' +
         '<div class="cond-body"><div class="then-col"><span class="col-tag">то</span><div class="cond-then" data-path="' + key + '">' + self.treeHTML(it.then, path) + "</div></div>" +
         (it.else ? '<div class="else-col"><span class="col-tag">інакше</span><button class="del-else" type="button" data-path="' + key + '" aria-label="Прибрати «інакше»">✕</button>' +
@@ -606,7 +608,7 @@ P.renderDeck = function () {
     b.className = "cmd" + (c === "light" ? " dark" : "");
     b.type = "button"; b.dataset.cmd = c;
     b.style.background = CMD_COLORS[c];
-    b.innerHTML = icon(c, 28) + "<span>" + LABELS[c] + "</span>";
+    b.innerHTML = c === "if" ? '<b class="kw">якщо</b>' : icon(c, 28) + "<span>" + LABELS[c] + "</span>";
     box.appendChild(b);
   });
 };
@@ -932,8 +934,8 @@ P.showHint = function () {
   var lv = this.level;
   if (lv.solution) {   // loops: the first lines of the reference solution
     var first = B.codeLines(lv.solution, this.codeLang).slice(0, 2).map(function (l) {
-      var ico = l.kind === "open" ? "repeat" : l.kind === "if" ? "if" : itemAt(lv.solution, l.path);
-      return '<span class="hint-chip">' + icon(ico, 14) + " " + esc(l.text) + "</span>";
+      var ico = l.kind === "open" ? "repeat" : l.kind === "if" ? "" : itemAt(lv.solution, l.path);
+      return '<span class="hint-chip">' + (ico ? icon(ico, 14) + " " : "") + esc(l.text) + "</span>";
     }).join(" ");
     return this.say("Почни так: " + first + " …а далі сам!", true);
   }
