@@ -150,25 +150,32 @@ BitGame.level("4-09", {
   say: "Остання дорога: усі правила разом!"
 });
 
-/* ----- Бонус: пам'яті рівно на оптимум ----- */
+/* ----- Бонус: пам'яті рівно на оптимум, і будова інша ----- */
 BitGame.level("4-b1", {
-  title: "Тісна пам'ять 1",
-  map: ["1 2t 3 3 4t 4 3 2t 1t"],
-  start: { x: 0, y: 0, dir: "E" },
-  commands: ["forward", "jump", "light", "repeat", "if"],
-  conditions: ["transistor", "step"], else: true,
-  solution: [{ repeat: 8, body: [{ if: "step", then: ["jump"], else: ["forward"] }, { if: "transistor", then: ["light"] }] }],
+  title: "Кільце навпаки",
+  map: ["1 1t 1 1",
+        "1t . . 1",
+        "1 1t 1t 1t"],
+  start: { x: 0, y: 0, dir: "S" },
+  commands: ["forward", "left", "light", "repeat", "if"],
+  conditions: ["transistor", "edge"],
+  solution: [{ repeat: 9, body: ["forward", { if: "transistor", then: ["light"] }, { if: "edge", then: ["left"] }] }],
   nest: 2, slots: 6, best: 6,
-  say: "Пам'яті рівно стільки, скільки треба!"
+  say: "Тепер Біт іде проти годинникової стрілки: на краю треба повертати ліворуч!"
 });
 
 BitGame.level("4-b2", {
-  title: "Тісна пам'ять 2",
-  map: ["1 1 2t 2 3 3t 4t 3 3t"],
+  title: "Зигзаг",
+  map: ["1 1 . . . .",
+        ". 1t 1 . . .",
+        ". . 1t 1 . .",
+        ". . . 1 1 .",
+        ". . . . 1t 1",
+        ". . . . . 1t"],
   start: { x: 0, y: 0, dir: "E" },
-  commands: ["forward", "jump", "light", "repeat", "if"],
-  conditions: ["transistor", "step"], else: true,
-  solution: [{ repeat: 8, body: [{ if: "step", then: ["jump"], else: ["forward"] }, { if: "transistor", then: ["light"] }] }],
-  nest: 2, slots: 6, best: 6,
-  say: "Ще тісніше. Ти зможеш!"
+  commands: ["forward", "left", "right", "light", "repeat", "if"],
+  conditions: ["transistor"],
+  solution: [{ repeat: 5, body: ["forward", "right", "forward", "left", { if: "transistor", then: ["light"] }] }],
+  nest: 2, slots: 7, best: 7,
+  say: "Зигзаг по сходах. Лампи є не на кожній сходинці!"
 });
