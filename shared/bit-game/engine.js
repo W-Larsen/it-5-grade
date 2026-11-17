@@ -11,10 +11,13 @@ var LOOP_MAX_SLOTS = 8;
 var MAX_HEIGHT = 4;
 var MIN_REPEAT = 2;
 var MAX_REPEAT = 9;
+var CONDITIONS = ["transistor", "step"];
+var ERROR_EVENTS = ["bump-edge", "bump-step", "bump-flat", "bump-high", "no-target"];
+var MAX_WALK = 2000;
 
 var CODE = {
-  uk: { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()", repeat: "повтори" },
-  en: { forward: "forward()", left: "turn_left()", right: "turn_right()", jump: "jump()", light: "switch_on()", repeat: "repeat" }
+  uk: { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()", repeat: "повтори", if: "якщо", else: "інакше", cond: { transistor: "тут_транзистор()", step: "попереду_сходинка()" } },
+  en: { forward: "forward()", left: "turn_left()", right: "turn_right()", jump: "jump()", light: "switch_on()", repeat: "repeat", if: "if", else: "else", cond: { transistor: "on_transistor()", step: "step_ahead()" } }
 };
 
 var registry = {};
@@ -47,18 +50,27 @@ function parseLevel(id, def) {
 
   var cmds = def.commands;
   if (!Array.isArray(cmds) || !cmds.length) fail(id, "commands must be a non-empty array");
-  cmds.forEach(function (c) { if (COMMANDS.indexOf(c) < 0 && c !== "repeat") fail(id, "unknown command '" + c + "'"); });
+  cmds.forEach(function (c) { if (COMMANDS.indexOf(c) < 0 && c !== "repeat" && c !== "if") fail(id, "unknown command '" + c + "'"); });
 
-  var loops = cmds.indexOf("repeat") >= 0, nest = 1, solution = null;
+  var hasIf = cmds.indexOf("if") >= 0, loops = hasIf || cmds.indexOf("repeat") >= 0, nest = 1, solution = null;
+  var conditions = [], allowElse = false;
+  if (hasIf) {
+    conditions = def.conditions;
+    if (!Array.isArray(conditions) || !conditions.length) fail(id, "a level with 'if' needs conditions");
+    conditions.forEach(function (c) { if (CONDITIONS.indexOf(c) < 0) fail(id, "unknown condition '" + c + "'"); });
+    allowElse = !!def.else;
+  } else if (def.conditions != null || def.else != null) {
+    fail(id, "conditions and else need 'if' in commands");
+  }
   if (loops) {
     nest = def.nest == null ? 1 : def.nest;
     if (nest !== 1 && nest !== 2) fail(id, "nest must be 1 or 2");
-    if (!Array.isArray(def.solution)) fail(id, "a level with 'repeat' needs a solution");
-    try { validateProgram(def.solution, nest, cmds); } catch (e) { fail(id, "solution: " + e.message); }
+    if (!Array.isArray(def.solution)) fail(id, "a level with 'repeat' or 'if' needs a solution");
+    try { validateProgram(def.solution, nest, cmds, { conditions: conditions, allowElse: allowElse }); } catch (e) { fail(id, "solution: " + e.message); }
     solution = clone(def.solution);
     if (def.slots > LOOP_MAX_SLOTS) fail(id, "slots must be at most " + LOOP_MAX_SLOTS + " with loops");
   } else if (def.nest != null || def.solution != null) {
-    fail(id, "nest and solution need 'repeat' in commands");
+    fail(id, "nest and solution need 'repeat' or 'if' in commands");
   }
 
   if (!(def.slots >= 1 && def.slots <= MAX_SLOTS)) fail(id, "slots must be 1.." + MAX_SLOTS);
@@ -70,7 +82,7 @@ function parseLevel(id, def) {
     w: w, h: rows.length, cells: cells,
     start: { x: s.x, y: s.y, dir: s.dir },
     commands: cmds.slice(), slots: def.slots, best: def.best, targets: targets,
-    nest: nest, solution: solution
+    nest: nest, solution: solution, conditions: conditions.slice(), allowElse: allowElse, strict: hasIf
   };
 }
 
@@ -121,19 +133,56 @@ function step(lv, st, cmd) {
   return { state: next, event: event };
 }
 
+function condition(lv, st, name) {
+  var here = cellAt(lv, st.x, st.y);
+  if (name === "transistor") return !!here.t;
+  if (name === "step") {
+    var to = cellAt(lv, st.x + DX[st.dir], st.y + DY[st.dir]);
+    return !!to && to.h !== here.h;
+  }
+  throw new Error("Unknown condition '" + name + "'");
+}
+
 function isWon(lv, st) {
   return lv.targets.every(function (t) { return st.lit.indexOf(key(t.x, t.y)) >= 0; });
 }
 
-function run(lv, program) {
-  var st = initialState(lv), trace = [], steps = expand(program);
-  for (var i = 0; i < steps.length; i++) {
-    var r = step(lv, st, steps[i].cmd);
-    st = r.state;
-    trace.push({ cmd: steps[i].cmd, event: r.event, state: st, path: steps[i].path, laps: steps[i].laps });
-    if (isWon(lv, st)) break;
+/* Walks the program over the board. Steps: { kind: "check", cond, result, path, laps, jumps } and
+   { kind: "cmd", cmd, event, state, path, laps, jumps }. Stops at the win, or (strict levels) at the first error. */
+function walk(lv, program, from) {
+  var st = from || initialState(lv), steps = [], error = null, stop = false;
+  function push(s) { steps.push(s); if (steps.length >= MAX_WALK) stop = true; }
+  function go(items, prefix, laps) {
+    for (var i = 0; i < items.length && !stop; i++) {
+      var it = items[i], path = prefix.concat(i);
+      if (isLoop(it)) {
+        for (var lap = 1; lap <= it.repeat && !stop; lap++) {
+          var before = steps.length;
+          go(it.body, path, laps.concat({ path: path, lap: lap, of: it.repeat }));
+          if (lap < it.repeat && steps.length > before) steps[steps.length - 1].jumps.push(path);
+        }
+      } else if (isIf(it)) {
+        var res = condition(lv, st, it.if);
+        push({ kind: "check", cond: it.if, result: res, path: path, laps: laps, jumps: [] });
+        go(res ? it.then : (it.else || []), res ? path : path.concat("e"), laps);
+      } else {
+        var r = step(lv, st, it);
+        st = r.state;
+        push({ kind: "cmd", cmd: it, event: r.event, state: st, path: path, laps: laps, jumps: [] });
+        if (isWon(lv, st)) stop = true;
+        else if (lv.strict && ERROR_EVENTS.indexOf(r.event) >= 0) { error = r.event; stop = true; }
+      }
+    }
   }
-  return { won: isWon(lv, st), trace: trace };
+  go(program, [], []);
+  return { steps: steps, state: st, won: isWon(lv, st), error: error };
+}
+
+function run(lv, program) {
+  var w = walk(lv, program), trace = w.steps.filter(function (s) { return s.kind === "cmd"; }).map(function (s) {
+    return { cmd: s.cmd, event: s.event, state: s.state, path: s.path, laps: s.laps };
+  });
+  return { won: w.won, trace: trace, error: w.error };
 }
 
 function stars(lv, length, won) {
@@ -272,18 +321,32 @@ function bestRotation(lv) {
 /* ---------- programs with loops ----------
    Program = Item[]; Item = command string | { repeat: N, body: Program }.
    Path = indices from the top; a cursor is the path of the container new items go into ([] = top level, [i] = body of loop i). */
-function isLoop(item) { return !!item && typeof item === "object" && !Array.isArray(item); }
+function isLoop(item) { return !!item && typeof item === "object" && item.repeat !== undefined; }
+function isIf(item) { return !!item && typeof item === "object" && item.if !== undefined; }
+function isBlock(item) { return isLoop(item) || isIf(item); }
+
+/* "2.e.0" <-> [2, "e", 0] */
+function parsePath(key) { return key === "" ? [] : String(key).split(".").map(function (k) { return k === "e" ? "e" : +k; }); }
+function pathKey(path) { return path.join("."); }
 
 function size(program) {
-  return program.reduce(function (sum, it) { return sum + (isLoop(it) ? 1 + size(it.body) : 1); }, 0);
+  return program.reduce(function (sum, it) {
+    return sum + (isLoop(it) ? 1 + size(it.body) : isIf(it) ? 1 + size(it.then) + size(it.else || []) : 1);
+  }, 0);
 }
 
 function depth(program) {
-  return program.reduce(function (d, it) { return Math.max(d, isLoop(it) ? 1 + depth(it.body) : 0); }, 0);
+  return program.reduce(function (d, it) {
+    return Math.max(d, isLoop(it) ? 1 + depth(it.body) : isIf(it) ? 1 + Math.max(depth(it.then), depth(it.else || [])) : 0);
+  }, 0);
 }
 
-function hasEmptyLoop(program) {
-  return program.some(function (it) { return isLoop(it) && (!it.body.length || hasEmptyLoop(it.body)); });
+function hasEmptyBlock(program) {
+  return program.some(function (it) {
+    if (isLoop(it)) return !it.body.length || hasEmptyBlock(it.body);
+    if (isIf(it)) return !it.then.length || !!(it.else && !it.else.length) || hasEmptyBlock(it.then) || hasEmptyBlock(it.else || []);
+    return false;
+  });
 }
 
 /* Unrolls loops into the flat list of steps the game animates.
@@ -306,38 +369,64 @@ function expand(program) {
 
 function codeLines(program, lang) {
   var code = CODE[lang], lines = [];
-  (function walk(items, prefix, d) {
+  (function walkLines(items, prefix, d) {
     items.forEach(function (it, i) {
       var path = prefix.concat(i);
-      if (!isLoop(it)) { lines.push({ text: code[it], depth: d, path: path, kind: "cmd" }); return; }
-      lines.push({ text: code.repeat + "(" + it.repeat + ") {", depth: d, path: path, kind: "open" });
-      walk(it.body, path, d + 1);
-      lines.push({ text: "}", depth: d, path: path, kind: "close" });
+      if (isLoop(it)) {
+        lines.push({ text: code.repeat + "(" + it.repeat + ") {", depth: d, path: path, kind: "open" });
+        walkLines(it.body, path, d + 1);
+        lines.push({ text: "}", depth: d, path: path, kind: "close" });
+      } else if (isIf(it)) {
+        lines.push({ text: code.if + " (" + code.cond[it.if] + ") {", depth: d, path: path, kind: "if" });
+        walkLines(it.then, path, d + 1);
+        if (it.else) {
+          lines.push({ text: "} " + code.else + " {", depth: d, path: path, kind: "else" });
+          walkLines(it.else, path.concat("e"), d + 1);
+        }
+        lines.push({ text: "}", depth: d, path: path, kind: "close" });
+      } else {
+        lines.push({ text: code[it], depth: d, path: path, kind: "cmd" });
+      }
     });
   })(program, [], 0);
   return lines;
 }
 
-function validateProgram(program, nest, commands) {
-  (function walk(items, d) {
+function validateProgram(program, nest, commands, opts) {
+  var conditions = (opts && opts.conditions) || CONDITIONS, allowElse = !!(opts && opts.allowElse);
+  (function check(items, d, inIf) {
     if (!Array.isArray(items)) throw new Error("program must be an array");
     items.forEach(function (it) {
-      if (!isLoop(it)) {
-        if (COMMANDS.indexOf(it) < 0 || commands.indexOf(it) < 0) throw new Error("command '" + it + "' is not allowed here");
-        return;
+      if (isLoop(it)) {
+        if (commands.indexOf("repeat") < 0) throw new Error("loops are not allowed here");
+        if (inIf) throw new Error("a loop inside an if is not allowed");
+        if (!(it.repeat % 1 === 0 && it.repeat >= MIN_REPEAT && it.repeat <= MAX_REPEAT)) throw new Error("repeat must be " + MIN_REPEAT + ".." + MAX_REPEAT);
+        if (d + 1 > nest) throw new Error("blocks nested deeper than " + nest);
+        check(it.body, d + 1, false);
+      } else if (isIf(it)) {
+        if (commands.indexOf("if") < 0) throw new Error("if is not allowed here");
+        if (conditions.indexOf(it.if) < 0) throw new Error("condition '" + it.if + "' is not allowed here");
+        if (it.else && !allowElse) throw new Error("else is not allowed here");
+        if (d + 1 > nest) throw new Error("blocks nested deeper than " + nest);
+        check(it.then, d + 1, true);
+        if (it.else) check(it.else, d + 1, true);
+      } else if (COMMANDS.indexOf(it) < 0 || commands.indexOf(it) < 0) {
+        throw new Error("command '" + it + "' is not allowed here");
       }
-      if (commands.indexOf("repeat") < 0) throw new Error("loops are not allowed here");
-      if (!(it.repeat % 1 === 0 && it.repeat >= MIN_REPEAT && it.repeat <= MAX_REPEAT)) throw new Error("repeat must be " + MIN_REPEAT + ".." + MAX_REPEAT);
-      if (d + 1 > nest) throw new Error("loops nested deeper than " + nest);
-      walk(it.body, d + 1);
     });
-  })(program, 0);
+  })(program, 0, false);
 }
 
 function clone(program) { return JSON.parse(JSON.stringify(program)); }
+
+/* The list a cursor points into: [] = top level, [..., i] = body of loop / then of if i, [..., i, "e"] = else of if i. */
 function containerAt(program, path) {
   var list = program;
-  path.forEach(function (i) { list = list[i].body; });
+  for (var k = 0; k < path.length; k++) {
+    var it = list[path[k]];
+    if (path[k + 1] === "e") { list = it.else; k++; }
+    else list = isLoop(it) ? it.body : it.then;
+  }
   return list;
 }
 
@@ -347,16 +436,13 @@ function addItem(program, cursor, item) {
   return next;
 }
 
+function itemAtPath(program, path) {
+  var list = containerAt(program, path.slice(0, -1));
+  return list ? list[path[path.length - 1]] : undefined;
+}
+
 function hasItem(program, path) {
-  var list = program;
-  for (var k = 0; k < path.length; k++) {
-    var it = list[path[k]];
-    if (it === undefined) return false;
-    if (k === path.length - 1) return true;
-    if (!isLoop(it)) return false;
-    list = it.body;
-  }
-  return false;
+  return path.length > 0 && itemAtPath(program, path) !== undefined;
 }
 
 function removeItem(program, path) {
@@ -367,18 +453,36 @@ function removeItem(program, path) {
 
 function setRepeat(program, path, n) {
   var next = clone(program);
-  containerAt(next, path.slice(0, -1))[path[path.length - 1]].repeat = n;
+  itemAtPath(next, path).repeat = n;
+  return next;
+}
+function setCond(program, path, cond) {
+  var next = clone(program);
+  itemAtPath(next, path).if = cond;
+  return next;
+}
+function addElse(program, path) {
+  var next = clone(program), it = itemAtPath(next, path);
+  if (!it.else) it.else = [];
+  return next;
+}
+function removeElse(program, path) {
+  var next = clone(program);
+  delete itemAtPath(next, path).else;
   return next;
 }
 
-/* The longest part of the cursor that still leads to a loop (after something was removed). */
+/* The longest part of the cursor that still leads to a block (after something was removed). */
 function fixCursor(program, cursor) {
   var list = program, fixed = [];
   for (var k = 0; k < cursor.length; k++) {
     var it = list[cursor[k]];
-    if (!isLoop(it)) break;
+    if (!isBlock(it)) break;
     fixed.push(cursor[k]);
-    list = it.body;
+    if (cursor[k + 1] === "e") {
+      if (!it.else) break;
+      fixed.push("e"); list = it.else; k++;
+    } else list = isLoop(it) ? it.body : it.then;
   }
   return fixed;
 }
@@ -429,7 +533,20 @@ BitGame.MIN_REPEAT = MIN_REPEAT;
 BitGame.MAX_REPEAT = MAX_REPEAT;
 BitGame.size = size;
 BitGame.depth = depth;
-BitGame.hasEmptyLoop = hasEmptyLoop;
+BitGame.hasEmptyBlock = hasEmptyBlock;
+BitGame.hasEmptyLoop = hasEmptyBlock;
+BitGame.isIf = isIf;
+BitGame.isLoop = isLoop;
+BitGame.parsePath = parsePath;
+BitGame.pathKey = pathKey;
+BitGame.containerAt = containerAt;
+BitGame.setCond = setCond;
+BitGame.addElse = addElse;
+BitGame.removeElse = removeElse;
+BitGame.CONDITIONS = CONDITIONS;
+BitGame.ERROR_EVENTS = ERROR_EVENTS;
+BitGame.condition = condition;
+BitGame.walk = walk;
 BitGame.expand = expand;
 BitGame.codeLines = codeLines;
 BitGame.validateProgram = validateProgram;

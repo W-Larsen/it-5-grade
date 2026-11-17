@@ -407,3 +407,106 @@ test("hasItem tells whether a path points at a command or a loop", () => {
   assert.equal(BitGame.hasItem(p, [0, 0]), false);   // a command has no body
   assert.equal(BitGame.hasItem(p, []), false);
 });
+
+/* ---------- conditions: if / else items ---------- */
+const IF = { repeat: 3, body: ["forward", { if: "transistor", then: ["light"], else: ["jump"] }] };
+test("size and depth count an if block with its else", () => {
+  assert.equal(BitGame.size([IF]), 5);
+  assert.equal(BitGame.depth([IF]), 2);
+});
+test("codeLines writes if / else / close with indentation", () => {
+  assert.deepEqual(BitGame.codeLines([IF], "uk").map((l) => "  ".repeat(l.depth) + l.text), [
+    "повтори(3) {", "  вперед()", "  якщо (тут_транзистор()) {", "    увімкнути()", "  } інакше {", "    стрибнути()", "  }", "}"]);
+  assert.equal(BitGame.codeLines([IF], "en")[2].text, "if (on_transistor()) {");
+});
+test("parsePath round-trips else segments", () => {
+  assert.deepEqual(BitGame.parsePath("2.e.0"), [2, "e", 0]);
+  assert.deepEqual(BitGame.parsePath(""), []);
+  assert.equal(BitGame.pathKey([2, "e", 0]), "2.e.0");
+});
+test("add, remove and edit inside then and else", () => {
+  let p = BitGame.addItem([], [], { if: "step", then: [] });
+  p = BitGame.addElse(p, [0]);
+  p = BitGame.addItem(p, [0], "jump");
+  p = BitGame.addItem(p, [0, "e"], "forward");
+  assert.deepEqual(p, [{ if: "step", then: ["jump"], else: ["forward"] }]);
+  assert.deepEqual(BitGame.removeItem(p, [0, "e", 0]), [{ if: "step", then: ["jump"], else: [] }]);
+  assert.deepEqual(BitGame.setCond(p, [0], "transistor")[0].if, "transistor");
+  assert.equal("else" in BitGame.removeElse(p, [0])[0], false);
+  assert.equal(BitGame.hasItem(p, [0, "e", 0]), true);
+  assert.equal(BitGame.hasItem(p, [0, "e", 1]), false);
+});
+test("fixCursor after removing the if or its else", () => {
+  const p = [{ repeat: 2, body: [{ if: "step", then: ["jump"] }] }];   // no else any more
+  assert.deepEqual(BitGame.fixCursor(p, [0, 0, "e"]), [0, 0]);
+  assert.deepEqual(BitGame.fixCursor([{ repeat: 2, body: [] }], [0, 0, "e"]), [0]);
+  assert.deepEqual(BitGame.shiftCursor([0, 1, "e"], [0, 0]), [0, 0, "e"]);
+});
+test("validateProgram enforces conditions, else and no loop inside if", () => {
+  const cmds = ["forward", "light", "repeat", "if"];
+  assert.throws(() => BitGame.validateProgram([{ if: "step", then: ["forward"] }], 2, cmds, { conditions: ["transistor"], allowElse: true }), /condition/);
+  assert.throws(() => BitGame.validateProgram([{ if: "transistor", then: [], else: [] }], 2, cmds, { conditions: ["transistor"], allowElse: false }), /else/);
+  assert.throws(() => BitGame.validateProgram([{ if: "transistor", then: [{ repeat: 2, body: ["forward"] }] }], 2, cmds, { conditions: ["transistor"], allowElse: false }), /loop/);
+});
+test("hasEmptyBlock sees an empty then or an empty else", () => {
+  assert.equal(BitGame.hasEmptyBlock([{ if: "step", then: [] }]), true);
+  assert.equal(BitGame.hasEmptyBlock([{ if: "step", then: ["jump"], else: [] }]), true);
+  assert.equal(BitGame.hasEmptyBlock([IF]), false);
+});
+
+const lvIf = (over) => BitGame.parseLevel("t-if", Object.assign({
+  title: "T", map: ["1 1t 1 1t 1t"], start: { x: 0, y: 0, dir: "E" },
+  commands: ["forward", "light", "repeat", "if"], conditions: ["transistor"], nest: 2,
+  solution: [{ repeat: 4, body: ["forward", { if: "transistor", then: ["light"] }] }], slots: 6, best: 4
+}, over));
+test("condition: transistor under Bit, step ahead", () => {
+  const lv = BitGame.parseLevel("c", { title: "C", map: ["1t 2 2"], start: { x: 0, y: 0, dir: "E" }, commands: ["forward"], slots: 3, best: 1 });
+  assert.equal(BitGame.condition(lv, at(0, 0, "E"), "transistor"), true);
+  assert.equal(BitGame.condition(lv, at(0, 0, "E"), "step"), true);
+  assert.equal(BitGame.condition(lv, at(1, 0, "E"), "step"), false);
+  assert.equal(BitGame.condition(lv, at(2, 0, "E"), "step"), false);   // edge
+});
+test("condition is evaluated at the current state on every lap", () => {
+  const lv = lvIf(), r = BitGame.walk(lv, lv.solution);
+  assert.equal(r.won, true);
+  assert.deepEqual(r.steps.filter((s) => s.kind === "check").map((s) => s.result), [true, false, true, true]);
+  assert.equal(r.steps[1].kind, "check");
+  assert.equal(r.steps[1].cond, "transistor");
+  assert.deepEqual(r.steps[1].path, [0, 1]);
+});
+test("strict mode stops at the first error; old levels do not", () => {
+  const lv = lvIf(), blind = [{ repeat: 4, body: ["forward", "light"] }];
+  const r = BitGame.walk(lv, blind);
+  assert.equal(r.error, "no-target");
+  assert.equal(r.won, false);
+  assert.equal(r.steps[r.steps.length - 1].event, "no-target");
+  const loop3 = BitGame.parseLevel("t3", { title: "T", map: ["1 1t 1 1t"], start: { x: 0, y: 0, dir: "E" }, commands: ["forward", "light", "repeat"], solution: [{ repeat: 3, body: ["forward", "light"] }], slots: 5, best: 3 });
+  assert.equal(BitGame.walk(loop3, loop3.solution).won, true);   // no-target is harmless in lesson 3
+});
+const STAIRS = { title: "S", map: ["1 2 2 3 3 3 4 4t"], start: { x: 0, y: 0, dir: "E" }, commands: ["forward", "jump", "light", "repeat", "if"], conditions: ["step"], else: true, nest: 2,
+  solution: [{ repeat: 7, body: [{ if: "step", then: ["jump"], else: ["forward"] }] }, "light"], slots: 6, best: 5 };
+test("else branch runs when the condition is false", () => {
+  const lv = BitGame.parseLevel("st", STAIRS), r = BitGame.walk(lv, lv.solution);
+  assert.equal(r.won, true);
+  assert.equal(r.steps.filter((s) => s.kind === "cmd").map((s) => s.cmd).join(" "), "jump forward jump forward forward jump forward light");
+});
+test("walk equals expand on every lesson 2–3 solution", () => {
+  globalThis.BitGame = BitGame;
+  require("../shared/bit-game/levels-02.js");
+  require("../shared/bit-game/levels-03.js");
+  for (const id of BitGame.levelIds().filter((x) => /^[23]-/.test(x))) {
+    const lv = BitGame.getLevel(id), prog = lv.solution || BitGame.solve(lv);
+    const a = BitGame.expand(prog), b = BitGame.walk(lv, prog).steps;
+    assert.ok(b.length && b.length <= a.length, id);
+    b.forEach((s, i) => {
+      assert.deepEqual([s.kind, s.cmd, s.path, s.laps], ["cmd", a[i].cmd, a[i].path, a[i].laps], id + " step " + i);
+      if (i < b.length - 1) assert.deepEqual(s.jumps, a[i].jumps, id + " jumps " + i);
+    });
+  }
+});
+test("parseLevel requires conditions and solution with if", () => {
+  assert.throws(() => lvIf({ conditions: undefined }), /conditions/);
+  assert.throws(() => lvIf({ conditions: ["smell"] }), /condition/);
+  assert.equal(lvIf().strict, true);
+  assert.equal(lvIf().allowElse, false);
+});
