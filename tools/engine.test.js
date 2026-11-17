@@ -512,3 +512,12 @@ test("parseLevel requires conditions and solution with if", () => {
   assert.equal(lvIf().strict, true);
   assert.equal(lvIf().allowElse, false);
 });
+
+test("condition edge: no tile ahead (the board edge or a hole)", () => {
+  const lv = BitGame.parseLevel("e", { title: "E", map: ["1 1 1t", "1 . 1"], start: { x: 0, y: 0, dir: "E" }, commands: ["forward"], slots: 3, best: 1 });
+  assert.equal(BitGame.condition(lv, at(0, 0, "E"), "edge"), false);
+  assert.equal(BitGame.condition(lv, at(2, 0, "E"), "edge"), true);    // the board ends
+  assert.equal(BitGame.condition(lv, at(0, 0, "S"), "edge"), false);
+  assert.equal(BitGame.condition(lv, at(0, 1, "E"), "edge"), true);    // a hole ahead
+  assert.equal(BitGame.CODE.uk.cond.edge, "попереду_край()");
+});

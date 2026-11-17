@@ -11,13 +11,13 @@ var LOOP_MAX_SLOTS = 8;
 var MAX_HEIGHT = 4;
 var MIN_REPEAT = 2;
 var MAX_REPEAT = 9;
-var CONDITIONS = ["transistor", "step"];
+var CONDITIONS = ["transistor", "step", "edge"];
 var ERROR_EVENTS = ["bump-edge", "bump-step", "bump-flat", "bump-high", "no-target"];
 var MAX_WALK = 2000;
 
 var CODE = {
-  uk: { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()", repeat: "повтори", if: "якщо", else: "інакше", cond: { transistor: "тут_транзистор()", step: "попереду_сходинка()" } },
-  en: { forward: "forward()", left: "turn_left()", right: "turn_right()", jump: "jump()", light: "switch_on()", repeat: "repeat", if: "if", else: "else", cond: { transistor: "on_transistor()", step: "step_ahead()" } }
+  uk: { forward: "вперед()", left: "ліворуч()", right: "праворуч()", jump: "стрибнути()", light: "увімкнути()", repeat: "повтори", if: "якщо", else: "інакше", cond: { transistor: "тут_транзистор()", step: "попереду_сходинка()", edge: "попереду_край()" } },
+  en: { forward: "forward()", left: "turn_left()", right: "turn_right()", jump: "jump()", light: "switch_on()", repeat: "repeat", if: "if", else: "else", cond: { transistor: "on_transistor()", step: "step_ahead()", edge: "edge_ahead()" } }
 };
 
 var registry = {};
@@ -140,6 +140,7 @@ function condition(lv, st, name) {
     var to = cellAt(lv, st.x + DX[st.dir], st.y + DY[st.dir]);
     return !!to && to.h !== here.h;
   }
+  if (name === "edge") return !cellAt(lv, st.x + DX[st.dir], st.y + DY[st.dir]);
   throw new Error("Unknown condition '" + name + "'");
 }
 

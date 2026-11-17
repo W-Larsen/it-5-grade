@@ -115,13 +115,15 @@ test("a stairs level that needs no else is reported", () => {
   assert.match(checkLevel(lv, IFS).join("\n"), /without else/);
 });
 test("a solution that switches a transistor off again is reported", () => {
-  const lv = mkIf("4-03", { map: ["1t 1t"], commands: IFS, best: 5, slots: 7, solution: ["light", "light", "light", "forward", { if: "transistor", then: ["light"] }] });
+  const lv = mkIf("4-03", { map: ["1t 1t"], commands: ["forward", "light", "repeat", "if"], best: 5, slots: 6, solution: ["light", "light", "light", "forward", { if: "transistor", then: ["light"] }] });
   assert.match(checkLevel(lv, ALL.concat("repeat")).join("\n"), /twice|off/);
 });
 test("margins for lesson 4 ids", () => {
   assert.equal(marginFor("4-i1"), 2);
-  assert.equal(marginFor("4-03"), 2);
-  assert.equal(marginFor("4-02"), 1);
+  assert.equal(marginFor("4-01"), 2);
+  assert.equal(marginFor("4-03"), 1);
+  assert.equal(marginFor("4-00"), 0);
+  assert.equal(marginFor("4-08"), 0);
   assert.equal(marginFor("4-05"), 1);
   assert.equal(marginFor("4-b1"), 0);
 });

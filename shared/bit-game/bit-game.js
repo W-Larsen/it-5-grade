@@ -81,7 +81,8 @@ var ICONS = {
   jump: '<path d="M3 19C5 7 14 5 18 12"/><path d="M13 12h6v-6"/>',
   light: '<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
   repeat: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
-  if: '<path d="M9 9a3 3 0 1 1 4.5 2.6c-1 .6-1.5 1.2-1.5 2.4"/><path d="M12 18h.01"/>'
+  if: '<path d="M9 9a3 3 0 1 1 4.5 2.6c-1 .6-1.5 1.2-1.5 2.4"/><path d="M12 18h.01"/>',
+  edge: '<path d="M20 4v16"/><path d="M4 12h11M11 8l4 4-4 4"/>'
 };
 var LABELS = { forward: "вперед", left: "ліворуч", right: "праворуч", jump: "стрибок", light: "увімкнути", repeat: "цикл", if: "якщо" };
 var CMD_COLORS = { forward: "#2F80ED", left: "#7A5CFA", right: "#7A5CFA", jump: "#E5487B", light: "#FFC93C", repeat: "#0E9C8D", if: "#E8590C" };
@@ -181,7 +182,9 @@ var CSS = [
 ".prog{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start;min-height:60px;overflow:auto;padding:2px}",
 ".side.tree .prog-panel{flex:0 0 61%;display:flex;flex-direction:column;padding:8px 10px}",
 ".side.tree .prog{flex:1 1 0;min-height:0}",
-".side.tree.ifs .prog-panel{flex-basis:75%}",
+".root.wide{grid-template-columns:minmax(0,1fr) 400px}",
+".side.tree.ifs .prog-panel{flex-basis:55%}",
+".side.tree.ifs .code-body{font-size:15px;line-height:1.4}",
 ".side.tree .code{flex:1 1 0;min-height:0;padding:6px 10px}",
 ".side.tree .code-head{margin-bottom:2px}",
 ".side.tree .code-head .btn.small{min-height:26px;padding:0 10px;font-size:12px;box-shadow:0 2px 0 var(--ink,#16193A)}",
@@ -205,22 +208,21 @@ var CSS = [
 ".loop-body{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:44px;border:2px dashed #9BD6CC;border-radius:10px;padding:3px}",
 ".tail{flex:1 1 100%;min-height:26px;display:flex;align-items:center;border:2px dashed #B9C6E0;border-radius:10px;padding:2px 3px}",
 ".tail .caret{height:20px}",
-".cond{flex:1 1 100%;position:relative;border:3px solid #E8590C;border-radius:14px;background:#FFF1E6;padding:4px;box-shadow:0 3px 0 #E8590C}",
-".cond-head{display:flex;align-items:center;gap:8px;color:#C2410C;margin-bottom:2px;border-radius:8px}",
+".cond{flex:1 1 100%;position:relative;border:3px solid #E8590C;border-radius:14px;background:#FFF1E6;padding:3px 5px 5px;box-shadow:0 3px 0 #E8590C}",
+".cond-head{display:flex;align-items:center;gap:6px;color:#C2410C;margin-bottom:3px;border-radius:8px}",
 ".cond-head.now{outline:4px solid #FFC93C;outline-offset:2px}",
 ".cond-head svg{flex:none}",
-".which{display:inline-flex;align-items:center;gap:4px;font:800 14px/1 var(--f-body,sans-serif);min-width:48px;height:28px;border-radius:999px;border:3px solid var(--ink,#16193A);background:#fff;color:var(--ink,#16193A);box-shadow:0 3px 0 var(--ink,#16193A);padding:0 10px}",
+".which{display:inline-flex;align-items:center;gap:4px;font:800 14px/1 var(--f-body,sans-serif);height:26px;border-radius:999px;border:3px solid var(--ink,#16193A);background:#fff;color:var(--ink,#16193A);box-shadow:0 3px 0 var(--ink,#16193A);padding:0 9px;white-space:nowrap}",
 ".which:active,.add-else:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
-".add-else{font:800 13px/1 var(--f-body,sans-serif);height:26px;border-radius:999px;border:3px dashed #E8590C;background:#fff;color:#C2410C;padding:0 9px}",
-".mark{font:800 13px/1 var(--f-body,sans-serif);flex:1;white-space:nowrap}",
+".which.static{box-shadow:none;border-style:dashed;background:#FFF1E6}",
+".mark{font:800 13px/1 var(--f-body,sans-serif);flex:1 1 0;min-width:0;white-space:nowrap}",
 ".mark.yes{color:#0A7A3C}.mark.no{color:#6B7280}",
-".cond-body{display:flex;gap:4px;align-items:stretch}",
-".cond-then{flex:1 1 0;min-width:0}",
-".else-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column}",
-".cond-else{flex:1}",
-".cond-then,.cond-else{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:38px;border:2px dashed #F5B38A;border-radius:10px;padding:2px}",
-".else-head{display:flex;align-items:center;gap:8px;font:800 13px/1 var(--f-body,sans-serif);color:#C2410C;margin:2px 0 1px}",
-".del-else{width:26px;height:26px;border-radius:50%;border:3px solid var(--ink,#16193A);background:#fff;font:900 12px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center;margin-left:auto}",
+".cond-body{display:flex;gap:6px;align-items:stretch}",
+".then-col,.else-col{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;padding-top:7px}",
+".col-tag{position:absolute;top:0;left:8px;z-index:1;background:#FFF1E6;padding:0 4px;font:900 10px/1 var(--f-body,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:#C2410C}",
+".cond-then,.cond-else{flex:1;display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:38px;border:2px dashed #F5B38A;border-radius:10px;padding:3px}",
+".add-else{align-self:stretch;flex:0 0 auto;font:800 12px/1.1 var(--f-body,sans-serif);min-width:64px;border-radius:10px;border:2px dashed #E8590C;background:#fff;color:#C2410C;padding:0 8px;margin-top:7px}",
+".del-else{position:absolute;top:-3px;right:-2px;z-index:2;width:22px;height:22px;border-radius:50%;border:2px solid var(--ink,#16193A);background:#fff;font:900 11px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center}",
 ".cond.took-then > .cond-body .cond-else,.cond.took-else > .cond-body .cond-then{opacity:.45}",
 ".peek .bit-body{animation:peek .5s ease-in-out}",
 "@keyframes peek{30%{transform:translateY(-6px) rotate(-5deg)}70%{transform:translateY(-6px) rotate(5deg)}}",
@@ -480,6 +482,7 @@ P.renderSide = function () {
   mem.hidden = this.q(".prog").hidden = !this.tree;
   this.q(".side").classList.toggle("tree", this.tree);
   this.q(".side").classList.toggle("ifs", !!lv.strict);
+  this.root.classList.toggle("wide", !!lv.strict);
   this.q(".prog-title").textContent = this.tree ? "ПАМ'ЯТЬ" : "ПРОГРАМА";
   for (var i = 0; i < lv.slots; i++) {
     if (this.tree) {
@@ -505,15 +508,16 @@ P.treeHTML = function (items, prefix) {
       html += '<button class="chip" type="button" data-path="' + key + '" style="background:' + CMD_COLORS[it] + ";color:" + (it === "light" ? "#16193A" : "#fff") +
         '" aria-label="' + LABELS[it] + ' (прибрати)">' + icon(it, 22) + "</button>";
     } else if (B.isIf(it)) {
-      var lbl = it.if === "transistor" ? icon("light", 16) + "транзистор" : icon("jump", 16) + "сходинка";
-      html += '<div class="cond" data-path="' + key + '"><div class="cond-head">' + icon("if", 20) +
-        '<button class="which" type="button" data-path="' + key + '" aria-label="Яка умова">' + lbl + "</button>" +
-        '<span class="mark"></span>' +
-        (it.else == null && lv.allowElse ? '<button class="add-else" type="button" data-path="' + key + '">+ інакше</button>' : "") +
+      var lbl = it.if === "transistor" ? icon("light", 16) + "транзистор" : it.if === "edge" ? icon("edge", 16) + "край" : icon("jump", 16) + "сходинка";
+      var which = lv.conditions.length > 1
+        ? '<button class="which" type="button" data-path="' + key + '" aria-label="Змінити умову">' + lbl + " ⇄</button>"
+        : '<span class="which static">' + lbl + "</span>";
+      html += '<div class="cond" data-path="' + key + '"><div class="cond-head">' + icon("if", 18) + which + '<span class="mark"></span>' +
         '<button class="del" type="button" data-path="' + key + '" aria-label="Прибрати «якщо»">✕</button></div>' +
-        '<div class="cond-body"><div class="cond-then" data-path="' + key + '">' + self.treeHTML(it.then, path) + "</div>" +
-        (it.else ? '<div class="else-col"><div class="else-head">інакше<button class="del-else" type="button" data-path="' + key + '" aria-label="Прибрати «інакше»">✕</button></div>' +
-          '<div class="cond-else" data-path="' + key + '">' + self.treeHTML(it.else, path.concat("e")) + "</div></div>" : "") +
+        '<div class="cond-body"><div class="then-col"><span class="col-tag">то</span><div class="cond-then" data-path="' + key + '">' + self.treeHTML(it.then, path) + "</div></div>" +
+        (it.else ? '<div class="else-col"><span class="col-tag">інакше</span><button class="del-else" type="button" data-path="' + key + '" aria-label="Прибрати «інакше»">✕</button>' +
+          '<div class="cond-else" data-path="' + key + '">' + self.treeHTML(it.else, path.concat("e")) + "</div></div>"
+          : lv.allowElse ? '<button class="add-else" type="button" data-path="' + key + '">+ інакше</button>' : "") +
         "</div></div>";
     } else {
       html += '<div class="loop" data-path="' + key + '"><div class="loop-head">' + icon("repeat", 20) +
@@ -536,13 +540,15 @@ P.renderProgram = function (now, flash) {
     var box = this.q(".prog"), lk = this.locked();
     box.innerHTML = this.treeHTML(prog, []);
     [].forEach.call(box.querySelectorAll("button"), function (b) { b.disabled = lk; });
+    var caretEl = box.querySelector(".caret");
+    if (caretEl && caretEl.scrollIntoView && !st) caretEl.scrollIntoView({ block: "nearest" });   // the place new commands go stays in view
     if (st) {
       if (st.kind === "check") {
         var head = box.querySelector('.cond[data-path="' + B.pathKey(st.path) + '"] > .cond-head');
         if (head) head.classList.add("now");
       } else {
         var chip = box.querySelector('.chip[data-path="' + B.pathKey(st.path) + '"]');
-        if (chip) chip.classList.add("now");
+        if (chip) { chip.classList.add("now"); if (chip.scrollIntoView) chip.scrollIntoView({ block: "nearest" }); }
       }
       st.laps.forEach(function (l) {
         var lap = box.querySelector('.loop[data-path="' + B.pathKey(l.path) + '"] > .loop-head .lap');
@@ -728,6 +734,12 @@ var BUMP_TEXT = {
 };
 
 /* Executes one command with animation; resolves false if the run was cancelled meanwhile. */
+/* What Bit says when a strict level stops the program. */
+function errText(ev) {
+  if (ev === "no-target") return "Іскра! Тут немає транзистора.";
+  return BUMP_TEXT[ev] + (ev === "bump-edge" ? " Може, повторів забагато?" : "");
+}
+
 P.execOne = async function (i) {
   var id = this.runId, lv = this.level, cmd = this.steps[i].cmd;
   this.curStep = i;
@@ -738,7 +750,7 @@ P.execOne = async function (i) {
     var chk = this.steps[i];
     this.bitG.classList.remove("peek"); void this.bitG.getBoundingClientRect(); this.bitG.classList.add("peek");
     Sound.pop();
-    this.say((chk.cond === "transistor" ? "Транзистор тут? " : "Попереду сходинка? ") + (chk.result ? "✓ так" : "✗ ні"));
+    this.say((chk.cond === "transistor" ? "Транзистор тут? " : chk.cond === "edge" ? "Попереду край? " : "Попереду сходинка? ") + (chk.result ? "✓ так" : "✗ ні"));
     await sleep(STEP_MS * 1.1);
     return id === this.runId;
   }
@@ -756,7 +768,7 @@ P.execOne = async function (i) {
   } else if (lv.strict) {   // a mistake stops the program
     this.errored = ev;
     Sound.buzz();
-    this.say(ev === "no-target" ? "Іскра! Тут немає транзистора." : BUMP_TEXT[ev]);
+    this.say(errText(ev));
     await this.shakeBit(from);
   } else if (ev === "no-target" && this.tree) {
     Sound.click();
@@ -853,7 +865,7 @@ P.lose = function (errorEvent) {
   this.curStep = -1;
   this.renderProgram();
   var left = this.level.targets.length - this.state.lit.length;
-  if (errorEvent) this.say((errorEvent === "no-target" ? "Іскра! Тут немає транзистора." : BUMP_TEXT[errorEvent]) + " Спробуй ще!");
+  if (errorEvent) this.say(errText(errorEvent) + " Спробуй ще!");
   else this.say(left > 0 ? B.remainingText(left) : "Усі транзистори вже горять!");
   if (this.fails >= 2) this.q('[data-act="hint"]').hidden = false;
   this.syncUI();
