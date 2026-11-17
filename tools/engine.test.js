@@ -483,12 +483,12 @@ test("strict mode stops at the first error; old levels do not", () => {
   const loop3 = BitGame.parseLevel("t3", { title: "T", map: ["1 1t 1 1t"], start: { x: 0, y: 0, dir: "E" }, commands: ["forward", "light", "repeat"], solution: [{ repeat: 3, body: ["forward", "light"] }], slots: 5, best: 3 });
   assert.equal(BitGame.walk(loop3, loop3.solution).won, true);   // no-target is harmless in lesson 3
 });
-const STAIRS = { title: "S", map: ["1 2 2 3 3 3 4 4t"], start: { x: 0, y: 0, dir: "E" }, commands: ["forward", "jump", "light", "repeat", "if"], conditions: ["step"], else: true, nest: 2,
-  solution: [{ repeat: 7, body: [{ if: "step", then: ["jump"], else: ["forward"] }] }, "light"], slots: 6, best: 5 };
+const STAIRS = { title: "S", map: ["1 2 2 3 2 3 4 4 3t"], start: { x: 0, y: 0, dir: "E" }, commands: ["forward", "jump", "light", "repeat", "if"], conditions: ["step"], else: true, nest: 2,
+  solution: [{ repeat: 8, body: [{ if: "step", then: ["jump"], else: ["forward"] }] }, "light"], slots: 6, best: 5 };
 test("else branch runs when the condition is false", () => {
   const lv = BitGame.parseLevel("st", STAIRS), r = BitGame.walk(lv, lv.solution);
   assert.equal(r.won, true);
-  assert.equal(r.steps.filter((s) => s.kind === "cmd").map((s) => s.cmd).join(" "), "jump forward jump forward forward jump forward light");
+  assert.equal(r.steps.filter((s) => s.kind === "cmd").map((s) => s.cmd).join(" "), "jump forward jump jump jump jump forward jump light");
 });
 test("walk equals expand on every lesson 2–3 solution", () => {
   globalThis.BitGame = BitGame;
