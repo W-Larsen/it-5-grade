@@ -26,14 +26,14 @@ BitGame.level("4-00", {
 
 /* ----- Знайомство з «якщо» (слайд «Якщо» у грі) ----- */
 BitGame.level("4-i1", {
-  title: "Ліхтарі нерівно",
+  title: "Різні проміжки",
   map: ["1 1t 1 1t 1t 1 1 1t"],
   start: { x: 0, y: 0, dir: "E" },
   commands: ["forward", "light", "repeat", "if"],
   conditions: ["transistor"],
   solution: [{ repeat: 7, body: ["forward", { if: "transistor", then: ["light"] }] }],
   nest: 2, slots: 6, best: 4,
-  say: "Транзистори стоять нерівно! Спитай: «тут транзистор?»"
+  say: "Транзистори стоять через різні проміжки. Вмикай лише там, де він є: спитай «тут транзистор?»"
 });
 
 /* ----- Ліхтарі: умова «тут транзистор?» ----- */
