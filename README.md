@@ -11,7 +11,7 @@
 | 1 | Подорож Біта: як працює інтернет | [`lesson-01-internet/`](lesson-01-internet/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-01-internet/) | [конспект](lesson-01-internet/teacher-notes.md) · теорія `.docx` |
 | 2 | Біт у процесорі | [`lesson-02-processor/`](lesson-02-processor/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-02-processor/) | [конспект](lesson-02-processor/teacher-notes.md) · теорія `.docx` |
 | 3 | Біт у циклі | [`lesson-03-loops/`](lesson-03-loops/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-03-loops/) | [конспект](lesson-03-loops/teacher-notes.md) · [теорія `.docx`](lesson-03-loops/Урок-3-теорія-для-вчителя.docx) |
-| 4 | Біт на роздоріжжі | [`lesson-04-conditions/`](lesson-04-conditions/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-04-conditions/) | [конспект](lesson-04-conditions/teacher-notes.md) |
+| 4 | Біт на роздоріжжі | [`lesson-04-conditions/`](lesson-04-conditions/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/lesson-04-conditions/) | [конспект](lesson-04-conditions/teacher-notes.md) · [теорія `.docx`](lesson-04-conditions/Урок-4-теорія-для-вчителя.docx) |
 | — | Біт-програміст · Всі рівні | [`game/`](game/index.html) · [онлайн](https://w-larsen.github.io/it-5-grade/game/) | — |
 
 ## Структура
