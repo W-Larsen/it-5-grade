@@ -18,9 +18,7 @@ function shade(hex, k) {
 function iso(x, y, h) { return { x: (x - y) * HW, y: (x + y) * HH - h * HZ }; }
 /* The item (command or loop) at `path` of a program tree. */
 function itemAt(program, path) {
-  var it = { body: program };
-  path.forEach(function (i) { it = it.body[i]; });
-  return it;
+  return B.containerAt(program, path.slice(0, -1))[path[path.length - 1]];
 }
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 function el(tag, attrs, parent) {
@@ -82,10 +80,12 @@ var ICONS = {
   right: '<path d="M15 4l5 5-5 5"/><path d="M20 9h-9a6 6 0 0 0 0 12h3"/>',
   jump: '<path d="M3 19C5 7 14 5 18 12"/><path d="M13 12h6v-6"/>',
   light: '<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
-  repeat: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>'
+  repeat: '<path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/>',
+  if: '<path d="M9 9a3 3 0 1 1 4.5 2.6c-1 .6-1.5 1.2-1.5 2.4"/><path d="M12 18h.01"/>',
+  edge: '<path d="M20 4v16"/><path d="M4 12h11M11 8l4 4-4 4"/>'
 };
-var LABELS = { forward: "вперед", left: "ліворуч", right: "праворуч", jump: "стрибок", light: "увімкнути", repeat: "цикл" };
-var CMD_COLORS = { forward: "#2F80ED", left: "#7A5CFA", right: "#7A5CFA", jump: "#E5487B", light: "#FFC93C", repeat: "#0E9C8D" };
+var LABELS = { forward: "вперед", left: "ліворуч", right: "праворуч", jump: "стрибок", light: "увімкнути", repeat: "цикл", if: "якщо" };
+var CMD_COLORS = { forward: "#2F80ED", left: "#7A5CFA", right: "#7A5CFA", jump: "#E5487B", light: "#FFC93C", repeat: "#0E9C8D", if: "#E8590C" };
 function icon(cmd, size) {
   return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[cmd] + '</svg>';
 }
@@ -182,6 +182,9 @@ var CSS = [
 ".prog{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;align-content:flex-start;min-height:60px;overflow:auto;padding:2px}",
 ".side.tree .prog-panel{flex:0 0 61%;display:flex;flex-direction:column;padding:8px 10px}",
 ".side.tree .prog{flex:1 1 0;min-height:0}",
+".root.wide{grid-template-columns:minmax(0,1fr) 400px}",
+".side.tree.ifs .prog-panel{flex-basis:55%}",
+".side.tree.ifs .code-body{font-size:15px;line-height:1.4}",
 ".side.tree .code{flex:1 1 0;min-height:0;padding:6px 10px}",
 ".side.tree .code-head{margin-bottom:2px}",
 ".side.tree .code-head .btn.small{min-height:26px;padding:0 10px;font-size:12px;box-shadow:0 2px 0 var(--ink,#16193A)}",
@@ -205,6 +208,26 @@ var CSS = [
 ".loop-body{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:44px;border:2px dashed #9BD6CC;border-radius:10px;padding:3px}",
 ".tail{flex:1 1 100%;min-height:26px;display:flex;align-items:center;border:2px dashed #B9C6E0;border-radius:10px;padding:2px 3px}",
 ".tail .caret{height:20px}",
+".cond{flex:1 1 100%;position:relative;border:3px solid #E8590C;border-radius:14px;background:#FFF1E6;padding:3px 5px 5px;box-shadow:0 3px 0 #E8590C}",
+".cond-head{display:flex;align-items:center;gap:6px;color:#C2410C;margin-bottom:3px;border-radius:8px}",
+".cond-head.now{outline:4px solid #FFC93C;outline-offset:2px}",
+".kw-head{font:900 15px/1 var(--f-body,sans-serif);color:#C2410C;flex:none}",
+".cmd .kw{font:900 20px/1 var(--f-body,sans-serif);letter-spacing:.01em}",
+".cond-head svg{flex:none}",
+".which{display:inline-flex;align-items:center;gap:4px;font:800 14px/1 var(--f-body,sans-serif);height:26px;border-radius:999px;border:3px solid var(--ink,#16193A);background:#fff;color:var(--ink,#16193A);box-shadow:0 3px 0 var(--ink,#16193A);padding:0 9px;white-space:nowrap}",
+".which:active,.add-else:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink,#16193A)}",
+".which.static{box-shadow:none;border-style:dashed;background:#FFF1E6}",
+".mark{font:800 13px/1 var(--f-body,sans-serif);flex:1 1 0;min-width:0;white-space:nowrap}",
+".mark.yes{color:#0A7A3C}.mark.no{color:#6B7280}",
+".cond-body{display:flex;gap:6px;align-items:stretch}",
+".then-col,.else-col{position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;padding-top:7px}",
+".col-tag{position:absolute;top:0;left:8px;z-index:1;background:#FFF1E6;padding:0 4px;font:900 10px/1 var(--f-body,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:#C2410C}",
+".cond-then,.cond-else{flex:1;display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:38px;border:2px dashed #F5B38A;border-radius:10px;padding:3px}",
+".add-else{align-self:stretch;flex:0 0 auto;font:800 12px/1.1 var(--f-body,sans-serif);min-width:64px;border-radius:10px;border:2px dashed #E8590C;background:#fff;color:#C2410C;padding:0 8px;margin-top:7px}",
+".del-else{position:absolute;top:-3px;right:-2px;z-index:2;width:22px;height:22px;border-radius:50%;border:2px solid var(--ink,#16193A);background:#fff;font:900 11px/1 var(--f-body,sans-serif);padding:0;display:grid;place-items:center}",
+".cond.took-then > .cond-body .cond-else,.cond.took-else > .cond-body .cond-then{opacity:.45}",
+".peek .bit-body{animation:peek .5s ease-in-out}",
+"@keyframes peek{30%{transform:translateY(-6px) rotate(-5deg)}70%{transform:translateY(-6px) rotate(5deg)}}",
 ".caret{display:inline-grid;place-items:center;width:24px;height:38px;border-radius:8px;border:2px dashed #2F80ED;color:#2F80ED;font:900 18px/1 var(--f-mono,monospace);animation:blink 1.1s steps(2,jump-none) infinite;pointer-events:none}",
 "@keyframes blink{50%{opacity:.25}}",
 ".deck{grid-column:1/-1;grid-row:3;display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;padding-bottom:6px}",
@@ -323,7 +346,7 @@ P.loadLevel = function (i) {
   this.cursor = [];
   this.steps = [];
   this.curStep = -1;
-  this.tree = this.level.commands.indexOf("repeat") >= 0;
+  this.tree = this.level.commands.indexOf("repeat") >= 0 || this.level.commands.indexOf("if") >= 0;
   this.fails = 0;
   this.hintCache = null;
   this.running = this.busy = this.won = false;
@@ -460,6 +483,8 @@ P.renderSide = function () {
   slots.hidden = this.tree;
   mem.hidden = this.q(".prog").hidden = !this.tree;
   this.q(".side").classList.toggle("tree", this.tree);
+  this.q(".side").classList.toggle("ifs", !!lv.strict);
+  this.root.classList.toggle("wide", !!lv.strict);
   this.q(".prog-title").textContent = this.tree ? "ПАМ'ЯТЬ" : "ПРОГРАМА";
   for (var i = 0; i < lv.slots; i++) {
     if (this.tree) {
@@ -478,12 +503,24 @@ P.renderSide = function () {
 
 /* The program as blocks (memory mode): commands are chips, a loop is a frame; the caret sits at the end of the container new commands go into. */
 P.treeHTML = function (items, prefix) {
-  var self = this, html = "";
+  var self = this, html = "", lv = this.level;
   items.forEach(function (it, i) {
-    var path = prefix.concat(i), key = path.join(".");
+    var path = prefix.concat(i), key = B.pathKey(path);
     if (typeof it === "string") {
       html += '<button class="chip" type="button" data-path="' + key + '" style="background:' + CMD_COLORS[it] + ";color:" + (it === "light" ? "#16193A" : "#fff") +
         '" aria-label="' + LABELS[it] + ' (прибрати)">' + icon(it, 22) + "</button>";
+    } else if (B.isIf(it)) {
+      var lbl = it.if === "transistor" ? icon("light", 16) + "транзистор" : it.if === "edge" ? icon("edge", 16) + "край" : icon("jump", 16) + "сходинка";
+      var which = lv.conditions.length > 1
+        ? '<button class="which" type="button" data-path="' + key + '" aria-label="Змінити умову">' + lbl + " ⇄</button>"
+        : '<span class="which static">' + lbl + "</span>";
+      html += '<div class="cond" data-path="' + key + '"><div class="cond-head"><b class="kw-head">якщо</b>' + which + '<span class="mark"></span>' +
+        '<button class="del" type="button" data-path="' + key + '" aria-label="Прибрати «якщо»">✕</button></div>' +
+        '<div class="cond-body"><div class="then-col"><span class="col-tag">то</span><div class="cond-then" data-path="' + key + '">' + self.treeHTML(it.then, path) + "</div></div>" +
+        (it.else ? '<div class="else-col"><span class="col-tag">інакше</span><button class="del-else" type="button" data-path="' + key + '" aria-label="Прибрати «інакше»">✕</button>' +
+          '<div class="cond-else" data-path="' + key + '">' + self.treeHTML(it.else, path.concat("e")) + "</div></div>"
+          : lv.allowElse ? '<button class="add-else" type="button" data-path="' + key + '">+ інакше</button>' : "") +
+        "</div></div>";
     } else {
       html += '<div class="loop" data-path="' + key + '"><div class="loop-head">' + icon("repeat", 20) +
         '<button class="times" type="button" data-path="' + key + '" aria-label="Скільки разів повторити">×' + it.repeat + "</button>" +
@@ -491,8 +528,8 @@ P.treeHTML = function (items, prefix) {
         '<div class="loop-body">' + self.treeHTML(it.body, path) + "</div></div>";
     }
   });
-  var caret = prefix.join(".") === this.cursor.join(".") ? '<span class="caret">+</span>' : "";
-  if (prefix.length) return html + caret;   // inside a loop the caret closes the body
+  var caret = B.pathKey(prefix) === B.pathKey(this.cursor) ? '<span class="caret">+</span>' : "";
+  if (prefix.length) return html + caret;   // inside a block the caret closes the body
   return html + '<div class="tail" aria-label="Додати після усього">' + caret + "</div>";
 };
 
@@ -505,17 +542,36 @@ P.renderProgram = function (now, flash) {
     var box = this.q(".prog"), lk = this.locked();
     box.innerHTML = this.treeHTML(prog, []);
     [].forEach.call(box.querySelectorAll("button"), function (b) { b.disabled = lk; });
+    var caretEl = box.querySelector(".caret");
+    if (caretEl && caretEl.scrollIntoView && !st) caretEl.scrollIntoView({ block: "nearest" });   // the place new commands go stays in view
     if (st) {
-      var chip = box.querySelector('.chip[data-path="' + st.path.join(".") + '"]');
-      if (chip) chip.classList.add("now");
+      if (st.kind === "check") {
+        var head = box.querySelector('.cond[data-path="' + B.pathKey(st.path) + '"] > .cond-head');
+        if (head) head.classList.add("now");
+      } else {
+        var chip = box.querySelector('.chip[data-path="' + B.pathKey(st.path) + '"]');
+        if (chip) { chip.classList.add("now"); if (chip.scrollIntoView) chip.scrollIntoView({ block: "nearest" }); }
+      }
       st.laps.forEach(function (l) {
-        var lap = box.querySelector('.loop[data-path="' + l.path.join(".") + '"] > .loop-head .lap');
+        var lap = box.querySelector('.loop[data-path="' + B.pathKey(l.path) + '"] > .loop-head .lap');
         if (lap) lap.textContent = "коло " + l.lap + "/" + l.of;
       });
+      /* what each if answered the last time it was asked: ✓/✗ in the head, the branch not taken dims */
+      for (var j = 0; j <= now; j++) {
+        var cs_ = this.steps[j];
+        if (cs_.kind !== "check") continue;
+        var cond = box.querySelector('.cond[data-path="' + B.pathKey(cs_.path) + '"]');
+        if (!cond) continue;
+        cond.classList.remove("took-then", "took-else");
+        cond.classList.add(cs_.result ? "took-then" : "took-else");
+        var mk = cond.querySelector(":scope > .cond-head .mark");
+        mk.textContent = cs_.result ? "✓ так" : "✗ ні";
+        mk.className = "mark " + (cs_.result ? "yes" : "no");
+      }
       /* the loops that jumped back right before this step flash «⤴ назад» */
       var before = flash && now > 0 ? this.steps[now - 1].jumps : [];
       before.forEach(function (path) {
-        var fr = box.querySelector('.loop[data-path="' + path.join(".") + '"]');
+        var fr = box.querySelector('.loop[data-path="' + B.pathKey(path) + '"]');
         if (fr) { fr.classList.add("jump"); setTimeout(function () { fr.classList.remove("jump"); }, 700); }
       });
     }
@@ -536,7 +592,7 @@ P.renderProgram = function (now, flash) {
     body.innerHTML = '<div class="ln empty">' + (this.codeLang === "uk" ? "# натискай команди внизу" : "# tap commands below") + "</div>";
   } else {
     body.innerHTML = lines.map(function (l, n) {
-      var cur = st && l.kind === "cmd" && l.path.join(".") === st.path.join(".");
+      var cur = st && l.kind === (st.kind === "check" ? "if" : "cmd") && B.pathKey(l.path) === B.pathKey(st.path);
       return '<div class="ln' + (cur ? " now" : "") + '"><i>' + (n + 1) + "</i><span>" + esc(new Array(l.depth * 4 + 1).join(" ") + l.text) + "</span></div>";
     }).join("");
     var cur_ = body.querySelector(".now");
@@ -552,7 +608,7 @@ P.renderDeck = function () {
     b.className = "cmd" + (c === "light" ? " dark" : "");
     b.type = "button"; b.dataset.cmd = c;
     b.style.background = CMD_COLORS[c];
-    b.innerHTML = icon(c, 28) + "<span>" + LABELS[c] + "</span>";
+    b.innerHTML = c === "if" ? '<b class="kw">якщо</b>' : icon(c, 28) + "<span>" + LABELS[c] + "</span>";
     box.appendChild(b);
   });
 };
@@ -562,16 +618,24 @@ P.locked = function () { return this.running || this.busy || !!this.won; };
 /* Buttons are inert while the program runs; ⟲ always works. */
 P.syncUI = function () {
   var locked = this.locked(), empty = !B.size(this.program);
-  [].forEach.call(this.root.querySelectorAll(".cmd,.slot,.tab,.chip,.times,.del"), function (b) { b.disabled = locked; });
-  var rep = this.q('.cmd[data-cmd="repeat"]');
-  if (rep && this.cursor.length >= this.level.nest) rep.disabled = true;   // loops nest only so deep
+  [].forEach.call(this.root.querySelectorAll(".cmd,.slot,.tab,.chip,.times,.del,.which,.add-else,.del-else"), function (b) { b.disabled = locked; });
+  var rep = this.q('.cmd[data-cmd="repeat"]'), iff = this.q('.cmd[data-cmd="if"]');
+  if (rep && (this.depth() >= this.level.nest || this.cursorInIf())) rep.disabled = true;   // blocks nest only so deep; no loop inside an if
+  if (iff && this.depth() >= this.level.nest) iff.disabled = true;
   this.q('[data-act="run"]').disabled = locked || empty;
   this.q('[data-act="step"]').disabled = locked || empty;
 };
 
 /* ----- editing: any change to the program behaves like ⟲ ----- */
+P.depth = function () { return this.cursor.filter(function (x) { return x !== "e"; }).length; };
+P.cursorInIf = function () {
+  if (!this.cursor.length) return false;
+  var owner = this.cursor[this.cursor.length - 1] === "e" ? this.cursor.slice(0, -1) : this.cursor;
+  return B.isIf(itemAt(this.program, owner));
+};
+
 P.edited = function () {
-  this.steps = B.expand(this.program);
+  this.steps = B.walk(this.level, this.program).steps;
   this.resetRun(true);
 };
 
@@ -586,13 +650,13 @@ P.addCmd = function (c) {
     if (this.tree) this.say("Пам'ять заповнена!");
     return;
   }
-  if (c === "repeat" && this.cursor.length >= lv.nest) return;
+  if ((c === "repeat" || c === "if") && this.depth() >= lv.nest) return;
+  if (c === "repeat" && this.cursorInIf()) return;
   Sound.click();
-  var list = this.program;
-  this.cursor.forEach(function (i) { list = list[i].body; });
-  var idx = list.length;
-  this.program = B.addItem(this.program, this.cursor, c === "repeat" ? { repeat: B.MIN_REPEAT, body: [] } : c);
-  if (c === "repeat") this.cursor = this.cursor.concat(idx);
+  var idx = B.containerAt(this.program, this.cursor).length;
+  var item = c === "repeat" ? { repeat: B.MIN_REPEAT, body: [] } : c === "if" ? { if: lv.conditions[0], then: [] } : c;
+  this.program = B.addItem(this.program, this.cursor, item);
+  if (c === "repeat" || c === "if") this.cursor = this.cursor.concat(idx);
   this.edited();
 };
 
@@ -610,6 +674,32 @@ P.cycleTimes = function (path) {
   var it = itemAt(this.program, path);
   Sound.click();
   this.program = B.setRepeat(this.program, path, it.repeat + 1 > B.MAX_REPEAT ? B.MIN_REPEAT : it.repeat + 1);
+  this.edited();
+};
+
+/* Tap on the condition chip: the next condition the level offers. */
+P.cycleCond = function (path) {
+  var lv = this.level;
+  if (this.locked() || lv.conditions.length < 2) return;
+  var it = itemAt(this.program, path);
+  Sound.click();
+  this.program = B.setCond(this.program, path, lv.conditions[(lv.conditions.indexOf(it.if) + 1) % lv.conditions.length]);
+  this.edited();
+};
+
+P.addElseAt = function (path) {
+  if (this.locked()) return;
+  Sound.click();
+  this.program = B.addElse(this.program, path);
+  this.cursor = path.concat("e");
+  this.edited();
+};
+
+P.removeElseAt = function (path) {
+  if (this.locked()) return;
+  Sound.click();
+  this.program = B.removeElse(this.program, path);
+  this.cursor = B.fixCursor(this.program, this.cursor);
   this.edited();
 };
 
@@ -646,12 +736,27 @@ var BUMP_TEXT = {
 };
 
 /* Executes one command with animation; resolves false if the run was cancelled meanwhile. */
+/* What Bit says when a strict level stops the program. */
+function errText(ev) {
+  if (ev === "no-target") return "Іскра! Тут немає транзистора.";
+  return BUMP_TEXT[ev] + (ev === "bump-edge" ? " Може, повторів забагато?" : "");
+}
+
 P.execOne = async function (i) {
   var id = this.runId, lv = this.level, cmd = this.steps[i].cmd;
-  var r = B.step(lv, this.state, cmd), from = this.state, to = r.state, ev = r.event;
   this.curStep = i;
   this.renderProgram(i, true);
   if (i > 0 && this.steps[i - 1].jumps.length) Sound.pop();
+  this.errored = null;
+  if (this.steps[i].kind === "check") {   // Bit looks and answers the question
+    var chk = this.steps[i];
+    this.bitG.classList.remove("peek"); void this.bitG.getBoundingClientRect(); this.bitG.classList.add("peek");
+    Sound.pop();
+    this.say((chk.cond === "transistor" ? "Транзистор тут? " : chk.cond === "edge" ? "Попереду край? " : "Попереду сходинка? ") + (chk.result ? "✓ так" : "✗ ні"));
+    await sleep(STEP_MS * 1.1);
+    return id === this.runId;
+  }
+  var r = B.step(lv, this.state, cmd), from = this.state, to = r.state, ev = r.event;
   if (ev === "move" || ev === "jump") {
     await this.tween(from, to, ev === "jump" ? STEP_MS + 80 : STEP_MS, ev === "jump" ? 34 : 0);
   } else if (ev === "turn") {
@@ -662,6 +767,11 @@ P.execOne = async function (i) {
     this.state = to; this.renderLit();
     if (ev === "on") Sound.ding(); else Sound.dark();
     await sleep(STEP_MS * 0.85);
+  } else if (lv.strict) {   // a mistake stops the program
+    this.errored = ev;
+    Sound.buzz();
+    this.say(errText(ev));
+    await this.shakeBit(from);
   } else if (ev === "no-target" && this.tree) {
     Sound.click();
     this.say("Тут немає транзистора. Іду далі.");
@@ -708,15 +818,16 @@ P.shakeBit = function (st) {
 
 P.run = async function () {
   if (this.locked() || !B.size(this.program)) return;
-  if (!this.steps.length) return this.say("У циклі нічого повторювати");
+  if (!this.steps.length) return this.say(this.emptyText());
   Sound.unlock();
   this.resetRun(false);
-  if (B.hasEmptyLoop(this.program)) this.say("У циклі нічого повторювати");
+  if (B.hasEmptyBlock(this.program)) this.say(this.emptyText());
   var id = this.runId;
   this.running = true;
   this.syncUI();
   for (var i = 0; i < this.steps.length; i++) {
     if (!(await this.execOne(i)) || id !== this.runId) return;
+    if (this.errored) { this.running = false; return this.lose(this.errored); }
     if (B.isWon(this.level, this.state)) { this.running = false; return this.win(); }
     await sleep(80);
     if (id !== this.runId) return;
@@ -725,13 +836,18 @@ P.run = async function () {
   this.lose();
 };
 
+P.emptyText = function () {
+  var hasIf = B.codeLines(this.program, "uk").some(function (l) { return l.kind === "if"; });
+  return hasIf && this.program.length === 1 && B.isIf(this.program[0]) ? "У «якщо» нічого немає" : "У блоці нічого повторювати";
+};
+
 P.stepOnce = async function () {
   if (this.locked() || !B.size(this.program)) return;
-  if (!this.steps.length) return this.say("У циклі нічого повторювати");
+  if (!this.steps.length) return this.say(this.emptyText());
   Sound.unlock();
   if (this.stepIdx < 0 || this.stepIdx >= this.steps.length) {
     this.resetRun(false); this.stepIdx = 0;
-    if (B.hasEmptyLoop(this.program)) this.say("У циклі нічого повторювати");
+    if (B.hasEmptyBlock(this.program)) this.say(this.emptyText());
   }
   var id = this.runId, i = this.stepIdx;
   this.busy = true;
@@ -741,16 +857,18 @@ P.stepOnce = async function () {
   this.busy = false;
   this.stepIdx = i + 1;
   this.syncUI();
+  if (this.errored) { this.stepIdx = -1; return this.lose(this.errored); }
   if (B.isWon(this.level, this.state)) return this.win();
   if (this.stepIdx >= this.steps.length) { this.stepIdx = -1; this.lose(); }
 };
 
-P.lose = function () {
+P.lose = function (errorEvent) {
   this.fails++;
   this.curStep = -1;
   this.renderProgram();
   var left = this.level.targets.length - this.state.lit.length;
-  this.say(left > 0 ? B.remainingText(left) : "Усі транзистори вже горять!");
+  if (errorEvent) this.say(errText(errorEvent) + " Спробуй ще!");
+  else this.say(left > 0 ? B.remainingText(left) : "Усі транзистори вже горять!");
   if (this.fails >= 2) this.q('[data-act="hint"]').hidden = false;
   this.syncUI();
 };
@@ -816,8 +934,8 @@ P.showHint = function () {
   var lv = this.level;
   if (lv.solution) {   // loops: the first lines of the reference solution
     var first = B.codeLines(lv.solution, this.codeLang).slice(0, 2).map(function (l) {
-      var ico = l.kind === "open" ? "repeat" : itemAt(lv.solution, l.path);
-      return '<span class="hint-chip">' + icon(ico, 14) + " " + esc(l.text) + "</span>";
+      var ico = l.kind === "open" ? "repeat" : l.kind === "if" ? "" : itemAt(lv.solution, l.path);
+      return '<span class="hint-chip">' + (ico ? icon(ico, 14) + " " : "") + esc(l.text) + "</span>";
     }).join(" ");
     return this.say("Почни так: " + first + " …а далі сам!", true);
   }
@@ -836,8 +954,9 @@ P.wire = function () {
     var t = e.target.closest("button");
     if (!t) {   // a tap on a loop frame or on empty space of the program moves the caret there
       if (self.tree && !self.locked() && e.target.closest(".prog")) {
-        var frame = e.target.closest(".loop");
-        self.setCursor(frame ? frame.dataset.path.split(".").map(Number) : []);
+        var zone = e.target.closest(".loop,.cond-then,.cond-else,.cond");
+        var zp = zone ? B.parsePath(zone.dataset.path) : [];
+        self.setCursor(zone && zone.classList.contains("cond-else") ? zp.concat("e") : zp);
       }
       return;
     }
@@ -845,8 +964,11 @@ P.wire = function () {
     Sound.unlock();
     if (t.dataset.cmd) return self.addCmd(t.dataset.cmd);
     if (t.classList.contains("slot")) return self.removeAt([+t.dataset.i]);
-    if (t.classList.contains("chip") || t.classList.contains("del")) return self.removeAt(t.dataset.path.split(".").map(Number));
-    if (t.classList.contains("times")) return self.cycleTimes(t.dataset.path.split(".").map(Number));
+    if (t.classList.contains("chip") || t.classList.contains("del")) return self.removeAt(B.parsePath(t.dataset.path));
+    if (t.classList.contains("times")) return self.cycleTimes(B.parsePath(t.dataset.path));
+    if (t.classList.contains("which")) return self.cycleCond(B.parsePath(t.dataset.path));
+    if (t.classList.contains("add-else")) return self.addElseAt(B.parsePath(t.dataset.path));
+    if (t.classList.contains("del-else")) return self.removeElseAt(B.parsePath(t.dataset.path));
     if (t.classList.contains("tab")) { Sound.pop(); return self.loadLevel(+t.dataset.i); }
     if (t.classList.contains("lang")) {
       self.codeLang = self.codeLang === "uk" ? "en" : "uk";
@@ -869,10 +991,10 @@ P.wire = function () {
 P.onKey = function (e) {
   if (e.key === "Backspace" && this.program && !this.locked() && B.size(this.program)) {
     e.preventDefault();
-    var list = this.program;
-    this.cursor.forEach(function (i) { list = list[i].body; });
-    if (list.length) this.removeAt(this.cursor.concat(list.length - 1));
-    else if (this.cursor.length) this.removeAt(this.cursor);   // an empty loop: Backspace takes the loop itself
+    var list = B.containerAt(this.program, this.cursor), cur = this.cursor;
+    if (list.length) this.removeAt(cur.concat(list.length - 1));
+    else if (cur[cur.length - 1] === "e") this.removeElseAt(cur.slice(0, -1));   // an empty else goes away
+    else if (cur.length) this.removeAt(cur);                                      // an empty block: Backspace takes the block itself
   }
 };
 

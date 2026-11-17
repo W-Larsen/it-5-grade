@@ -50,3 +50,26 @@ test("switching on at every step is a valid shortcut and the search sees it", ()
   assert.equal(BitGame.size(p), 3);
   assert.equal(BitGame.run(level, p).won, true);
 });
+
+/* ---------- conditions ---------- */
+// transistors on 1, 3, 4, 7: no loop period fits; without an if the best program is 8 cells
+const LAMPS = { title: "L", map: ["1 1t 1 1t 1t 1 1 1t"], start: { x: 0, y: 0, dir: "E" },
+  commands: ["forward", "light", "repeat", "if"], conditions: ["transistor"], nest: 2,
+  solution: [{ repeat: 7, body: ["forward", { if: "transistor", then: ["light"] }] }], slots: 6, best: 4 };
+const STAIRS = { title: "S", map: ["1 2 2 3 2 3 4 4 3t"], start: { x: 0, y: 0, dir: "E" }, commands: ["forward", "jump", "light", "repeat", "if"], conditions: ["step"], else: true, nest: 2,
+  solution: [{ repeat: 8, body: [{ if: "step", then: ["jump"], else: ["forward"] }] }, "light"], slots: 6, best: 5 };
+
+test("finds the loop-with-if solution and nothing shorter", () => {
+  const level = BitGame.parseLevel("s1", LAMPS), p = shortestProgram(level, { maxSize: 6, nest: 2 });
+  assert.equal(BitGame.size(p), 4);
+  assert.equal(BitGame.walk(level, p).won, true);
+  assert.equal(shortestProgram(level, { maxSize: 3, nest: 2 }), null);
+});
+test("noIf finds no program when only an if fits the memory", () => {
+  assert.equal(shortestProgram(BitGame.parseLevel("s1", LAMPS), { maxSize: 6, nest: 2, noIf: true }), null);
+});
+test("noElse rules out the uneven stairs solution", () => {
+  const level = BitGame.parseLevel("s2", STAIRS);
+  assert.equal(BitGame.size(shortestProgram(level, { maxSize: 6, nest: 2 })), 5);
+  assert.equal(shortestProgram(level, { maxSize: 6, nest: 2, noElse: true }), null);
+});

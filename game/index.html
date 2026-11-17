@@ -60,6 +60,7 @@ h1{margin:0;font:800 calc(25px*var(--u,1))/1.1 var(--f-display);letter-spacing:-
 <script src="../shared/bit-game/engine.js"></script>
 <script src="../shared/bit-game/levels-02.js"></script>
 <script src="../shared/bit-game/levels-03.js"></script>
+<script src="../shared/bit-game/levels-04.js"></script>
 <script src="../shared/bit-game/bit-game.js"></script>
 <script>
 (function () {
@@ -74,10 +75,15 @@ var SETS = [
   { lesson: 3, name: "Коридори", d: "Цикл: повтори команди кілька разів", ids: ["3-01", "3-02", "3-03"] },
   { lesson: 3, name: "Візерунки", d: "Цикл із поворотами й команди до та після нього", ids: ["3-04", "3-05", "3-06"] },
   { lesson: 3, name: "Цикл у циклі", d: "Цикл усередині іншого циклу", ids: ["3-07", "3-08", "3-09"] },
-  { lesson: 3, name: "Бонус 3", d: "Для найсміливіших: є хитра коротка програма", ids: ["3-b1", "3-b2"] }
+  { lesson: 3, name: "Бонус 3", d: "Для найсміливіших: є хитра коротка програма", ids: ["3-b1", "3-b2"] },
+  { lesson: 4, name: "Розминка", d: "Цикл у циклі з уроку 3 і перше «якщо»", ids: ["4-00", "4-i1"] },
+  { lesson: 4, name: "Ліхтарі", d: "«Якщо тут транзистор» і «якщо попереду край»: вулиці та кільце", ids: ["4-01", "4-02", "4-03"] },
+  { lesson: 4, name: "Нерівні сходи", d: "«Якщо попереду сходинка» і «інакше»: сходи, кільце, лампи", ids: ["4-04", "4-05", "4-06"] },
+  { lesson: 4, name: "Все разом", d: "Кілька умов в одному циклі", ids: ["4-07", "4-08", "4-09"] },
+  { lesson: 4, name: "Бонус 4", d: "Пам'яті рівно, і Біт іде по-новому: проти годинникової стрілки та зигзагом", ids: ["4-b1", "4-b2"] }
 ];
-var LESSONS = [{ n: 0, name: "Усі" }, { n: 2, name: "Урок 2" }, { n: 3, name: "Урок 3" }];
-var filter = 3;   // opens on the newest lesson; «Усі» shows every set
+var LESSONS = [{ n: 0, name: "Усі" }, { n: 2, name: "Урок 2" }, { n: 3, name: "Урок 3" }, { n: 4, name: "Урок 4" }];
+var filter = 4;   // opens on the newest lesson; «Усі» shows every set
 var game = document.getElementById("game"), list = document.getElementById("sets"), probe = document.getElementById("probe"), selected = 0;
 var page = document.getElementById("page"), bar = document.getElementById("bar");
 var box = document.getElementById("stageBox"), stage = document.getElementById("stage");
